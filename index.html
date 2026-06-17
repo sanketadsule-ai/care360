@@ -1,0 +1,1129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Carapal360 — Social Listening, Analytics & Customer Experience Platform">
+  <title>Carapal360 — Suite</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='11' fill='none' stroke='%232D7FF9' stroke-width='2'/%3E%3Ccircle cx='12' cy='12' r='2' fill='%232D7FF9'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="app-layout">
+
+    <!-- ══════════════════════════════════════════════
+         HEADER
+         ══════════════════════════════════════════════ -->
+    <header class="header" id="header">
+      <div class="header-logo">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" style="margin-right:4px;">
+          <circle cx="12" cy="12" r="11" stroke="#2D7FF9" stroke-width="2"/>
+          <path d="M8 12C8 9.79 9.79 8 12 8C14.21 8 16 9.79 16 12C16 14.21 14.21 16 12 16" stroke="#2D7FF9" stroke-width="2" stroke-linecap="round"/>
+          <circle cx="12" cy="12" r="2" fill="#2D7FF9"/>
+        </svg>
+        <span class="logo-text">carapal<span>360</span></span>
+      </div>
+      <div class="header-right">
+        <!-- Mail Icon -->
+        <button class="header-icon-btn" id="header-mail-btn" aria-label="Messages">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="4" width="20" height="16" rx="2"/>
+            <polyline points="22,4 12,13 2,4"/>
+          </svg>
+        </button>
+        <!-- Notification Bell -->
+        <button class="header-icon-btn" id="header-notif-btn" aria-label="Notifications">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+            <path d="M13.73 21a2 2 0 01-3.46 0"/>
+          </svg>
+          <span class="notification-badge">109</span>
+        </button>
+        <!-- User Avatar -->
+        <div class="user-avatar" id="user-avatar">
+          SC
+          <span class="online-dot"></span>
+        </div>
+      </div>
+    </header>
+
+    <!-- ══════════════════════════════════════════════
+         BODY (Sidebar + Main)
+         ══════════════════════════════════════════════ -->
+    <div class="app-body">
+
+      <!-- Sidebar -->
+      <nav class="sidebar" id="sidebar">
+        <div class="sidebar-nav">
+          <!-- Home / Dashboard -->
+          <div class="sidebar-item active" data-page="dashboard" data-tooltip="Home">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+              <polyline points="9,22 9,12 15,12 15,22"/>
+            </svg>
+          </div>
+          <!-- Social Inbox -->
+          <div class="sidebar-item" data-page="inbox" data-tooltip="Social Inbox">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+            </svg>
+          </div>
+          <!-- Dashboard Grid -->
+          <div class="sidebar-item" data-page="dashboard" data-tooltip="Modules">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="7" height="7" rx="1"/>
+              <rect x="14" y="3" width="7" height="7" rx="1"/>
+              <rect x="3" y="14" width="7" height="7" rx="1"/>
+              <rect x="14" y="14" width="7" height="7" rx="1"/>
+            </svg>
+          </div>
+          <!-- Publish -->
+          <div class="sidebar-item" data-tooltip="Publish">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+              <polyline points="17,8 12,3 7,8"/>
+              <line x1="12" y1="3" x2="12" y2="15"/>
+            </svg>
+          </div>
+          <!-- Moderation / Shield -->
+          <div class="sidebar-item" data-tooltip="Moderation">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            </svg>
+          </div>
+          <!-- Team -->
+          <div class="sidebar-item" data-tooltip="Team">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
+              <circle cx="9" cy="7" r="4"/>
+              <path d="M23 21v-2a4 4 0 00-3-3.87"/>
+              <path d="M16 3.13a4 4 0 010 7.75"/>
+            </svg>
+          </div>
+          <!-- Reports -->
+          <div class="sidebar-item" data-tooltip="Reports">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+              <polyline points="14,2 14,8 20,8"/>
+              <line x1="16" y1="13" x2="8" y2="13"/>
+              <line x1="16" y1="17" x2="8" y2="17"/>
+              <polyline points="10,9 9,9 8,9"/>
+            </svg>
+          </div>
+
+          <div class="sidebar-spacer"></div>
+
+          <!-- Settings -->
+          <div class="sidebar-item" data-page="settings" data-tooltip="Settings">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="3"/>
+              <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>
+            </svg>
+          </div>
+        </div>
+      </nav>
+
+      <!-- ══════════════════════════════════════════
+           MAIN CONTENT
+           ══════════════════════════════════════════ -->
+      <div class="main-content" id="main-content">
+
+        <!-- ────────────────────────────────────────
+             PAGE 1: DASHBOARD
+             ──────────────────────────────────────── -->
+        <div class="page dashboard-page active" id="page-dashboard">
+
+          <!-- Dashboard Header -->
+          <div class="dashboard-header">
+            <h1 class="dashboard-title">What would you like to do<br>today?</h1>
+            <div class="tab-group" id="tab-group">
+              <button class="tab-btn active" data-tab="insight">Insight</button>
+              <button class="tab-btn" data-tab="productivity">Productivity</button>
+            </div>
+          </div>
+
+          <!-- Action Cards -->
+          <div class="action-cards-row" id="action-cards">
+
+            <!-- Listen (selected by default) -->
+            <div class="action-card selected" data-action="listen" id="card-listen">
+              <div class="action-card-icon">
+                <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M24 4L10 18H4v12h6l14 14V4z"/>
+                  <path d="M32 16a8 8 0 010 16"/>
+                  <path d="M36 10a14 14 0 010 28"/>
+                </svg>
+              </div>
+              <div class="action-card-title">Listen</div>
+              <div class="action-card-desc">Profile based listening insights across social review tracking</div>
+            </div>
+
+            <!-- Analyze -->
+            <div class="action-card" data-action="analyze" id="card-analyze">
+              <div class="action-card-icon">
+                <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="6" y="24" width="8" height="18" rx="1"/>
+                  <rect x="20" y="14" width="8" height="28" rx="1"/>
+                  <rect x="34" y="6" width="8" height="36" rx="1"/>
+                  <line x1="4" y1="44" x2="44" y2="44"/>
+                </svg>
+              </div>
+              <div class="action-card-title">Analyze</div>
+              <div class="action-card-desc">Channel insights and analytics across FB, Twitter & Instagram</div>
+            </div>
+
+            <!-- Compare -->
+            <div class="action-card" data-action="compare" id="card-compare">
+              <div class="action-card-icon">
+                <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="4" y="6" width="16" height="20" rx="2"/>
+                  <rect x="28" y="6" width="16" height="20" rx="2"/>
+                  <line x1="12" y1="12" x2="12" y2="12.01"/>
+                  <line x1="12" y1="16" x2="16" y2="16"/>
+                  <line x1="12" y1="20" x2="16" y2="20"/>
+                  <line x1="36" y1="12" x2="36" y2="12.01"/>
+                  <line x1="36" y1="16" x2="40" y2="16"/>
+                  <line x1="36" y1="20" x2="40" y2="20"/>
+                  <path d="M20 16h8" stroke-dasharray="2 2"/>
+                  <polyline points="16,32 24,38 32,32"/>
+                  <line x1="24" y1="26" x2="24" y2="38"/>
+                </svg>
+              </div>
+              <div class="action-card-title">Compare</div>
+              <div class="action-card-desc">Compare and analyze your Brand's performance vs your competitor</div>
+            </div>
+
+            <!-- Ideate -->
+            <div class="action-card" data-action="ideate" id="card-ideate">
+              <div class="action-card-icon">
+                <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M18 38h12"/>
+                  <path d="M20 42h8"/>
+                  <path d="M24 4a14 14 0 00-8 25.4V34h16v-4.6A14 14 0 0024 4z"/>
+                  <line x1="24" y1="18" x2="24" y2="26"/>
+                  <line x1="20" y1="22" x2="28" y2="22"/>
+                </svg>
+              </div>
+              <div class="action-card-title">Ideate</div>
+              <div class="action-card-desc">Campaign & Post Performance across various Channels</div>
+            </div>
+
+            <!-- Update & Announcement -->
+            <div class="action-card" data-action="updates" id="card-updates">
+              <div class="action-card-icon">
+                <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M22 4a14 14 0 0114 14c0 5-2 8.5-5 11l-1 1v6H18v-6l-1-1c-3-2.5-5-6-5-11A14 14 0 0122 4z"/>
+                  <path d="M18 40h12"/>
+                  <path d="M20 44h8"/>
+                  <line x1="24" y1="10" x2="24" y2="10.01" stroke-width="3"/>
+                  <path d="M24 16v8"/>
+                  <circle cx="24" cy="28" r="1.5" fill="currentColor"/>
+                </svg>
+              </div>
+              <div class="action-card-title">Update &<br>Announcement</div>
+              <div class="action-card-desc">Update & Announcement</div>
+            </div>
+          </div>
+
+          <!-- Listening Type Section -->
+          <div class="listening-section" id="listening-section">
+            <div class="listening-section-title">Select a listening type to get started</div>
+            <div class="listening-cards-row">
+
+              <!-- Brand Listening -->
+              <div class="listening-card" id="listen-brand">
+                <div class="listening-card-icon">
+                  <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M6 18c0-2 1-3 3-3h2l4-6h18l4 6h2c2 0 3 1 3 3v18c0 2-1 3-3 3H9c-2 0-3-1-3-3V18z"/>
+                    <circle cx="24" cy="26" r="8"/>
+                    <circle cx="24" cy="26" r="3"/>
+                  </svg>
+                </div>
+                <div class="listening-card-title">Brand Listening</div>
+                <div class="listening-card-desc">Understand whats happening around your Brand, campaign or competitor</div>
+              </div>
+
+              <!-- Influencer -->
+              <div class="listening-card" id="listen-influencer">
+                <div class="listening-card-icon">
+                  <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M8 30l12-8V10L8 18v12z"/>
+                    <path d="M20 22l12 8V42l-12-8V22z"/>
+                    <circle cx="36" cy="14" r="4"/>
+                    <path d="M24 8l6-4"/>
+                    <path d="M30 4l4 2"/>
+                    <line x1="36" y1="6" x2="40" y2="4"/>
+                    <line x1="40" y1="10" x2="44" y2="10"/>
+                    <line x1="40" y1="16" x2="44" y2="18"/>
+                  </svg>
+                </div>
+                <div class="listening-card-title">Influencer</div>
+                <div class="listening-card-desc">Brand Influencers relating to the topics you have setup</div>
+              </div>
+
+              <!-- Voice of Customer -->
+              <div class="listening-card" id="listen-voc">
+                <div class="listening-card-icon">
+                  <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M38 24c0 8-6.3 14-14 14-2.5 0-4.8-.6-6.8-1.8L8 38l2-8.2A13.8 13.8 0 0110 24c0-8 6.3-14 14-14s14 6 14 14z"/>
+                    <line x1="18" y1="20" x2="30" y2="20"/>
+                    <line x1="18" y1="26" x2="26" y2="26"/>
+                  </svg>
+                </div>
+                <div class="listening-card-title">Voice of Customer</div>
+                <div class="listening-card-desc">Slice and dice the data to get to the root of it</div>
+              </div>
+
+              <!-- Ecommerce Reviews -->
+              <div class="listening-card" id="listen-ecommerce">
+                <div class="listening-card-icon">
+                  <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M8 8h4l4 20h20l4-14H16"/>
+                    <circle cx="18" cy="36" r="3"/>
+                    <circle cx="34" cy="36" r="3"/>
+                  </svg>
+                </div>
+                <div class="listening-card-title">Ecommerce Reviews</div>
+                <div class="listening-card-desc">All your ecommerce reviews for you and your competitors</div>
+              </div>
+
+              <!-- Location Reviews -->
+              <div class="listening-card" id="listen-location">
+                <div class="listening-card-icon">
+                  <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M24 4C16.3 4 10 10.3 10 18c0 10 14 26 14 26s14-16 14-26c0-7.7-6.3-14-14-14z"/>
+                    <circle cx="24" cy="18" r="5"/>
+                    <path d="M4 24c0 0 4-2 8-1s8 3 12 2 8-3 12-2 8 1 8 1"/>
+                  </svg>
+                </div>
+                <div class="listening-card-title">Location Reviews</div>
+                <div class="listening-card-desc">Track all locations - Google My Business, Zomato, Tripadvisor, Yelp, Facebook Recommendations</div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+        <!-- ────────────────────────────────────────
+             PAGE 2: SOCIAL INBOX
+             ──────────────────────────────────────── -->
+        <div class="page inbox-page" id="page-inbox">
+
+          <!-- Left Panel: Case List -->
+          <div class="inbox-left">
+
+            <!-- Toolbar -->
+            <div class="inbox-toolbar">
+              <div class="toolbar-tabs">
+                <div class="toolbar-tab active" data-toolbar="messages" title="Messages">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="2" y="4" width="20" height="16" rx="2"/>
+                    <polyline points="22,4 12,13 2,4"/>
+                  </svg>
+                </div>
+                <div class="toolbar-tab" data-toolbar="users" title="Users">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
+                    <circle cx="9" cy="7" r="4"/>
+                    <path d="M23 21v-2a4 4 0 00-3-3.87"/>
+                    <path d="M16 3.13a4 4 0 010 7.75"/>
+                  </svg>
+                </div>
+                <div class="toolbar-tab" data-toolbar="company" title="Company">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="4" y="2" width="16" height="20" rx="2"/>
+                    <line x1="9" y1="6" x2="9" y2="6.01"/>
+                    <line x1="15" y1="6" x2="15" y2="6.01"/>
+                    <line x1="9" y1="10" x2="9" y2="10.01"/>
+                    <line x1="15" y1="10" x2="15" y2="10.01"/>
+                    <line x1="9" y1="14" x2="9" y2="14.01"/>
+                    <line x1="15" y1="14" x2="15" y2="14.01"/>
+                    <line x1="9" y1="18" x2="15" y2="18"/>
+                  </svg>
+                </div>
+                <div class="toolbar-tab" data-toolbar="saved" title="Saved">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/>
+                  </svg>
+                </div>
+              </div>
+              <div class="toolbar-actions">
+                <!-- Filter -->
+                <button class="toolbar-action-btn" title="Filter">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="22,3 2,3 10,12.46 10,19 14,21 14,12.46"/>
+                  </svg>
+                </button>
+                <!-- Smiley -->
+                <button class="toolbar-action-btn" title="Sentiment">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"/>
+                    <path d="M8 14s1.5 2 4 2 4-2 4-2"/>
+                    <line x1="9" y1="9" x2="9.01" y2="9"/>
+                    <line x1="15" y1="9" x2="15.01" y2="9"/>
+                  </svg>
+                </button>
+                <!-- Search -->
+                <button class="toolbar-action-btn" title="Search">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="8"/>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                  </svg>
+                </button>
+                <!-- Analytics -->
+                <button class="toolbar-action-btn" title="Analytics">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="20" x2="18" y2="10"/>
+                    <line x1="12" y1="20" x2="12" y2="4"/>
+                    <line x1="6" y1="20" x2="6" y2="14"/>
+                  </svg>
+                </button>
+                <!-- Download -->
+                <button class="toolbar-action-btn" title="Download">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                    <polyline points="7,10 12,15 17,10"/>
+                    <line x1="12" y1="15" x2="12" y2="3"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <!-- Filter Bar -->
+            <div class="inbox-filter-bar">
+              <div class="filter-status">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
+                  <circle cx="9" cy="7" r="4"/>
+                  <path d="M23 21v-2a4 4 0 00-3-3.87"/>
+                  <path d="M16 3.13a4 4 0 010 7.75"/>
+                </svg>
+                <span id="inbox-source-label">Assigned/Reassigned/Ongoing</span>
+                <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="6,9 12,15 18,9"/>
+                </svg>
+              </div>
+              <div class="filter-actions">
+                <!-- Refresh -->
+                <button class="filter-action-btn" title="Refresh">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="23,4 23,10 17,10"/>
+                    <path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/>
+                  </svg>
+                </button>
+                <!-- Select All Checkbox -->
+                <div class="filter-action-btn" title="Select all" style="border:1.5px solid #D1D5DB; border-radius:3px; width:16px; height:16px; cursor:pointer;"></div>
+              </div>
+            </div>
+
+            <!-- Case Items -->
+            <div class="case-list" id="case-list">
+
+              <!-- Case 1: Impact Guru -->
+              <div class="case-item" id="case-1">
+                <div class="case-avatar" style="background: linear-gradient(135deg, #6366f1, #8b5cf6);">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><circle cx="12" cy="7" r="4"/><path d="M5.5 21a6.5 6.5 0 0113 0"/></svg>
+                </div>
+                <div class="case-content">
+                  <div class="case-source-label">@ImpactGuru</div>
+                  <div class="case-author">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="#1DA1F2"><path d="M23.643 4.937c-.835.37-1.732.62-2.675.733.962-.576 1.7-1.49 2.048-2.578-.9.534-1.897.922-2.958 1.13-.85-.904-2.06-1.47-3.4-1.47-2.572 0-4.658 2.086-4.658 4.66 0 .364.042.718.12 1.06-3.873-.195-7.304-2.05-9.602-4.868-.4.69-.63 1.49-.63 2.342 0 1.616.823 3.043 2.072 3.878-.764-.025-1.482-.234-2.11-.583v.06c0 2.257 1.605 4.14 3.737 4.568-.392.106-.803.162-1.227.162-.3 0-.593-.028-.877-.082.593 1.85 2.313 3.198 4.352 3.234-1.595 1.25-3.604 1.995-5.786 1.995-.376 0-.747-.022-1.112-.065 2.062 1.323 4.51 2.093 7.14 2.093 8.57 0 13.255-7.098 13.255-13.254 0-.2-.005-.402-.014-.602.91-.658 1.7-1.477 2.323-2.41z"/></svg>
+                    Impact Guru
+                  </div>
+                  <div class="case-text">On their way home from a wedding, my parents met with a devastating <span class="highlight">#accident</span>. I los...</div>
+                  <div class="case-meta">
+                    <div class="case-actions">
+                      <div class="case-action-icon" title="Emoji">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+                      </div>
+                      <div class="case-action-icon" title="Reply" style="color:#F59E0B;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="22,4 12,13 2,4"/></svg>
+                      </div>
+                      <div class="case-action-icon" title="Share">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+                      </div>
+                    </div>
+                    <div class="case-timestamp">02:30 PM Wed, Jun 17 | Tweet</div>
+                  </div>
+                </div>
+                <div class="case-checkbox"></div>
+              </div>
+
+              <!-- Case 2: Avneesh Gautam -->
+              <div class="case-item" id="case-2">
+                <div class="case-avatar" style="background: linear-gradient(135deg, #f97316, #ef4444);">AG</div>
+                <div class="case-content">
+                  <div class="case-source-label">Impact Guru</div>
+                  <div class="case-author">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="#4267B2"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+                    Avneesh Gautam
+                  </div>
+                  <div class="case-text">God bless you 🙏</div>
+                  <div class="case-meta">
+                    <div class="case-actions">
+                      <div class="case-action-icon" title="Emoji">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+                      </div>
+                      <div class="case-action-icon" title="Reply" style="color:#F59E0B;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="22,4 12,13 2,4"/></svg>
+                      </div>
+                      <div class="case-action-icon" title="Share">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+                      </div>
+                    </div>
+                    <div class="case-timestamp">07:28 AM Wed, Jun 17 | Comment</div>
+                  </div>
+                </div>
+                <div class="case-checkbox"></div>
+              </div>
+
+              <!-- Case 3: Kerwin Jason -->
+              <div class="case-item" id="case-3">
+                <div class="case-avatar" style="background: linear-gradient(135deg, #06b6d4, #3b82f6);">KJ</div>
+                <div class="case-content">
+                  <div class="case-source-label">Impact Guru</div>
+                  <div class="case-author">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="#4267B2"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+                    Kerwin Jason
+                  </div>
+                  <div class="case-text">Amen</div>
+                  <div class="case-meta">
+                    <div class="case-actions">
+                      <div class="case-action-icon" title="Emoji">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+                      </div>
+                      <div class="case-action-icon" title="Reply" style="color:#F59E0B;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="22,4 12,13 2,4"/></svg>
+                      </div>
+                      <div class="case-action-icon" title="Share">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+                      </div>
+                    </div>
+                    <div class="case-timestamp">05:00 AM Wed, Jun 17 | Comment</div>
+                  </div>
+                </div>
+                <div class="case-checkbox"></div>
+              </div>
+
+              <!-- Case 4: Namita Naskar -->
+              <div class="case-item" id="case-4">
+                <div class="case-avatar" style="background: linear-gradient(135deg, #ec4899, #f43f5e);">NN</div>
+                <div class="case-content">
+                  <div class="case-source-label">Impact Guru</div>
+                  <div class="case-author">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="#4267B2"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+                    Namita Naskar
+                  </div>
+                  <div class="case-text">god bless you</div>
+                  <div class="case-meta">
+                    <div class="case-actions">
+                      <div class="case-action-icon" title="Emoji">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+                      </div>
+                      <div class="case-action-icon" title="Reply" style="color:#F59E0B;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="22,4 12,13 2,4"/></svg>
+                      </div>
+                      <div class="case-action-icon" title="Share">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+                      </div>
+                    </div>
+                    <div class="case-timestamp">18 | Comment</div>
+                  </div>
+                </div>
+                <div class="case-checkbox"></div>
+              </div>
+
+            </div>
+
+            <!-- Pagination -->
+            <div class="case-pagination">
+              <div class="smiley-btn">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+              </div>
+              <div class="pagination-nav">
+                <span>Showing</span>
+                <div class="pagination-arrow" title="Previous page">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15,18 9,12 15,6"/></svg>
+                </div>
+                <input class="pagination-input" type="text" value="1" aria-label="Page number">
+                <span>of 19</span>
+                <div class="pagination-arrow" title="Next page">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9,6 15,12 9,18"/></svg>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Center Panel: Detail View -->
+          <div class="inbox-center">
+            <div class="inbox-empty-state">
+              Select Case to work or click on play mode for sequence
+            </div>
+          </div>
+
+          <!-- Right Panel: Info -->
+          <div class="inbox-right"></div>
+        </div>
+
+        <!-- ────────────────────────────────────────
+             PAGE 3: SETTINGS
+             ──────────────────────────────────────── -->
+        <div class="page settings-page" id="page-settings">
+
+          <h1 class="settings-page-title">SETTINGS</h1>
+
+          <!-- Data and Automation -->
+          <div class="settings-section">
+            <h2 class="settings-section-title">Data and Automation</h2>
+            <div class="settings-grid">
+
+              <!-- Workspace Management -->
+              <div class="settings-card" id="settings-workspace">
+                <div class="settings-card-icon orange">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="3"/>
+                    <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>
+                  </svg>
+                </div>
+                <div class="settings-card-label">Workspace<br>Management</div>
+              </div>
+
+              <!-- Manage Channels -->
+              <div class="settings-card" id="settings-manage-channels" data-navigate="channels">
+                <div class="settings-card-icon orange">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
+                    <circle cx="9" cy="7" r="4"/>
+                    <path d="M23 21v-2a4 4 0 00-3-3.87"/>
+                    <path d="M16 3.13a4 4 0 010 7.75"/>
+                  </svg>
+                </div>
+                <div class="settings-card-label">Manage<br>Channels</div>
+              </div>
+
+              <!-- Bulk Operations -->
+              <div class="settings-card" id="settings-bulk">
+                <div class="settings-card-icon orange">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="2" y="6" width="8" height="12" rx="2"/>
+                    <rect x="14" y="6" width="8" height="12" rx="2"/>
+                    <line x1="10" y1="10" x2="14" y2="10"/>
+                    <line x1="10" y1="14" x2="14" y2="14"/>
+                  </svg>
+                </div>
+                <div class="settings-card-label">Bulk<br>Operations</div>
+              </div>
+
+              <!-- Download Request -->
+              <div class="settings-card" id="settings-download">
+                <div class="settings-card-icon orange">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+                    <polyline points="14,2 14,8 20,8"/>
+                    <line x1="12" y1="12" x2="12" y2="18"/>
+                    <polyline points="9,15 12,18 15,15"/>
+                  </svg>
+                </div>
+                <div class="settings-card-label">Download<br>Request</div>
+              </div>
+
+              <!-- Organizer -->
+              <div class="settings-card" id="settings-organizer">
+                <div class="settings-card-icon orange">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="3" width="18" height="18" rx="2"/>
+                    <line x1="3" y1="9" x2="21" y2="9"/>
+                    <line x1="9" y1="21" x2="9" y2="9"/>
+                  </svg>
+                </div>
+                <div class="settings-card-label">Organizer</div>
+              </div>
+
+              <!-- Caseform Configuration -->
+              <div class="settings-card" id="settings-caseform">
+                <div class="settings-card-icon orange">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M9 11l3 3L22 4"/>
+                    <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/>
+                  </svg>
+                </div>
+                <div class="settings-card-label">Caseform<br>Configuration</div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Publishing and Response Management -->
+          <div class="settings-section">
+            <h2 class="settings-section-title">Publishing and Response Management</h2>
+            <div class="settings-grid">
+
+              <!-- Publish Settings -->
+              <div class="settings-card" id="settings-publish">
+                <div class="settings-card-icon orange">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                    <polyline points="17,8 12,3 7,8"/>
+                    <line x1="12" y1="3" x2="12" y2="15"/>
+                  </svg>
+                </div>
+                <div class="settings-card-label">Publish<br>Settings</div>
+              </div>
+
+              <!-- Email Signatures -->
+              <div class="settings-card" id="settings-email-sig">
+                <div class="settings-card-icon orange">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="2" y="4" width="20" height="16" rx="2"/>
+                    <polyline points="22,4 12,13 2,4"/>
+                  </svg>
+                </div>
+                <div class="settings-card-label">Email<br>Signatures</div>
+              </div>
+
+              <!-- FAQs -->
+              <div class="settings-card" id="settings-faqs">
+                <div class="settings-card-icon orange">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"/>
+                    <path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/>
+                    <line x1="12" y1="17" x2="12.01" y2="17"/>
+                  </svg>
+                </div>
+                <div class="settings-card-label">FAQs</div>
+              </div>
+
+              <!-- Media Library -->
+              <div class="settings-card" id="settings-media">
+                <div class="settings-card-icon orange">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="3" width="18" height="18" rx="2"/>
+                    <circle cx="8.5" cy="8.5" r="1.5"/>
+                    <polyline points="21,15 16,10 5,21"/>
+                  </svg>
+                </div>
+                <div class="settings-card-label">Media<br>Library</div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Account Management -->
+          <div class="settings-section">
+            <h2 class="settings-section-title">Account Management</h2>
+            <div class="settings-grid">
+
+              <div class="settings-card" id="settings-custom-sites">
+                <div class="settings-card-icon green">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"/>
+                    <line x1="2" y1="12" x2="22" y2="12"/>
+                    <path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/>
+                  </svg>
+                </div>
+                <div class="settings-card-label">Custom<br>Sites</div>
+              </div>
+
+              <div class="settings-card" id="settings-news">
+                <div class="settings-card-icon green">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M4 22h16a2 2 0 002-2V4a2 2 0 00-2-2H8a2 2 0 00-2 2v16a2 2 0 01-2 2zm0 0a2 2 0 01-2-2v-9c0-1.1.9-2 2-2h2"/>
+                    <line x1="10" y1="6" x2="18" y2="6"/>
+                    <line x1="10" y1="10" x2="18" y2="10"/>
+                    <line x1="10" y1="14" x2="14" y2="14"/>
+                  </svg>
+                </div>
+                <div class="settings-card-label">News/Blogs<br>Push</div>
+              </div>
+
+              <div class="settings-card" id="settings-integration">
+                <div class="settings-card-icon green">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="2" y="6" width="8" height="12" rx="2"/>
+                    <rect x="14" y="6" width="8" height="12" rx="2"/>
+                    <line x1="10" y1="10" x2="14" y2="10"/>
+                    <line x1="10" y1="14" x2="14" y2="14"/>
+                  </svg>
+                </div>
+                <div class="settings-card-label">Integration</div>
+              </div>
+
+              <div class="settings-card" id="settings-ip">
+                <div class="settings-card-icon green">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="3"/>
+                    <circle cx="12" cy="12" r="8"/>
+                    <line x1="12" y1="2" x2="12" y2="4"/>
+                    <line x1="12" y1="20" x2="12" y2="22"/>
+                    <line x1="2" y1="12" x2="4" y2="12"/>
+                    <line x1="20" y1="12" x2="22" y2="12"/>
+                  </svg>
+                </div>
+                <div class="settings-card-label">IP Address</div>
+              </div>
+
+              <div class="settings-card" id="settings-packaging">
+                <div class="settings-card-icon green">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/>
+                    <polyline points="3.27,6.96 12,12.01 20.73,6.96"/>
+                    <line x1="12" y1="22.08" x2="12" y2="12"/>
+                  </svg>
+                </div>
+                <div class="settings-card-label">Packaging</div>
+              </div>
+
+              <div class="settings-card" id="settings-vendors">
+                <div class="settings-card-icon green">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="2" y="7" width="20" height="14" rx="2"/>
+                    <path d="M16 7V5a4 4 0 00-8 0v2"/>
+                    <line x1="12" y1="12" x2="12" y2="16"/>
+                    <circle cx="12" cy="14" r="1" fill="currentColor"/>
+                  </svg>
+                </div>
+                <div class="settings-card-label">Vendors</div>
+              </div>
+
+              <div class="settings-card" id="settings-audit">
+                <div class="settings-card-icon green">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="3" width="18" height="18" rx="2"/>
+                    <line x1="8" y1="8" x2="16" y2="8"/>
+                    <line x1="8" y1="12" x2="16" y2="12"/>
+                    <line x1="8" y1="16" x2="13" y2="16"/>
+                  </svg>
+                </div>
+                <div class="settings-card-label">Audit Logs</div>
+              </div>
+
+              <div class="settings-card" id="settings-crm">
+                <div class="settings-card-icon green">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="2" y="2" width="20" height="20" rx="2"/>
+                    <path d="M9 2v20"/>
+                    <path d="M13 8h4"/>
+                    <path d="M13 12h4"/>
+                    <path d="M13 16h2"/>
+                    <circle cx="5.5" cy="8" r="1" fill="currentColor"/>
+                    <circle cx="5.5" cy="12" r="1" fill="currentColor"/>
+                    <circle cx="5.5" cy="16" r="1" fill="currentColor"/>
+                  </svg>
+                </div>
+                <div class="settings-card-label">CRM Plug-In</div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Custom Section -->
+          <div class="settings-section">
+            <h2 class="settings-section-title">Custom</h2>
+            <div class="settings-grid">
+
+              <div class="settings-card" id="settings-intent">
+                <div class="settings-card-icon maroon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"/>
+                    <circle cx="12" cy="12" r="6"/>
+                    <circle cx="12" cy="12" r="2"/>
+                  </svg>
+                </div>
+                <div class="settings-card-label">Manage<br>Intent</div>
+              </div>
+
+              <div class="settings-card" id="settings-content">
+                <div class="settings-card-icon maroon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="3" width="18" height="18" rx="2"/>
+                    <line x1="8" y1="8" x2="16" y2="8"/>
+                    <line x1="8" y1="12" x2="16" y2="12"/>
+                    <line x1="8" y1="16" x2="12" y2="16"/>
+                  </svg>
+                </div>
+                <div class="settings-card-label">Manage<br>Content</div>
+              </div>
+
+              <div class="settings-card" id="settings-group-insights">
+                <div class="settings-card-icon maroon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="3" width="7" height="7" rx="1"/>
+                    <rect x="14" y="3" width="7" height="7" rx="1"/>
+                    <rect x="3" y="14" width="7" height="7" rx="1"/>
+                    <rect x="14" y="14" width="7" height="7" rx="1"/>
+                  </svg>
+                </div>
+                <div class="settings-card-label">Manage Group<br>Insights</div>
+              </div>
+
+              <div class="settings-card" id="settings-segment">
+                <div class="settings-card-icon maroon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"/>
+                    <path d="M12 2v10l7 4"/>
+                  </svg>
+                </div>
+                <div class="settings-card-label">Manage<br>Segment</div>
+              </div>
+
+              <div class="settings-card" id="settings-training">
+                <div class="settings-card-icon maroon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"/>
+                    <line x1="12" y1="8" x2="12" y2="12"/>
+                    <line x1="12" y1="16" x2="12.01" y2="16"/>
+                  </svg>
+                </div>
+                <div class="settings-card-label">Training<br>Module</div>
+              </div>
+
+              <div class="settings-card" id="settings-exit-playmode">
+                <div class="settings-card-icon maroon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="4" y="4" width="16" height="16" rx="2"/>
+                    <polygon points="10,8 16,12 10,16" fill="currentColor"/>
+                  </svg>
+                </div>
+                <div class="settings-card-label">Manage Exit-<br>Playmode</div>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+
+        <!-- ────────────────────────────────────────
+             PAGE 4: MANAGE CHANNELS
+             ──────────────────────────────────────── -->
+        <div class="page channels-page" id="page-channels">
+
+          <!-- Channels Header -->
+          <div class="channels-header">
+            <h1 class="channels-title">MANAGE CHANNELS</h1>
+            <div class="channels-breadcrumb">
+              <a href="#" class="breadcrumb-link" id="channels-back-btn">SETTINGS</a>
+              <span class="breadcrumb-sep">/</span>
+              <span class="breadcrumb-current">SELECT SOURCE</span>
+            </div>
+          </div>
+
+          <div class="channels-body">
+            <!-- Left Panel: Source Selection -->
+            <div class="channels-sources" id="channels-sources">
+              <div class="source-grid">
+
+                <!-- Social -->
+                <div class="source-card active" data-source="social" id="source-social">
+                  <div class="source-card-icon">
+                    <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M6 40l8-8"/>
+                      <path d="M14 32l20-20"/>
+                      <path d="M34 12l6-6"/>
+                      <path d="M28 6h12v12"/>
+                    </svg>
+                  </div>
+                  <div class="source-card-label">Social</div>
+                </div>
+
+                <!-- App Reviews -->
+                <div class="source-card" data-source="app-reviews" id="source-app-reviews">
+                  <div class="source-card-icon">
+                    <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="12" y="4" width="24" height="40" rx="3"/>
+                      <line x1="20" y1="8" x2="28" y2="8"/>
+                      <circle cx="24" cy="38" r="2"/>
+                    </svg>
+                  </div>
+                  <div class="source-card-label">App<br>Reviews</div>
+                </div>
+
+                <!-- e-Commerce Reviews -->
+                <div class="source-card" data-source="ecommerce" id="source-ecommerce">
+                  <div class="source-card-icon">
+                    <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M6 6h6l6 24h18l4-16H16"/>
+                      <circle cx="20" cy="38" r="3"/>
+                      <circle cx="34" cy="38" r="3"/>
+                      <text x="20" y="18" font-size="8" fill="currentColor" stroke="none" font-weight="bold">e</text>
+                    </svg>
+                  </div>
+                  <div class="source-card-label">e-Commerce<br>Reviews</div>
+                </div>
+
+                <!-- Location Reviews -->
+                <div class="source-card" data-source="location" id="source-location">
+                  <div class="source-card-icon">
+                    <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="8" y="8" width="32" height="32" rx="2"/>
+                      <rect x="14" y="14" width="8" height="10" rx="1"/>
+                      <rect x="26" y="14" width="8" height="10" rx="1"/>
+                      <rect x="14" y="28" width="8" height="10" rx="1"/>
+                      <rect x="26" y="28" width="8" height="10" rx="1"/>
+                      <line x1="24" y1="8" x2="24" y2="40"/>
+                      <line x1="8" y1="26" x2="40" y2="26"/>
+                    </svg>
+                  </div>
+                  <div class="source-card-label">Location<br>Reviews</div>
+                </div>
+
+                <!-- Messaging Apps -->
+                <div class="source-card" data-source="messaging" id="source-messaging">
+                  <div class="source-card-icon">
+                    <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="8" y="6" width="32" height="24" rx="3"/>
+                      <line x1="16" y1="14" x2="32" y2="14"/>
+                      <line x1="16" y1="20" x2="28" y2="20"/>
+                      <line x1="16" y1="26" x2="24" y2="26"/>
+                      <path d="M16 30v8l8-8"/>
+                    </svg>
+                  </div>
+                  <div class="source-card-label">Messaging<br>Apps</div>
+                </div>
+
+                <!-- Others -->
+                <div class="source-card" data-source="others" id="source-others">
+                  <div class="source-card-icon">
+                    <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <circle cx="14" cy="24" r="3"/>
+                      <circle cx="24" cy="24" r="3"/>
+                      <circle cx="34" cy="24" r="3"/>
+                    </svg>
+                  </div>
+                  <div class="source-card-label">Others</div>
+                </div>
+
+              </div>
+            </div>
+
+            <!-- Right Panel: Channel Selection -->
+            <div class="channels-panel" id="channels-panel">
+              <h2 class="channels-panel-title">SELECT CHANNELS</h2>
+              <div class="channels-grid" id="channels-grid">
+
+                <!-- X (Twitter) -->
+                <div class="channel-card" id="channel-x">
+                  <div class="channel-card-logo">
+                    <svg viewBox="0 0 24 24" width="40" height="40">
+                      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" fill="#000"/>
+                    </svg>
+                  </div>
+                  <div class="channel-card-name">X</div>
+                </div>
+
+                <!-- Facebook Pages -->
+                <div class="channel-card" id="channel-facebook">
+                  <div class="channel-card-logo">
+                    <svg viewBox="0 0 24 24" width="40" height="40">
+                      <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" fill="#1877F2"/>
+                    </svg>
+                  </div>
+                  <div class="channel-card-name">Facebook Pages</div>
+                </div>
+
+                <!-- YouTube -->
+                <div class="channel-card" id="channel-youtube">
+                  <div class="channel-card-logo">
+                    <svg viewBox="0 0 24 24" width="40" height="40">
+                      <path d="M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814z" fill="#FF0000"/>
+                      <polygon points="9.545,15.568 15.818,12 9.545,8.432" fill="#fff"/>
+                    </svg>
+                  </div>
+                  <div class="channel-card-name">YouTube</div>
+                </div>
+
+                <!-- LinkedIn Company Page -->
+                <div class="channel-card" id="channel-linkedin">
+                  <div class="channel-card-logo">
+                    <svg viewBox="0 0 24 24" width="40" height="40">
+                      <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" fill="#0A66C2"/>
+                    </svg>
+                  </div>
+                  <div class="channel-card-name">LinkedIn Company Page</div>
+                </div>
+
+                <!-- Instagram Business -->
+                <div class="channel-card" id="channel-instagram">
+                  <div class="channel-card-logo">
+                    <svg viewBox="0 0 48 48" width="40" height="40">
+                      <defs>
+                        <radialGradient id="ig-grad" cx="30%" cy="107%" r="150%">
+                          <stop offset="0%" stop-color="#fdf497"/>
+                          <stop offset="5%" stop-color="#fdf497"/>
+                          <stop offset="45%" stop-color="#fd5949"/>
+                          <stop offset="60%" stop-color="#d6249f"/>
+                          <stop offset="90%" stop-color="#285AEB"/>
+                        </radialGradient>
+                      </defs>
+                      <rect x="2" y="2" width="44" height="44" rx="12" fill="url(#ig-grad)"/>
+                      <circle cx="24" cy="24" r="9" fill="none" stroke="#fff" stroke-width="3"/>
+                      <circle cx="35" cy="13" r="2.5" fill="#fff"/>
+                    </svg>
+                  </div>
+                  <div class="channel-card-name">Instagram Business</div>
+                </div>
+
+                <!-- Tumblr -->
+                <div class="channel-card" id="channel-tumblr">
+                  <div class="channel-card-logo">
+                    <svg viewBox="0 0 24 24" width="40" height="40">
+                      <path d="M14.563 24c-5.093 0-7.031-3.756-7.031-6.411V9.747H5.116V6.648c3.63-1.313 4.512-4.596 4.71-6.469C9.84.053 9.94 0 10.066 0h3.86v6.114h5.283v3.633H13.92v7.46c.011 1.01.245 2.412 2.316 2.412.78-.003 1.819-.252 2.366-.493l1.398 3.406c-.546.713-3.014 1.468-4.216 1.468h-1.221z" fill="#36465D"/>
+                    </svg>
+                  </div>
+                  <div class="channel-card-name">Tumblr</div>
+                </div>
+
+              </div>
+            </div>
+
+            <!-- Right Panel (alt): Facebook Pages detail (hidden until FB selected) -->
+            <div class="fb-pages-panel" id="fb-pages-panel" style="display:none;">
+              <div class="fb-pages-header">
+                <div class="fb-pages-heading">
+                  <button class="fb-back-btn" id="fb-back-btn" aria-label="Back to channels">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12,19 5,12 12,5"/></svg>
+                  </button>
+                  <svg class="fb-pages-icon" viewBox="0 0 24 24" width="22" height="22"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" fill="#1877F2"/></svg>
+                  <span class="fb-pages-title">FACEBOOK PAGES</span>
+                </div>
+                <button class="fb-add-channel-btn" id="fb-add-channel-btn">+ ADD CHANNEL</button>
+              </div>
+
+              <div class="fb-tabs" id="fb-tabs">
+                <button class="fb-tab active" data-fbtab="admin">Admin Channels</button>
+                <button class="fb-tab" data-fbtab="non-admin">Non-Admin Channels</button>
+              </div>
+
+              <!-- Status / empty / error messages -->
+              <div class="fb-status" id="fb-status">
+                Click <strong>+ ADD CHANNEL</strong> to connect your Facebook account and load your pages.
+              </div>
+
+              <!-- Connected pages render here -->
+              <div class="fb-pages-grid" id="fb-pages-admin"></div>
+              <div class="fb-pages-grid" id="fb-pages-non-admin" style="display:none;"></div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Help Button (floating) -->
+  <button id="help-fab" class="help-fab" aria-label="Help">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="10"/>
+      <path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/>
+      <line x1="12" y1="17" x2="12.01" y2="17"/>
+    </svg>
+  </button>
+
+  <script src="config.js"></script>
+  <script src="facebook.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
