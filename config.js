@@ -24,4 +24,19 @@ window.CARAPAL_CONFIG = {
   // Permissions requested at login. pages_read_engagement lets us read
   // a page's posts & comments; pages_show_list lists the pages you manage.
   FB_SCOPES: 'pages_show_list,pages_read_engagement',
+
+  // ── INSTAGRAM CONFIG ──────────────────────────────
+  // Instagram uses the exact same FB_APP_ID, just different scopes.
+  IG_SCOPES: 'instagram_basic,instagram_manage_comments,instagram_business_manage_messages,pages_show_list,pages_read_engagement',
+
+  // ── GOOGLE PLAY STORE CONFIG ──────────────────────
+  // 1. Go to Google Cloud Console (https://console.cloud.google.com)
+  // 2. Create Project -> APIs & Services -> Credentials
+  // 3. Create OAuth Client ID (Web Application)
+  // 4. Add your Vercel URL to "Authorized JavaScript origins" and "Authorized redirect URIs"
+  // 👇 PASTE YOUR GOOGLE CLIENT ID HERE
+  GOOGLE_CLIENT_ID: 'YOUR_GOOGLE_CLIENT_ID_HERE.apps.googleusercontent.com',
+
+  // Scopes needed to read and reply to Play Store app reviews
+  GOOGLE_SCOPES: 'https://www.googleapis.com/auth/androidpublisher',
 };

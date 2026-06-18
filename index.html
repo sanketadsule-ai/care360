@@ -1075,6 +1075,16 @@
                   <div class="channel-card-name">Tumblr</div>
                 </div>
 
+                <!-- Google Play Store -->
+                <div class="channel-card" id="channel-playstore">
+                  <div class="channel-card-logo">
+                    <svg viewBox="0 0 24 24" width="40" height="40">
+                      <path d="M3.483 1.189A1.854 1.854 0 002.9 2.664v18.672a1.852 1.852 0 00.584 1.474l.02.02 10.518-10.519v-.622L3.504 1.169l-.021.02zm14.156 14.156l-3.054-3.054v-.582l3.054-3.054 4.58 2.598c1.31.745 1.31 1.956 0 2.7l-4.58 2.598v-.206zm-4.321-4.321L2.8 21.542a1.854 1.854 0 002.502.138l9.406-5.334-3.32-3.322zm0-2.048l3.32-3.322L4.35 1.512a1.854 1.854 0 00-2.502.138l10.518 10.519z" fill="#0F9D58"/>
+                    </svg>
+                  </div>
+                  <div class="channel-card-name">Google Play Store</div>
+                </div>
+
               </div>
             </div>
 
@@ -1088,7 +1098,8 @@
                   <svg class="fb-pages-icon" viewBox="0 0 24 24" width="22" height="22"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" fill="#1877F2"/></svg>
                   <span class="fb-pages-title">FACEBOOK PAGES</span>
                 </div>
-                <button class="fb-add-channel-btn" id="fb-add-channel-btn">+ ADD CHANNEL</button>
+                <button id="fb-add-channel-btn" class="btn primary">+ ADD FACEBOOK</button>
+                <button id="ig-add-channel-btn" class="btn primary" style="background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%); border: none;">+ ADD INSTAGRAM</button>
               </div>
 
               <div class="fb-tabs" id="fb-tabs">
@@ -1105,6 +1116,27 @@
               <div class="fb-pages-grid" id="fb-pages-admin"></div>
               <div class="fb-pages-grid" id="fb-pages-non-admin" style="display:none;"></div>
             </div>
+
+            <!-- Right Panel (alt): Play Store detail (hidden until selected) -->
+            <div class="fb-pages-panel" id="playstore-panel" style="display:none;">
+              <div class="fb-pages-header">
+                <div class="fb-pages-heading">
+                  <button class="fb-back-btn" id="playstore-back-btn" aria-label="Back to channels">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12,19 5,12 12,5"/></svg>
+                  </button>
+                  <svg class="fb-pages-icon" viewBox="0 0 24 24" width="22" height="22"><path d="M3.483 1.189A1.854 1.854 0 002.9 2.664v18.672a1.852 1.852 0 00.584 1.474l.02.02 10.518-10.519v-.622L3.504 1.169l-.021.02zm14.156 14.156l-3.054-3.054v-.582l3.054-3.054 4.58 2.598c1.31.745 1.31 1.956 0 2.7l-4.58 2.598v-.206zm-4.321-4.321L2.8 21.542a1.854 1.854 0 002.502.138l9.406-5.334-3.32-3.322zm0-2.048l3.32-3.322L4.35 1.512a1.854 1.854 0 00-2.502.138l10.518 10.519z" fill="#0F9D58"/></svg>
+                  <span class="fb-pages-title">GOOGLE PLAY STORE</span>
+                </div>
+                <button id="playstore-add-btn" class="btn primary" style="background:#0F9D58; border:none;">+ ADD PLAY STORE</button>
+              </div>
+
+              <!-- Status / empty / error messages -->
+              <div class="fb-status" id="playstore-status">
+                Click <strong>+ ADD PLAY STORE</strong> to connect your Google Cloud account.
+              </div>
+
+            </div>
+
           </div>
 
         </div>
@@ -1124,6 +1156,7 @@
 
   <script src="config.js"></script>
   <script src="facebook.js"></script>
+  <script src="google.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

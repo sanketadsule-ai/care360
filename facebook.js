@@ -37,15 +37,22 @@
   }
 
   // ── OAuth Redirect Login ────────────────────────────
-  function login() {
+  function login(platform = 'facebook') {
     if (!isConfigured()) {
       alert('No Facebook App ID set. Open config.js and paste your App ID.');
       return;
     }
 
     const redirectUri = window.location.origin + window.location.pathname;
-    const scope = cfg.FB_SCOPES || 'public_profile,pages_show_list,pages_read_engagement';
-    const state = 'carapal360_' + Date.now(); // CSRF protection
+    
+    // Choose scopes based on platform
+    let scope = cfg.FB_SCOPES || 'public_profile,pages_show_list,pages_read_engagement';
+    if (platform === 'instagram') {
+      scope = cfg.IG_SCOPES || 'instagram_basic,pages_show_list';
+    }
+
+    // Embed the platform into the state so the callback knows what we logged into
+    const state = 'carapal360_' + platform + '_' + Date.now(); // CSRF protection
     sessionStorage.setItem('fb_oauth_state', state);
 
     const authUrl =
@@ -78,12 +85,16 @@
     }
     sessionStorage.removeItem('fb_oauth_state');
 
+    // Extract platform from state (e.g., carapal360_instagram_12345)
+    let platform = 'facebook';
+    if (state && state.includes('_instagram_')) platform = 'instagram';
+
     // Clean the URL (remove the token from the address bar)
     if (window.history && window.history.replaceState) {
       window.history.replaceState(null, '', window.location.pathname + window.location.search);
     }
 
-    return accessToken;
+    return { token: accessToken, platform };
   }
 
   // ── Generic Graph API call ──────────────────────────

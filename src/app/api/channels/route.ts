@@ -43,11 +43,12 @@ export async function POST(request: Request) {
           access_token: encryptedToken,
           is_admin: page.isAdmin,
           status: 'active',
+          platform: page.platform || 'facebook',
         },
         create: {
           id: page.id,
           user_id: user.id,
-          platform: 'facebook',
+          platform: page.platform || 'facebook',
           platform_id: page.id,
           name: page.name,
           handle: page.name.replace(/\s+/g, ''),

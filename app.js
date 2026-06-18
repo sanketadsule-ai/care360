@@ -185,10 +185,16 @@
 
   // Channel card selection — Facebook opens its detail panel
   const fbPanel = document.getElementById('fb-pages-panel');
+  const playstorePanel = document.getElementById('playstore-panel');
+  
   document.querySelectorAll('.channel-card').forEach((card) => {
     makeActivatable(card, () => {
       if (card.id === 'channel-facebook') {
         showFacebookPanel();
+        return;
+      }
+      if (card.id === 'channel-playstore') {
+        showPlaystorePanel();
         return;
       }
       card.classList.toggle('selected');
@@ -197,22 +203,37 @@
 
   function showFacebookPanel() {
     if (channelsPanel) channelsPanel.style.display = 'none';
+    if (playstorePanel) playstorePanel.style.display = 'none';
     if (fbPanel) fbPanel.style.display = '';
   }
   function hideFacebookPanel() {
     if (fbPanel) fbPanel.style.display = 'none';
     if (channelsPanel) channelsPanel.style.display = '';
   }
+  
+  function showPlaystorePanel() {
+    if (channelsPanel) channelsPanel.style.display = 'none';
+    if (fbPanel) fbPanel.style.display = 'none';
+    if (playstorePanel) playstorePanel.style.display = '';
+  }
+  function hidePlaystorePanel() {
+    if (playstorePanel) playstorePanel.style.display = 'none';
+    if (channelsPanel) channelsPanel.style.display = '';
+  }
 
   const fbBackBtn = document.getElementById('fb-back-btn');
   if (fbBackBtn) fbBackBtn.addEventListener('click', hideFacebookPanel);
+  
+  const playstoreBackBtn = document.getElementById('playstore-back-btn');
+  if (playstoreBackBtn) playstoreBackBtn.addEventListener('click', hidePlaystorePanel);
 
   // ══════════════════════════════════════════════════════
-  // FACEBOOK INTEGRATION (Redirect-based OAuth)
+  // FACEBOOK / INSTAGRAM INTEGRATION (Redirect-based OAuth)
   // ══════════════════════════════════════════════════════
 
   const fbStatus = document.getElementById('fb-status');
   const fbAddBtn = document.getElementById('fb-add-channel-btn');
+  const igAddBtn = document.getElementById('ig-add-channel-btn');
   const fbAdminGrid = document.getElementById('fb-pages-admin');
   const fbNonAdminGrid = document.getElementById('fb-pages-non-admin');
   const fbTabs = document.querySelectorAll('.fb-tab');
@@ -245,25 +266,28 @@
 
   // ── Handle Facebook OAuth callback on page load ─────
   if (FB) {
-    const token = FB.handleCallback();
-    if (token) {
-      fbAccessToken = token;
-      sessionStorage.setItem('fb_access_token', token);
+    const callbackData = FB.handleCallback();
+    if (callbackData && callbackData.token) {
+      fbAccessToken = callbackData.token;
+      sessionStorage.setItem('fb_access_token', callbackData.token);
       // Auto-navigate to the Facebook pages panel and load pages
       navigateTo('channels');
       activateSidebarFor('settings');
       setTimeout(async () => {
         showFacebookPanel();
-        setStatus('Loading your pages…', 'loading');
+        setStatus('Loading your ' + (callbackData.platform === 'instagram' ? 'Instagram' : 'Facebook') + ' pages…', 'loading');
         try {
           const fbPages = await FB.getPages(fbAccessToken);
           renderPages(fbPages);
           
+          // Inject platform before saving
+          const pagesWithPlatform = fbPages.map(p => ({ ...p, platform: callbackData.platform }));
+
           // Save channels to the database backend
           fetch('/api/channels', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ pages: fbPages })
+            body: JSON.stringify({ pages: pagesWithPlatform })
           }).catch((err) => console.error('Failed to save to DB:', err));
 
         } catch (err) {
@@ -299,7 +323,75 @@
         return;
       }
       // Otherwise, redirect to Facebook OAuth
-      FB.login();
+      FB.login('facebook');
+    });
+  }
+
+  // Connect button → redirect to Instagram (uses FB Graph API)
+  if (igAddBtn) {
+    igAddBtn.addEventListener('click', () => {
+      if (!FB) { setStatus('Facebook integration script failed to load.', 'error'); return; }
+      if (!FB.isConfigured()) {
+        setStatus('No Facebook App ID set. Open config.js and paste your App ID.', 'error');
+        return;
+      }
+      FB.login('instagram');
+    });
+  }
+
+  // ══════════════════════════════════════════════════════
+  // GOOGLE PLAY STORE INTEGRATION (OAuth 2.0)
+  // ══════════════════════════════════════════════════════
+  const playstoreAddBtn = document.getElementById('playstore-add-btn');
+  const playstoreStatus = document.getElementById('playstore-status');
+  const GOOGLE = window.CarapalGoogle;
+
+  function setPlaystoreStatus(message, kind) {
+    if (!playstoreStatus) return;
+    playstoreStatus.style.display = '';
+    playstoreStatus.className = 'fb-status' + (kind ? ' ' + kind : '');
+    playstoreStatus.textContent = message;
+  }
+
+  // Handle Google OAuth callback on page load
+  if (GOOGLE) {
+    const googleToken = GOOGLE.handleCallback();
+    if (googleToken) {
+      navigateTo('channels');
+      activateSidebarFor('settings');
+      setTimeout(() => {
+        showPlaystorePanel();
+        setPlaystoreStatus('Google Play Store Connected! Access Token received.', 'success');
+        
+        // Save to DB
+        fetch('/api/channels', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            pages: [{
+              id: 'google_play_' + Date.now(), // Real implementation would fetch apps list
+              name: 'Google Play Developer Account',
+              accessToken: googleToken,
+              isAdmin: true,
+              pictureUrl: null,
+              platform: 'google_play'
+            }]
+          })
+        }).catch((err) => console.error('Failed to save to DB:', err));
+        
+      }, 300);
+    }
+  }
+
+  // Connect button → redirect to Google
+  if (playstoreAddBtn) {
+    playstoreAddBtn.addEventListener('click', () => {
+      if (!GOOGLE) { setPlaystoreStatus('Google integration script failed to load.', 'error'); return; }
+      if (!GOOGLE.isConfigured()) {
+        setPlaystoreStatus('No Google Client ID set. Open config.js and paste your Client ID.', 'error');
+        return;
+      }
+      GOOGLE.login();
     });
   }
 
