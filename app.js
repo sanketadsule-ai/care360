@@ -185,12 +185,17 @@
 
   // Channel card selection — Facebook opens its detail panel
   const fbPanel = document.getElementById('fb-pages-panel');
+  const igPanel = document.getElementById('ig-pages-panel');
   const playstorePanel = document.getElementById('playstore-panel');
   
   document.querySelectorAll('.channel-card').forEach((card) => {
     makeActivatable(card, () => {
       if (card.id === 'channel-facebook') {
         showFacebookPanel();
+        return;
+      }
+      if (card.id === 'channel-instagram') {
+        showIgPanel();
         return;
       }
       if (card.id === 'channel-playstore') {
@@ -204,6 +209,7 @@
   function showFacebookPanel() {
     if (channelsPanel) channelsPanel.style.display = 'none';
     if (playstorePanel) playstorePanel.style.display = 'none';
+    if (igPanel) igPanel.style.display = 'none';
     if (fbPanel) fbPanel.style.display = '';
   }
   function hideFacebookPanel() {
@@ -211,9 +217,21 @@
     if (channelsPanel) channelsPanel.style.display = '';
   }
   
+  function showIgPanel() {
+    if (channelsPanel) channelsPanel.style.display = 'none';
+    if (playstorePanel) playstorePanel.style.display = 'none';
+    if (fbPanel) fbPanel.style.display = 'none';
+    if (igPanel) igPanel.style.display = '';
+  }
+  function hideIgPanel() {
+    if (igPanel) igPanel.style.display = 'none';
+    if (channelsPanel) channelsPanel.style.display = '';
+  }
+  
   function showPlaystorePanel() {
     if (channelsPanel) channelsPanel.style.display = 'none';
     if (fbPanel) fbPanel.style.display = 'none';
+    if (igPanel) igPanel.style.display = 'none';
     if (playstorePanel) playstorePanel.style.display = '';
   }
   function hidePlaystorePanel() {
@@ -223,6 +241,9 @@
 
   const fbBackBtn = document.getElementById('fb-back-btn');
   if (fbBackBtn) fbBackBtn.addEventListener('click', hideFacebookPanel);
+  
+  const igBackBtn = document.getElementById('ig-back-btn');
+  if (igBackBtn) igBackBtn.addEventListener('click', hideIgPanel);
   
   const playstoreBackBtn = document.getElementById('playstore-back-btn');
   if (playstoreBackBtn) playstoreBackBtn.addEventListener('click', hidePlaystorePanel);
@@ -270,15 +291,19 @@
     if (callbackData && callbackData.token) {
       fbAccessToken = callbackData.token;
       sessionStorage.setItem('fb_access_token', callbackData.token);
-      // Auto-navigate to the Facebook pages panel and load pages
+      // Auto-navigate to the correct panel and load pages
       navigateTo('channels');
       activateSidebarFor('settings');
       setTimeout(async () => {
-        showFacebookPanel();
+        if (callbackData.platform === 'instagram') {
+          showIgPanel();
+        } else {
+          showFacebookPanel();
+        }
         setStatus('Loading your ' + (callbackData.platform === 'instagram' ? 'Instagram' : 'Facebook') + ' pages…', 'loading');
         try {
           const fbPages = await FB.getPages(fbAccessToken);
-          renderPages(fbPages);
+          renderPages(fbPages, callbackData.platform);
           
           // Inject platform before saving
           const pagesWithPlatform = fbPages.map(p => ({ ...p, platform: callbackData.platform }));
@@ -291,7 +316,7 @@
           }).catch((err) => console.error('Failed to save to DB:', err));
 
         } catch (err) {
-          setStatus(err.message || 'Could not load pages.', 'error');
+          setStatus(err.message || 'Failed to load pages from Facebook Graph API.', 'error');
         }
       }, 300);
     }
@@ -395,28 +420,44 @@
     });
   }
 
-  function renderPages(allPages) {
+  function renderPages(allPages, platform = 'facebook') {
     if (!allPages || allPages.length === 0) {
-      setStatus('No Facebook pages found on this account. Make sure you manage at least one page and granted the requested permissions.', null);
+      setStatus('No accounts found. Make sure you granted the requested permissions.', null);
       return;
     }
     clearStatus();
-    if (fbAdminGrid) fbAdminGrid.innerHTML = '';
-    if (fbNonAdminGrid) fbNonAdminGrid.innerHTML = '';
+    
+    const igPanelContainer = document.getElementById('ig-pages-panel');
+    let targetAdminGrid = fbAdminGrid;
+    let targetNonAdminGrid = fbNonAdminGrid;
+    
+    if (platform === 'instagram' && igPanelContainer) {
+      let igGrid = igPanelContainer.querySelector('.fb-pages-grid');
+      if (!igGrid) {
+        igGrid = document.createElement('div');
+        igGrid.className = 'fb-pages-grid';
+        igPanelContainer.appendChild(igGrid);
+      }
+      targetAdminGrid = igGrid;
+      targetNonAdminGrid = null;
+    }
+    
+    if (targetAdminGrid) targetAdminGrid.innerHTML = '';
+    if (targetNonAdminGrid) targetNonAdminGrid.innerHTML = '';
 
     let adminCount = 0;
     let nonAdminCount = 0;
     allPages.forEach((page) => {
       const card = buildPageCard(page);
-      if (page.isAdmin) { fbAdminGrid.appendChild(card); adminCount++; }
-      else { fbNonAdminGrid.appendChild(card); nonAdminCount++; }
+      if (page.isAdmin && targetAdminGrid) { targetAdminGrid.appendChild(card); adminCount++; }
+      else if (targetNonAdminGrid) { targetNonAdminGrid.appendChild(card); nonAdminCount++; }
     });
 
-    if (adminCount === 0 && fbAdminGrid) {
-      fbAdminGrid.innerHTML = '<div class="fb-status">No admin pages.</div>';
+    if (adminCount === 0 && targetAdminGrid) {
+      targetAdminGrid.innerHTML = '<div class="fb-status">No admin pages.</div>';
     }
-    if (nonAdminCount === 0 && fbNonAdminGrid) {
-      fbNonAdminGrid.innerHTML = '<div class="fb-status">No non-admin pages.</div>';
+    if (nonAdminCount === 0 && targetNonAdminGrid) {
+      targetNonAdminGrid.innerHTML = '<div class="fb-status">No non-admin pages.</div>';
     }
   }
 

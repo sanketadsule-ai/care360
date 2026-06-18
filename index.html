@@ -1099,7 +1099,6 @@
                   <span class="fb-pages-title">FACEBOOK PAGES</span>
                 </div>
                 <button id="fb-add-channel-btn" class="btn primary">+ ADD FACEBOOK</button>
-                <button id="ig-add-channel-btn" class="btn primary" style="background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%); border: none;">+ ADD INSTAGRAM</button>
               </div>
 
               <div class="fb-tabs" id="fb-tabs">
@@ -1115,6 +1114,29 @@
               <!-- Connected pages render here -->
               <div class="fb-pages-grid" id="fb-pages-admin"></div>
               <div class="fb-pages-grid" id="fb-pages-non-admin" style="display:none;"></div>
+            </div>
+
+            <!-- Right Panel (alt): Instagram detail (hidden until selected) -->
+            <div class="fb-pages-panel" id="ig-pages-panel" style="display:none;">
+              <div class="fb-pages-header">
+                <div class="fb-pages-heading">
+                  <button class="fb-back-btn" id="ig-back-btn" aria-label="Back to channels">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12,19 5,12 12,5"/></svg>
+                  </button>
+                  <svg class="fb-pages-icon" viewBox="0 0 48 48" width="22" height="22">
+                    <rect x="2" y="2" width="44" height="44" rx="12" fill="url(#ig-grad)"/>
+                    <circle cx="24" cy="24" r="9" fill="none" stroke="#fff" stroke-width="3"/>
+                    <circle cx="35" cy="13" r="2.5" fill="#fff"/>
+                  </svg>
+                  <span class="fb-pages-title">INSTAGRAM ACCOUNTS</span>
+                </div>
+                <button id="ig-add-channel-btn" class="btn primary" style="background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%); border: none;">+ ADD INSTAGRAM</button>
+              </div>
+
+              <!-- Status / empty / error messages -->
+              <div class="fb-status" id="ig-status">
+                Click <strong>+ ADD INSTAGRAM</strong> to connect your Instagram Professional accounts.
+              </div>
             </div>
 
             <!-- Right Panel (alt): Play Store detail (hidden until selected) -->
