@@ -22,8 +22,7 @@
       return;
     }
 
-    // Google Cloud Console strictly requires a trailing slash for base domains
-    const redirectUri = window.location.origin + '/';
+    const redirectUri = cfg.GOOGLE_REDIRECT_URI || window.location.origin + '/';
     const scope = cfg.GOOGLE_SCOPES || 'https://www.googleapis.com/auth/androidpublisher';
     const state = 'carapal360_google_play_' + Date.now();
     sessionStorage.setItem('google_oauth_state', state);

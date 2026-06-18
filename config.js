@@ -39,4 +39,7 @@ window.CARAPAL_CONFIG = {
 
   // Scopes needed to read and reply to Play Store app reviews
   GOOGLE_SCOPES: 'https://www.googleapis.com/auth/androidpublisher',
+  
+  // Hardcoded Redirect URI to avoid mismatch errors
+  GOOGLE_REDIRECT_URI: 'https://sanketadsule-ai-carepal360-ouz4.vercel.app/'
 };
