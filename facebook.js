@@ -77,6 +77,11 @@
     const accessToken = params.get('access_token');
     const state = params.get('state');
 
+    // Only process this callback if it's explicitly a Facebook or Instagram callback
+    if (!state || (!state.startsWith('carapal360_facebook_') && !state.startsWith('carapal360_instagram_'))) {
+      return null;
+    }
+
     // Verify CSRF state
     const savedState = sessionStorage.getItem('fb_oauth_state');
     if (state && savedState && state !== savedState) {
