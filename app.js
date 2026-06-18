@@ -465,7 +465,22 @@
     const original = view ? view.textContent : '';
     try {
       if (view) view.textContent = 'Loading…';
-      const cases = await FB.getPageCases(page);
+      
+      // Fetch normalized messages from our own database instead of Facebook directly
+      const res = await fetch('/api/messages?channel_id=' + page.id);
+      const data = await res.json();
+      
+      if (!res.ok) throw new Error(data.error || 'Failed to fetch messages');
+
+      const cases = (data.data || []).map(msg => ({
+        id: msg.id,
+        source: msg.channel ? msg.channel.name : page.name,
+        author: msg.author_name,
+        text: msg.content,
+        createdTime: msg.platform_created_at,
+        type: msg.type
+      }));
+
       renderCases(cases, page.name);
       navigateTo('inbox');
       activateSidebarFor('inbox');
