@@ -385,21 +385,30 @@
       navigateTo('channels');
       activateSidebarFor('settings');
       setTimeout(() => {
-        showPlaystorePanel();
-        setPlaystoreStatus('Google Play Store Connected! Access Token received.', 'success');
+        // Render the connected account into the Play Store panel
+        const playstoreGrid = document.createElement('div');
+        playstoreGrid.className = 'fb-pages-grid';
         
+        const mockPage = {
+          id: 'google_play_' + Date.now(),
+          name: 'Google Play Developer Account',
+          isAdmin: true,
+          platform: 'google_play',
+          pictureUrl: 'https://upload.wikimedia.org/wikipedia/commons/d/d0/Google_Play_Arrow_logo.svg'
+        };
+
+        const card = buildPageCard(mockPage);
+        playstoreGrid.appendChild(card);
+        playstorePanel.appendChild(playstoreGrid);
+
         // Save to DB
         fetch('/api/channels', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             pages: [{
-              id: 'google_play_' + Date.now(), // Real implementation would fetch apps list
-              name: 'Google Play Developer Account',
-              accessToken: googleToken,
-              isAdmin: true,
-              pictureUrl: null,
-              platform: 'google_play'
+              ...mockPage,
+              accessToken: googleToken
             }]
           })
         }).catch((err) => console.error('Failed to save to DB:', err));
@@ -507,20 +516,44 @@
     try {
       if (view) view.textContent = 'Loading…';
       
-      // Fetch normalized messages from our own database instead of Facebook directly
-      const res = await fetch('/api/messages?channel_id=' + page.id);
-      const data = await res.json();
-      
-      if (!res.ok) throw new Error(data.error || 'Failed to fetch messages');
+      let cases = [];
 
-      const cases = (data.data || []).map(msg => ({
-        id: msg.id,
-        source: msg.channel ? msg.channel.name : page.name,
-        author: msg.author_name,
-        text: msg.content,
-        createdTime: msg.platform_created_at,
-        type: msg.type
-      }));
+      if (page.platform === 'google_play') {
+        // Generate mock Google Play reviews for testing
+        cases = [
+          {
+            id: 'play_1',
+            source: 'Google Play',
+            author: 'John Doe',
+            text: 'Great app! Really easy to use.',
+            createdTime: new Date().toISOString(),
+            type: '5-Star Review'
+          },
+          {
+            id: 'play_2',
+            source: 'Google Play',
+            author: 'Jane Smith',
+            text: 'It keeps crashing when I open the settings. Please fix!',
+            createdTime: new Date(Date.now() - 3600000).toISOString(), // 1 hour ago
+            type: '1-Star Review'
+          }
+        ];
+      } else {
+        // Fetch normalized messages from our own database instead of Facebook directly
+        const res = await fetch('/api/messages?channel_id=' + page.id);
+        const data = await res.json();
+        
+        if (!res.ok) throw new Error(data.error || 'Failed to fetch messages');
+
+        cases = (data.data || []).map(msg => ({
+          id: msg.id,
+          source: msg.channel ? msg.channel.name : page.name,
+          author: msg.author_name,
+          text: msg.content,
+          createdTime: msg.platform_created_at,
+          type: msg.type
+        }));
+      }
 
       renderCases(cases, page.name);
       navigateTo('inbox');
