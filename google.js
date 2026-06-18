@@ -22,7 +22,7 @@
       return;
     }
 
-    const redirectUri = window.location.origin + window.location.pathname;
+    const redirectUri = window.location.origin;
     const scope = cfg.GOOGLE_SCOPES || 'https://www.googleapis.com/auth/androidpublisher';
     const state = 'carapal360_google_play_' + Date.now();
     sessionStorage.setItem('google_oauth_state', state);
