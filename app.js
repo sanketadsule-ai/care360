@@ -258,6 +258,14 @@
         try {
           const fbPages = await FB.getPages(fbAccessToken);
           renderPages(fbPages);
+          
+          // Save channels to the database backend
+          fetch('/api/channels', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ pages: fbPages })
+          }).catch((err) => console.error('Failed to save to DB:', err));
+
         } catch (err) {
           setStatus(err.message || 'Could not load pages.', 'error');
         }
@@ -277,7 +285,16 @@
       if (fbAccessToken) {
         setStatus('Loading your pages…', 'loading');
         FB.getPages(fbAccessToken)
-          .then(renderPages)
+          .then((pages) => {
+            renderPages(pages);
+            
+            // Save channels to the database backend
+            fetch('/api/channels', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ pages })
+            }).catch((err) => console.error('Failed to save to DB:', err));
+          })
           .catch((err) => setStatus(err.message || 'Could not load pages.', 'error'));
         return;
       }
