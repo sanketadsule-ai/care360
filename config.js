@@ -23,5 +23,5 @@ window.CARAPAL_CONFIG = {
 
   // Permissions requested at login. pages_read_engagement lets us read
   // a page's posts & comments; pages_show_list lists the pages you manage.
-  FB_SCOPES: 'public_profile'
+  FB_SCOPES: 'pages_show_list,pages_read_engagement',
 };
