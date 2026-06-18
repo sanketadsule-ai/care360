@@ -21,7 +21,7 @@ window.CARAPAL_CONFIG = {
   // 👇 PASTE YOUR FACEBOOK APP ID HERE
   FB_APP_ID: '910067414827041',
 
-  FB_API_VERSION: 'v21.0',
+  FB_API_VERSION: 'v25.0',
 
   // Permissions requested at login. pages_read_engagement lets us read
   // a page's posts & comments; pages_show_list lists the pages you manage.
