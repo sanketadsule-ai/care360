@@ -208,7 +208,7 @@
   if (fbBackBtn) fbBackBtn.addEventListener('click', hideFacebookPanel);
 
   // ══════════════════════════════════════════════════════
-  // FACEBOOK INTEGRATION
+  // FACEBOOK INTEGRATION (Redirect-based OAuth)
   // ══════════════════════════════════════════════════════
 
   const fbStatus = document.getElementById('fb-status');
@@ -218,6 +218,9 @@
   const fbTabs = document.querySelectorAll('.fb-tab');
   const inboxSourceLabel = document.getElementById('inbox-source-label');
   const FB = window.CarapalFB;
+
+  // Store access token for the session
+  let fbAccessToken = sessionStorage.getItem('fb_access_token') || null;
 
   function setStatus(message, kind) {
     if (!fbStatus) return;
@@ -240,30 +243,46 @@
     });
   });
 
-  // Connect + load pages
+  // ── Handle Facebook OAuth callback on page load ─────
+  if (FB) {
+    const token = FB.handleCallback();
+    if (token) {
+      fbAccessToken = token;
+      sessionStorage.setItem('fb_access_token', token);
+      // Auto-navigate to the Facebook pages panel and load pages
+      navigateTo('channels');
+      activateSidebarFor('settings');
+      setTimeout(async () => {
+        showFacebookPanel();
+        setStatus('Loading your pages…', 'loading');
+        try {
+          const fbPages = await FB.getPages(fbAccessToken);
+          renderPages(fbPages);
+        } catch (err) {
+          setStatus(err.message || 'Could not load pages.', 'error');
+        }
+      }, 300);
+    }
+  }
+
+  // Connect button → redirect to Facebook
   if (fbAddBtn) {
-    fbAddBtn.addEventListener('click', async () => {
+    fbAddBtn.addEventListener('click', () => {
       if (!FB) { setStatus('Facebook integration script failed to load.', 'error'); return; }
       if (!FB.isConfigured()) {
-        setStatus('No Facebook App ID set. Open config.js and paste your App ID (see the setup steps in that file).', 'error');
+        setStatus('No Facebook App ID set. Open config.js and paste your App ID.', 'error');
         return;
       }
-      if (!FB.canRun()) {
-        setStatus('Facebook Login needs http(s). You are on a file:// page. Serve the folder over http://localhost (e.g. VS Code Live Server) and reopen.', 'error');
-        return;
-      }
-      try {
-        fbAddBtn.disabled = true;
-        setStatus('Connecting to Facebook…', 'loading');
-        await FB.login();
+      // If we already have a token, just load pages
+      if (fbAccessToken) {
         setStatus('Loading your pages…', 'loading');
-        const pages = await FB.getPages();
-        renderPages(pages);
-      } catch (err) {
-        setStatus(err.message || 'Could not connect to Facebook.', 'error');
-      } finally {
-        fbAddBtn.disabled = false;
+        FB.getPages(fbAccessToken)
+          .then(renderPages)
+          .catch((err) => setStatus(err.message || 'Could not load pages.', 'error'));
+        return;
       }
+      // Otherwise, redirect to Facebook OAuth
+      FB.login();
     });
   }
 

@@ -1,20 +1,31 @@
 /**
- * Carapal360 — Facebook Graph API integration (client-side, JS SDK).
+ * Carapal360 — Facebook Graph API integration (Redirect-based OAuth).
  *
- * Exposes window.CarapalFB with promise-based helpers:
- *   CarapalFB.isConfigured()          -> boolean (App ID present?)
- *   CarapalFB.canRun()                -> boolean (served over http/https, not file://)
- *   CarapalFB.login()                 -> Promise<authResponse>
- *   CarapalFB.getPages()              -> Promise<Page[]>
- *   CarapalFB.getPageCases(page)      -> Promise<Case[]>  (comments flattened from feed)
+ * This uses Facebook's server-side redirect OAuth flow instead of the
+ * JavaScript SDK popup. This approach:
+ *   ✅ Works on ANY domain (no JSSDK domain whitelist needed)
+ *   ✅ Works on HTTPS (Vercel, Netlify, etc.)
+ *   ✅ More secure (no client-side SDK required)
  *
- * No App Secret is used (and none should ever be put in client code).
+ * Flow:
+ *   1. User clicks "+ ADD CHANNEL" → redirected to Facebook OAuth page
+ *   2. User grants permissions on Facebook
+ *   3. Facebook redirects back to our app with ?code=... in the URL
+ *   4. We exchange the code for an access token using the Graph API
+ *   5. We fetch pages and display them
+ *
+ * Exposes window.CarapalFB with:
+ *   CarapalFB.isConfigured()          -> boolean
+ *   CarapalFB.canRun()                -> boolean
+ *   CarapalFB.login()                 -> Redirects to Facebook
+ *   CarapalFB.handleCallback()        -> Promise<string> (access token)
+ *   CarapalFB.getPages(token)         -> Promise<Page[]>
+ *   CarapalFB.getPageCases(page)      -> Promise<Case[]>
  */
 (function () {
   'use strict';
 
   const cfg = window.CARAPAL_CONFIG || {};
-  let sdkReady = null; // memoised Promise
 
   // ── Environment checks ──────────────────────────────
   function isConfigured() {
@@ -22,87 +33,86 @@
   }
 
   function canRun() {
-    // Facebook Login does not work from the file:// protocol.
     return location.protocol === 'http:' || location.protocol === 'https:';
   }
 
-  // ── SDK loader ──────────────────────────────────────
-  function loadSdk() {
-    if (sdkReady) return sdkReady;
+  // ── OAuth Redirect Login ────────────────────────────
+  function login() {
+    if (!isConfigured()) {
+      alert('No Facebook App ID set. Open config.js and paste your App ID.');
+      return;
+    }
 
-    sdkReady = new Promise((resolve, reject) => {
-      if (!isConfigured()) {
-        reject(new Error('Facebook App ID is not set. Add it in config.js.'));
-        return;
-      }
-      if (!canRun()) {
-        reject(new Error('Open this app over http://localhost — Facebook Login does not work from a file:// page.'));
-        return;
-      }
+    const redirectUri = window.location.origin + window.location.pathname;
+    const scope = cfg.FB_SCOPES || 'public_profile,pages_show_list,pages_read_engagement';
+    const state = 'carapal360_' + Date.now(); // CSRF protection
+    sessionStorage.setItem('fb_oauth_state', state);
 
-      window.fbAsyncInit = function () {
-        window.FB.init({
-          appId: cfg.FB_APP_ID,
-          cookie: true,
-          xfbml: false,
-          version: cfg.FB_API_VERSION || 'v21.0',
-        });
-        resolve(window.FB);
-      };
+    const authUrl =
+      'https://www.facebook.com/' + (cfg.FB_API_VERSION || 'v25.0') + '/dialog/oauth' +
+      '?client_id=' + encodeURIComponent(cfg.FB_APP_ID) +
+      '&redirect_uri=' + encodeURIComponent(redirectUri) +
+      '&scope=' + encodeURIComponent(scope) +
+      '&response_type=token' +
+      '&state=' + encodeURIComponent(state);
 
-      // Inject the SDK script once.
-      if (document.getElementById('facebook-jssdk')) return;
-      const js = document.createElement('script');
-      js.id = 'facebook-jssdk';
-      js.src = 'https://connect.facebook.net/en_US/sdk.js';
-      js.async = true;
-      js.defer = true;
-      js.onerror = () => reject(new Error('Failed to load the Facebook SDK (check your internet connection).'));
-      document.head.appendChild(js);
-    });
-
-    return sdkReady;
+    window.location.href = authUrl;
   }
 
-  // ── Login ───────────────────────────────────────────
-  async function login() {
-    const FB = await loadSdk();
-    return new Promise((resolve, reject) => {
-      FB.login((response) => {
-        if (response.status === 'connected' && response.authResponse) {
-          resolve(response.authResponse);
-        } else {
-          reject(new Error('Facebook login was cancelled or not authorized.'));
-        }
-      }, { scope: cfg.FB_SCOPES });
-    });
+  // ── Handle the callback (token in URL fragment) ─────
+  function handleCallback() {
+    // Facebook returns the token in the URL hash fragment:
+    // #access_token=...&expires_in=...&state=...
+    const hash = window.location.hash;
+    if (!hash || !hash.includes('access_token')) return null;
+
+    const params = new URLSearchParams(hash.substring(1));
+    const accessToken = params.get('access_token');
+    const state = params.get('state');
+
+    // Verify CSRF state
+    const savedState = sessionStorage.getItem('fb_oauth_state');
+    if (state && savedState && state !== savedState) {
+      console.warn('OAuth state mismatch — possible CSRF.');
+      return null;
+    }
+    sessionStorage.removeItem('fb_oauth_state');
+
+    // Clean the URL (remove the token from the address bar)
+    if (window.history && window.history.replaceState) {
+      window.history.replaceState(null, '', window.location.pathname + window.location.search);
+    }
+
+    return accessToken;
   }
 
   // ── Generic Graph API call ──────────────────────────
-  async function api(path, params) {
-    const FB = await loadSdk();
-    return new Promise((resolve, reject) => {
-      FB.api(path, params || {}, (response) => {
-        if (!response || response.error) {
-          reject(new Error(response && response.error ? response.error.message : 'Unknown Graph API error.'));
-        } else {
-          resolve(response);
-        }
-      });
-    });
+  async function graphApi(path, accessToken, params) {
+    const url = new URL('https://graph.facebook.com/' + (cfg.FB_API_VERSION || 'v25.0') + path);
+    url.searchParams.set('access_token', accessToken);
+    if (params) {
+      Object.keys(params).forEach((k) => url.searchParams.set(k, params[k]));
+    }
+
+    const res = await fetch(url.toString());
+    const data = await res.json();
+
+    if (data.error) {
+      throw new Error(data.error.message || 'Graph API error');
+    }
+    return data;
   }
 
   // ── Fetch the pages the user manages ────────────────
-  async function getPages() {
-    const res = await api('/me/accounts', {
+  async function getPages(accessToken) {
+    const res = await graphApi('/me/accounts', accessToken, {
       fields: 'id,name,access_token,tasks,picture{url}',
-      limit: 50,
+      limit: '50',
     });
     return (res.data || []).map((p) => ({
       id: p.id,
       name: p.name,
       accessToken: p.access_token,
-      // "ADMINISTER"/"MANAGE" task means full admin; otherwise treat as non-admin.
       isAdmin: Array.isArray(p.tasks) && (p.tasks.includes('MANAGE') || p.tasks.includes('ADMINISTER')),
       pictureUrl: p.picture && p.picture.data ? p.picture.data.url : null,
     }));
@@ -110,15 +120,13 @@
 
   // ── Fetch a page's feed and flatten comments to "cases" ──
   async function getPageCases(page) {
-    const res = await api('/' + page.id + '/feed', {
-      access_token: page.accessToken,
-      limit: 25,
+    const res = await graphApi('/' + page.id + '/feed', page.accessToken, {
+      limit: '25',
       fields: 'id,message,created_time,from,comments.limit(25){id,message,from,created_time}',
     });
 
     const cases = [];
     (res.data || []).forEach((post) => {
-      // The post itself becomes a case (type "Post").
       if (post.message) {
         cases.push({
           id: post.id,
@@ -129,13 +137,11 @@
           type: 'Post',
         });
       }
-      // Each comment becomes a case (type "Comment").
       const comments = (post.comments && post.comments.data) || [];
       comments.forEach((c) => {
         cases.push({
           id: c.id,
           source: page.name,
-          // `from` is often null for non-admin commenters without App Review.
           author: (c.from && c.from.name) || 'Facebook User',
           text: c.message || '',
           createdTime: c.created_time,
@@ -147,5 +153,5 @@
     return cases;
   }
 
-  window.CarapalFB = { isConfigured, canRun, login, getPages, getPageCases, api };
+  window.CarapalFB = { isConfigured, canRun, login, handleCallback, getPages, getPageCases, graphApi };
 })();
