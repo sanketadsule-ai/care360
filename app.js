@@ -2649,6 +2649,7 @@ Collab Manager`
       .then(data => {
         if (data.success && data.data && data.data.length > 0) {
           const dbAccounts = data.data.map(ch => ({
+            id: ch.account_email, // Needed for FB API which expects page.id
             email: ch.account_email,
             name: ch.account_name,
             dbChannelId: ch.id,
