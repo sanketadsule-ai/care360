@@ -1984,7 +1984,8 @@ Billing Dept.`,
             requestGoogleAuth(window.CARAPAL_CONFIG.GOOGLE_CLIENT_ID || localStorage.getItem('gmail_google_client_id'));
             return;
           }
-          throw new Error('Failed to retrieve messages');
+          const errorText = await listRes.text();
+          throw new Error('Google API Error ' + listRes.status + ': ' + errorText);
         }
 
         const listData = await listRes.json();
@@ -2025,7 +2026,7 @@ Billing Dept.`,
 
       } catch (err) {
         console.error('Error syncing Gmail emails:', err);
-        showGmailToast('Failed to sync emails from Gmail inbox.', 'error');
+        showGmailToast('Failed to sync emails: ' + err.message.substring(0, 100), 'error');
       }
     }
 
