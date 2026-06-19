@@ -1940,6 +1940,22 @@ Billing Dept.`,
                   showGmailToast(`✓ Connected Gmail account: ${profile.email}`, 'success');
                   showGmailToast('🔄 Loading emails from your Gmail inbox...', 'info');
 
+                  // Save the Gmail channel to the backend DB
+                  fetch('/api/channels', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      pages: [{
+                        id: profile.email,
+                        name: account.name,
+                        pictureUrl: profile.picture || '',
+                        accessToken: token,
+                        isAdmin: true,
+                        platform: 'gmail'
+                      }]
+                    })
+                  }).catch((err) => console.error('Failed to save Gmail channel to DB:', err));
+
                   await fetchGmailEmailsForAccount(account);
 
                   saveState();
@@ -2012,13 +2028,34 @@ Billing Dept.`,
 
         const details = await Promise.all(detailPromises);
 
+        const newDbMessages = [];
+
         details.forEach((rawMsg) => {
           if (!rawMsg) return;
           const mappedCase = parseGmailMessage(rawMsg, account.email);
           if (mappedCase) {
             state.cases.push(mappedCase);
+            
+            // Prepare for DB insert
+            newDbMessages.push({
+              channel_id: account.email,
+              platform_message_id: mappedCase.id,
+              type: mappedCase.type,
+              author_name: mappedCase.author,
+              content: mappedCase.text,
+              platform_created_at: mappedCase.createdTime
+            });
           }
         });
+
+        // Save synced messages to the backend DB
+        if (newDbMessages.length > 0) {
+          fetch('/api/messages', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ messages: newDbMessages })
+          }).catch((err) => console.error('Failed to save Gmail messages to DB:', err));
+        }
 
         state.cases.sort((a, b) => new Date(b.createdTime) - new Date(a.createdTime));
         saveState();
