@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Twitter Authentication</title>
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background-color: #f7f9fa;
+      color: #0f1419;
+    }
+    .message {
+      text-align: center;
+      padding: 20px;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+  </style>
+</head>
+<body>
+  <div class="message">
+    <h2>Authenticating...</h2>
+    <p>Please wait while we complete the connection to Twitter (X).</p>
+  </div>
+
+  <script>
+    (function() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const code = urlParams.get('code');
+      const state = urlParams.get('state');
+      const error = urlParams.get('error');
+
+      if (window.opener) {
+        if (error) {
+          window.opener.postMessage({ type: 'TWITTER_AUTH_ERROR', error: error }, '*');
+        } else if (code) {
+          window.opener.postMessage({ type: 'TWITTER_AUTH_SUCCESS', code: code, state: state }, '*');
+        }
+        window.close();
+      } else {
+        document.querySelector('.message h2').innerText = "Authentication Error";
+        document.querySelector('.message p').innerText = "This window was not opened by Care360. Please close it and try again.";
+      }
+    })();
+  </script>
+</body>
+</html>

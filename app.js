@@ -375,6 +375,10 @@ Billing Dept.`,
         showIgPanel();
         return;
       }
+      if (card.id === 'channel-x') {
+        if (window.CarapalTwitter) window.CarapalTwitter.connect();
+        return;
+      }
       if (card.id === 'channel-playstore') {
         showPlaystorePanel();
         return;
@@ -1191,6 +1195,19 @@ Billing Dept.`,
             sendBtn.disabled = false;
             sendBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="12" height="12"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Send`;
             if (!success) return;
+          }
+        } else if (c.channel === 'twitter') {
+          const twAccount = state.connectedAccounts.find(x => x.channel === 'twitter' && x.accessToken);
+          if (twAccount) {
+            sendBtn.disabled = true;
+            sendBtn.textContent = 'Sending…';
+            const success = await sendRealTwitterReply(c, replyVal, twAccount);
+            sendBtn.disabled = false;
+            sendBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="12" height="12"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Send`;
+            if (!success) return;
+          } else {
+             showGmailToast('No active connected Twitter account found.', 'error');
+             return;
           }
         }
 
@@ -2545,4 +2562,96 @@ Collab Manager`
       startEmailSyncLoop();
     }
 
-  });
+    // Expose a way to add Twitter account from the popup
+    window.addTwitterAccount = function(account) {
+      account.channel = 'twitter';
+      const idx = state.connectedAccounts.findIndex(x => x.username === account.username && x.channel === 'twitter');
+      if (idx !== -1) {
+        state.connectedAccounts[idx] = account;
+      } else {
+        state.connectedAccounts.push(account);
+      }
+      saveState();
+      renderConnectedGmailAccounts(); // re-render the connected accounts list
+      showGmailToast('Twitter account connected successfully!', 'success');
+      
+      // trigger a sync
+      generateIncomingTwitterMentions();
+    };
+
+    async function generateIncomingTwitterMentions() {
+      if (state.connectedAccounts.length === 0) return;
+      const twAccount = state.connectedAccounts.find(x => x.channel === 'twitter' && x.accessToken);
+      if (!twAccount) return;
+      
+      showGmailToast('Syncing fresh mentions from Twitter...', 'info');
+      try {
+        const response = await fetch('/api/twitter/sync', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ access_token: twAccount.accessToken })
+        });
+        const result = await response.json();
+        if (result.success && result.mentions && result.mentions.length > 0) {
+          result.mentions.forEach(tweet => {
+            // map tweet to case
+            const newCase = {
+              id: 'tw-' + tweet.id,
+              channel: 'twitter',
+              author: tweet.author_id,
+              username: tweet.author_id, // we might want author name
+              avatar: '', // could use default avatar
+              text: tweet.text,
+              timestamp: new Date(tweet.created_at).getTime() || Date.now(),
+              status: 'open',
+              sentiment: 'neutral', // default
+              priority: 'high',
+              tags: ['mention'],
+              replies: []
+            };
+            if (!state.cases.find(c => c.id === newCase.id)) {
+              state.cases.unshift(newCase);
+            }
+          });
+          saveState();
+          renderAllCases();
+          showGmailToast('Twitter sync complete!', 'success');
+        } else if (result.success) {
+          showGmailToast('No new mentions found.', 'info');
+        } else {
+          showGmailToast('Failed to sync Twitter: ' + result.error, 'error');
+        }
+      } catch (err) {
+        console.error(err);
+        showGmailToast('Error syncing Twitter.', 'error');
+      }
+    }
+
+    async function sendRealTwitterReply(c, replyText, twAccount) {
+      try {
+        const response = await fetch('/api/twitter/reply', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            access_token: twAccount.accessToken,
+            tweet_id: c.id.replace('tw-', ''),
+            text: replyText
+          })
+        });
+        const result = await response.json();
+        if (result.success) {
+          showGmailToast('Reply posted to Twitter!', 'success');
+          return true;
+        } else {
+          showGmailToast('Failed to post reply: ' + result.error, 'error');
+          return false;
+        }
+      } catch (err) {
+        console.error(err);
+        showGmailToast('Error posting to Twitter.', 'error');
+        return false;
+      }
+    }
+
+  })();
+
