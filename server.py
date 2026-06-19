@@ -221,10 +221,9 @@ class Care360RequestHandler(http.server.SimpleHTTPRequestHandler):
             self.wfile.write(json.dumps({'success': False, 'error': str(e)}).encode('utf-8'))
 
 if __name__ == '__main__':
-    # Serve from the parent directory of this script (which is the project root)
+    # Serve from the same directory as this script (where index.html lives)
     script_dir = os.path.dirname(os.path.abspath(__file__))
-    project_root = os.path.dirname(script_dir)
-    os.chdir(project_root)
+    os.chdir(script_dir)
     
     handler = Care360RequestHandler
     socketserver.TCPServer.allow_reuse_address = True
