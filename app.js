@@ -37,6 +37,17 @@
     activeFilter: 'all'
   };
 
+
+
+
+
+
+
+
+
+
+
+
   const DEFAULT_CASES = [
     {
       id: 'case-1',
