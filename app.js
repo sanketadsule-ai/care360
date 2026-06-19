@@ -479,40 +479,34 @@ Billing Dept.`,
       fbAccessToken = callbackData.token;
       sessionStorage.setItem('fb_access_token', callbackData.token);
       // Auto-navigate to the correct panel and load pages
-      const token = FB.handleCallback();
-      if (token) {
-        fbAccessToken = token;
-        sessionStorage.setItem('fb_access_token', token);
-        navigateTo('channels');
-        activateSidebarFor('settings');
-        setTimeout(async () => {
-          if (callbackData.platform === 'instagram') {
-            showIgPanel();
-          } else {
-            showFacebookPanel();
-          }
-          setStatus('Loading your ' + (callbackData.platform === 'instagram' ? 'Instagram' : 'Facebook') + ' pages…', 'loading');
-          try {
-            const fbPages = await FB.getPages(fbAccessToken);
-            renderPages(fbPages, callbackData.platform);
+      navigateTo('channels');
+      activateSidebarFor('settings');
+      setTimeout(async () => {
+        if (callbackData.platform === 'instagram') {
+          showIgPanel();
+        } else {
+          showFacebookPanel();
+        }
+        setStatus('Loading your ' + (callbackData.platform === 'instagram' ? 'Instagram' : 'Facebook') + ' pages…', 'loading');
+        try {
+          const fbPages = await FB.getPages(fbAccessToken);
+          renderPages(fbPages, callbackData.platform);
 
-            // Inject platform before saving
-            const pagesWithPlatform = fbPages.map(p => ({ ...p, platform: callbackData.platform }));
+          // Inject platform before saving
+          const pagesWithPlatform = fbPages.map(p => ({ ...p, platform: callbackData.platform }));
 
-            // Save channels to the database backend
-            renderPages(fbPages);
-
-            fetch('/api/channels', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ pages: pagesWithPlatform })
-            }).catch((err) => console.error('Failed to save to DB:', err));
-          } catch (err) {
-            setStatus(err.message || 'Failed to load pages from Facebook Graph API.', 'error');
-          }
-        }, 300);
-      }
+          // Save channels to the database backend
+          fetch('/api/channels', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ pages: pagesWithPlatform })
+          }).catch((err) => console.error('Failed to save to DB:', err));
+        } catch (err) {
+          setStatus(err.message || 'Failed to load pages from Facebook Graph API.', 'error');
+        }
+      }, 300);
     }
+  }
 
     if (fbAddBtn) {
       fbAddBtn.addEventListener('click', () => {
@@ -537,7 +531,6 @@ Billing Dept.`,
         }
         // Otherwise, redirect to Facebook OAuth
         FB.login('facebook');
-        FB.login();
       });
     }
 
