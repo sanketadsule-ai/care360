@@ -55,7 +55,7 @@ window.CARAPAL_CONFIG = {
   TWITTER_SCOPES: 'tweet.read tweet.write users.read offline.access',
 
   // Update this to match your production domain when deploying
-  TWITTER_REDIRECT_URI: 'http://localhost:8080/twitter_auth.html'
+  TWITTER_REDIRECT_URI: 'https://sanketadsule-ai-carepal360-ouz4.vercel.app//twitter_auth.html'
 };
 
 
