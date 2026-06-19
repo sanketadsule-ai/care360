@@ -20,7 +20,6 @@ window.CARAPAL_CONFIG = {
   FB_APP_ID: '910067414827041',
 
   // 👇 PASTE YOUR GOOGLE OAUTH CLIENT ID HERE (e.g. 'xxxx.apps.googleusercontent.com')
-  GOOGLE_CLIENT_ID: '282172866930-91vun3ocj044bnfft49lb2f17f95beun.apps.googleusercontent.com',
 
   FB_API_VERSION: 'v25.0',
 
@@ -42,7 +41,7 @@ window.CARAPAL_CONFIG = {
 
   // Scopes needed to read and reply to Play Store app reviews
   GOOGLE_SCOPES: 'https://www.googleapis.com/auth/androidpublisher',
-  
+
   // Hardcoded Redirect URI to avoid mismatch errors
   GOOGLE_REDIRECT_URI: 'https://sanketadsule-ai-carepal360-ouz4.vercel.app/'
 };
