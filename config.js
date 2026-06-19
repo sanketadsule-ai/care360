@@ -40,8 +40,5 @@ window.CARAPAL_CONFIG = {
   GOOGLE_CLIENT_ID: '941381739417-gj0tc6acd4vserfk9ku4i285cnurs66o.apps.googleusercontent.com',
 
   // Scopes needed to read and reply to Play Store app reviews
-  GOOGLE_SCOPES: 'https://www.googleapis.com/auth/androidpublisher',
-
-  // Hardcoded Redirect URI to avoid mismatch errors
-  GOOGLE_REDIRECT_URI: 'https://sanketadsule-ai-carepal360-ouz4.vercel.app/'
+  GOOGLE_SCOPES: 'https://www.googleapis.com/auth/androidpublisher'
 };

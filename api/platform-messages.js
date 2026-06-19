@@ -1,6 +1,6 @@
-// Vercel Serverless Function: /api/gmail-messages
-// GET  — list stored Gmail messages
-// POST — bulk upsert Gmail messages
+// Vercel Serverless Function: /api/platform-messages
+// GET  — list stored platform messages
+// POST — bulk upsert platform messages
 const { getPool, ensureTables } = require('./db');
 
 module.exports = async function handler(req, res) {
@@ -17,7 +17,7 @@ module.exports = async function handler(req, res) {
     await ensureTables();
     const pool = getPool();
 
-    // ─── GET: Return all stored Gmail messages ───
+    // ─── GET: Return all stored platform messages ───
     if (req.method === 'GET') {
       const channelId = req.query.channel_id;
       let query = `
@@ -45,7 +45,7 @@ module.exports = async function handler(req, res) {
       return res.status(200).json({ success: true, data: result.rows });
     }
 
-    // ─── POST: Bulk upsert Gmail messages ───
+    // ─── POST: Bulk upsert platform messages ───
     if (req.method === 'POST') {
       const { channel_id, messages } = req.body;
 
@@ -89,7 +89,7 @@ module.exports = async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
 
   } catch (error) {
-    console.error('gmail-messages error:', error);
+    console.error('platform-messages error:', error);
     return res.status(500).json({ error: 'Internal server error', details: error.message });
   }
 };
