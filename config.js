@@ -42,9 +42,6 @@ window.CARAPAL_CONFIG = {
   // Scopes needed to read and reply to Play Store app reviews
   GOOGLE_SCOPES: 'https://www.googleapis.com/auth/androidpublisher',
 
-  // Hardcoded Redirect URI to avoid mismatch errors
-  GOOGLE_REDIRECT_URI: 'https://sanketadsule-ai-carepal360-ouz4.vercel.app/',
-
   // ── TWITTER CONFIG ───────────────────────────────
   // 1. Go to Twitter Developer Portal (https://developer.twitter.com/en/portal/dashboard)
   // 2. Create a Web App, enable OAuth 2.0 with PKCE.
@@ -52,10 +49,7 @@ window.CARAPAL_CONFIG = {
   TWITTER_CLIENT_ID: 'VzYzT0JlSzJOaFI2RHV3Wldsb3A6MTpjaQ', // PASTE YOUR TWITTER CLIENT ID HERE
 
   // Scopes needed for Twitter API v2
-  TWITTER_SCOPES: 'tweet.read tweet.write users.read offline.access',
-
-  // Update this to match your production domain when deploying
-  TWITTER_REDIRECT_URI: 'http://localhost:8080/twitter_auth.html'
+  TWITTER_SCOPES: 'tweet.read tweet.write users.read offline.access'
 };
 
 
