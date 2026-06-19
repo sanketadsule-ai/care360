@@ -46,7 +46,7 @@ window.CARAPAL_CONFIG = {
   // 1. Go to Twitter Developer Portal (https://developer.twitter.com/en/portal/dashboard)
   // 2. Create a Web App, enable OAuth 2.0 with PKCE.
   // 3. Set the Redirect URL to your deployed twitter_auth.html or localhost.
-  TWITTER_CLIENT_ID: 'VzYzT0JlSzJOaFI2RHV3Wldsb3A6MTpjaQ', // PASTE YOUR TWITTER CLIENT ID HERE
+  TWITTER_CLIENT_ID: 'VzYzT0JlSzJOaFI2RHV3Wldsb3A6MTpjaQ',
 
   // Scopes needed for Twitter API v2
 
@@ -54,40 +54,3 @@ window.CARAPAL_CONFIG = {
   TWITTER_REDIRECT_URI: 'https://sanketadsule-ai-carepal360-ouz4.vercel.app/twitter_auth.html',
   TWITTER_SCOPES: 'tweet.read tweet.write users.read offline.access'
 };
-
-
-
-
-
-// Consumer Key
-
-
-// Copy
-// 4fmhuz0NRkQhEwfHbZCohc3qy
-
-// Secret Key
-
-
-// Copy
-// ulW9lG6tgugigiPwJbaOQYoLITfcw1WONcVU6SmqhQFSky2Den
-
-// Bearer Token
-
-
-// Copy
-// AAAAAAAAAAAAAAAAAAAAAPTn % 2BAEAAAAAB1fiGsTSccCjpmaNubl42C % 2FXvCI % 3DjYI0em2paj9ZV9U38Vlu4krkZv9RLTRFxCgbf9Jh7YbUdj58PY
-
-
-
-
-// Client ID
-
-
-// Copy
-// VzYzT0JlSzJOaFI2RHV3Wldsb3A6MTpjaQ
-
-// Client Secret
-
-
-// Copy
-// -82xHadTFtSPiKpQODiDF2omgemXWwLWtlQF15FUT5c79G9pLC

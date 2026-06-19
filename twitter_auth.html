@@ -28,23 +28,54 @@
     <p>Please wait while we complete the connection to Twitter (X).</p>
   </div>
 
+  <script src="config.js"></script>
   <script>
-    (function() {
+    (async function() {
       const urlParams = new URLSearchParams(window.location.search);
       const code = urlParams.get('code');
       const state = urlParams.get('state');
       const error = urlParams.get('error');
 
-      if (window.opener) {
-        if (error) {
-          window.opener.postMessage({ type: 'TWITTER_AUTH_ERROR', error: error }, '*');
-        } else if (code) {
-          window.opener.postMessage({ type: 'TWITTER_AUTH_SUCCESS', code: code, state: state }, '*');
+      if (error) {
+         alert('Twitter Error: ' + error);
+         window.location.href = '/care360/';
+         return;
+      }
+
+      if (code) {
+        const savedState = localStorage.getItem('twitter_oauth_state');
+        const codeVerifier = localStorage.getItem('twitter_code_verifier');
+
+        if (state !== savedState) {
+          alert('Twitter OAuth state mismatch. Possible CSRF attack.');
+          window.location.href = '/care360/';
+          return;
         }
-        window.close();
-      } else {
-        document.querySelector('.message h2').innerText = "Authentication Error";
-        document.querySelector('.message p').innerText = "This window was not opened by Care360. Please close it and try again.";
+
+        try {
+          const redirectUri = window.CARAPAL_CONFIG.TWITTER_REDIRECT_URI;
+          const response = await fetch('/api/twitter-token', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              code: code,
+              code_verifier: codeVerifier,
+              redirect_uri: redirectUri,
+              client_id: window.CARAPAL_CONFIG.TWITTER_CLIENT_ID
+            })
+          });
+          const result = await response.json();
+          if (result.success) {
+            localStorage.setItem('twitter_user_data', JSON.stringify(result.user));
+            window.location.href = '/care360/';
+          } else {
+            alert('Failed to authenticate with Twitter: ' + result.error);
+            window.location.href = '/care360/';
+          }
+        } catch (e) {
+          alert('Error connecting to Twitter: ' + e);
+          window.location.href = '/care360/';
+        }
       }
     })();
   </script>

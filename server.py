@@ -14,6 +14,19 @@ import base64
 import os
 import sys
 
+# ── Load .env file ──────────────────────────────────────
+def load_env():
+    env_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '.env')
+    if os.path.exists(env_path):
+        with open(env_path, 'r') as f:
+            for line in f:
+                line = line.strip()
+                if line and not line.startswith('#') and '=' in line:
+                    key, val = line.split('=', 1)
+                    os.environ[key.strip()] = val.strip()
+
+load_env()
+
 PORT = 8080
 
 class Care360RequestHandler(http.server.SimpleHTTPRequestHandler):
@@ -27,6 +40,18 @@ class Care360RequestHandler(http.server.SimpleHTTPRequestHandler):
     def end_headers(self):
         self.send_header('Access-Control-Allow-Origin', '*')
         super().end_headers()
+
+    def do_GET(self):
+        url_parts = urllib.parse.urlparse(self.path)
+        path = url_parts.path
+        
+        if path == '/api/twitter/connect':
+            self.handle_twitter_connect()
+        elif path == '/api/twitter/sync':
+            self.handle_twitter_sync_get()
+        else:
+            # Fall through to serve static files
+            super().do_GET()
 
     def do_POST(self):
         url_parts = urllib.parse.urlparse(self.path)
@@ -287,6 +312,143 @@ class Care360RequestHandler(http.server.SimpleHTTPRequestHandler):
             self.send_header('Content-Type', 'application/json')
             self.end_headers()
             self.wfile.write(json.dumps({'success': False, 'error': err_msg}).encode('utf-8'))
+        except Exception as e:
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps({'success': False, 'error': str(e)}).encode('utf-8'))
+
+    def handle_twitter_connect(self):
+        """GET /api/twitter/connect — Uses tokens from .env to verify and return user info."""
+        try:
+            access_token = os.environ.get('TWITTER_ACCESS_TOKEN', '')
+            refresh_token = os.environ.get('TWITTER_REFRESH_TOKEN', '')
+            client_id = os.environ.get('TWITTER_CLIENT_ID', '')
+            client_secret = os.environ.get('TWITTER_CLIENT_SECRET', '')
+
+            if not access_token:
+                self.send_response(200)
+                self.send_header('Content-Type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'success': False, 'error': 'No Twitter tokens in .env'}).encode('utf-8'))
+                return
+
+            # Try to get user info with current access token
+            try:
+                user_req = urllib.request.Request('https://api.twitter.com/2/users/me?user.fields=profile_image_url,description')
+                user_req.add_header('Authorization', f'Bearer {access_token}')
+                with urllib.request.urlopen(user_req) as u_resp:
+                    user_info = json.loads(u_resp.read().decode('utf-8'))['data']
+            except urllib.error.HTTPError as e:
+                if e.code == 401 and refresh_token and client_id:
+                    # Token expired — refresh it
+                    token_url = 'https://api.twitter.com/2/oauth2/token'
+                    refresh_data = urllib.parse.urlencode({
+                        'grant_type': 'refresh_token',
+                        'refresh_token': refresh_token,
+                        'client_id': client_id,
+                    }).encode('utf-8')
+                    refresh_req = urllib.request.Request(token_url, data=refresh_data)
+                    refresh_req.add_header('Content-Type', 'application/x-www-form-urlencoded')
+                    if client_secret:
+                        auth_str = base64.b64encode(f'{client_id}:{client_secret}'.encode()).decode()
+                        refresh_req.add_header('Authorization', f'Basic {auth_str}')
+
+                    with urllib.request.urlopen(refresh_req) as r_resp:
+                        new_tokens = json.loads(r_resp.read().decode('utf-8'))
+
+                    access_token = new_tokens['access_token']
+                    new_refresh = new_tokens.get('refresh_token', refresh_token)
+
+                    # Update .env file with new tokens
+                    env_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '.env')
+                    if os.path.exists(env_path):
+                        with open(env_path, 'r') as f:
+                            content = f.read()
+                        content = content.replace(os.environ.get('TWITTER_ACCESS_TOKEN', ''), access_token)
+                        content = content.replace(os.environ.get('TWITTER_REFRESH_TOKEN', ''), new_refresh)
+                        with open(env_path, 'w') as f:
+                            f.write(content)
+
+                    os.environ['TWITTER_ACCESS_TOKEN'] = access_token
+                    os.environ['TWITTER_REFRESH_TOKEN'] = new_refresh
+
+                    # Retry user info with new token
+                    user_req = urllib.request.Request('https://api.twitter.com/2/users/me?user.fields=profile_image_url,description')
+                    user_req.add_header('Authorization', f'Bearer {access_token}')
+                    with urllib.request.urlopen(user_req) as u_resp:
+                        user_info = json.loads(u_resp.read().decode('utf-8'))['data']
+                else:
+                    raise e
+
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps({
+                'success': True,
+                'user': {
+                    'name': user_info.get('name'),
+                    'username': user_info.get('username'),
+                    'id': user_info.get('id'),
+                    'profile_image_url': user_info.get('profile_image_url', ''),
+                    'description': user_info.get('description', '')
+                }
+            }).encode('utf-8'))
+
+        except Exception as e:
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps({'success': False, 'error': str(e)}).encode('utf-8'))
+
+    def handle_twitter_sync_get(self):
+        """GET /api/twitter/sync — Uses tokens from .env to fetch mentions."""
+        try:
+            access_token = os.environ.get('TWITTER_ACCESS_TOKEN', '')
+            if not access_token:
+                raise Exception('No Twitter access token in .env')
+
+            # Fetch user ID
+            user_req = urllib.request.Request('https://api.twitter.com/2/users/me')
+            user_req.add_header('Authorization', f'Bearer {access_token}')
+            with urllib.request.urlopen(user_req) as u_resp:
+                user_id = json.loads(u_resp.read().decode('utf-8'))['data']['id']
+
+            # Fetch recent tweets by user (timeline) + mentions
+            timeline_url = f'https://api.twitter.com/2/users/{user_id}/tweets?max_results=10&tweet.fields=created_at,text'
+            req = urllib.request.Request(timeline_url)
+            req.add_header('Authorization', f'Bearer {access_token}')
+
+            tweets = []
+            try:
+                with urllib.request.urlopen(req) as response:
+                    result = json.loads(response.read().decode('utf-8'))
+                    tweets = result.get('data', [])
+            except urllib.error.HTTPError:
+                tweets = []
+
+            # Also fetch mentions
+            mentions_url = f'https://api.twitter.com/2/users/{user_id}/mentions?max_results=10&tweet.fields=created_at,author_id,text'
+            req2 = urllib.request.Request(mentions_url)
+            req2.add_header('Authorization', f'Bearer {access_token}')
+
+            mentions = []
+            try:
+                with urllib.request.urlopen(req2) as response:
+                    result = json.loads(response.read().decode('utf-8'))
+                    mentions = result.get('data', [])
+            except urllib.error.HTTPError:
+                mentions = []
+
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps({
+                'success': True,
+                'tweets': tweets,
+                'mentions': mentions
+            }).encode('utf-8'))
+
         except Exception as e:
             self.send_response(200)
             self.send_header('Content-Type', 'application/json')
