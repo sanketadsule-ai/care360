@@ -859,24 +859,561 @@ ul, li {
 .inbox-center {
   flex: 1;
   display: flex;
-  align-items: center;
-  justify-content: center;
+  flex-direction: column;
   background: var(--gray-50);
   border-right: 1px solid var(--gray-200);
+  overflow: hidden;
+  position: relative;
 }
 
 .inbox-empty-state {
+  margin: auto;
   text-align: center;
   color: var(--gray-400);
-  font-size: 14px;
+  font-size: 13.5px;
   line-height: 1.5;
+}
+
+/* Inbox Center Detail View */
+.inbox-center-detail {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  background: var(--gray-50);
+}
+
+.inbox-detail-header {
+  padding: 12px 20px;
+  background: var(--white);
+  border-bottom: 1px solid var(--gray-200);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+}
+
+.inbox-detail-author-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.inbox-detail-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--white);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.inbox-detail-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.inbox-detail-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--gray-800);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.inbox-detail-source {
+  font-size: 10px;
+  color: var(--gray-400);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.inbox-detail-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.detail-action-btn {
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  color: var(--gray-500);
+  border: 1px solid var(--gray-200);
+  background: var(--white);
+  transition: all var(--transition-fast);
+  cursor: pointer;
+}
+
+.detail-action-btn:hover {
+  background: var(--gray-100);
+  color: var(--gray-800);
+  border-color: var(--gray-300);
+}
+
+.detail-action-btn.delete:hover {
+  color: var(--red-badge);
+  border-color: #FCA5A5;
+  background: #FEF2F2;
+}
+
+.inbox-detail-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.email-subject-line {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--gray-800);
+  background: var(--white);
+  padding: 12px 16px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--gray-200);
+  margin-bottom: 4px;
+  box-shadow: var(--shadow-sm);
+}
+
+.thread-message {
+  display: flex;
+  flex-direction: column;
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  box-shadow: var(--shadow-sm);
+  max-width: 85%;
+  align-self: flex-start;
+  animation: fadeIn 0.25s ease both;
+}
+
+.thread-message.agent {
+  align-self: flex-end;
+  background: var(--primary-blue-light);
+  border-color: rgba(45, 127, 249, 0.2);
+}
+
+.message-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  font-size: 11px;
+  color: var(--gray-400);
+  border-bottom: 1px solid var(--gray-100);
+  padding-bottom: 6px;
+}
+
+.thread-message.agent .message-header {
+  border-bottom-color: rgba(45, 127, 249, 0.1);
+  color: var(--primary-blue);
+}
+
+.message-sender {
+  font-weight: 600;
+  color: var(--gray-700);
+}
+
+.thread-message.agent .message-sender {
+  color: var(--primary-blue);
+}
+
+.message-content {
+  font-size: 12.5px;
+  color: var(--gray-700);
+  line-height: 1.5;
+  white-space: pre-line;
+}
+
+.email-attachments {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--gray-200);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.attachment-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--gray-100);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-sm);
+  padding: 4px 8px;
+  font-size: 10.5px;
+  color: var(--gray-600);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.attachment-chip:hover {
+  background: var(--gray-200);
+  color: var(--gray-800);
+}
+
+.attachment-chip svg {
+  width: 12px;
+  height: 12px;
+  color: var(--gray-400);
+}
+
+/* Reply Composer */
+.inbox-detail-composer {
+  background: var(--white);
+  border-top: 1px solid var(--gray-200);
+  padding: 14px 20px;
+  flex-shrink: 0;
+  box-shadow: 0 -1px 3px rgba(0, 0, 0, 0.02);
+}
+
+.composer-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  border-bottom: 1px solid var(--gray-100);
+  padding-bottom: 6px;
+}
+
+.composer-tool-btn {
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  color: var(--gray-400);
+  transition: all var(--transition-fast);
+  cursor: pointer;
+}
+
+.composer-tool-btn:hover {
+  background: var(--gray-100);
+  color: var(--gray-700);
+}
+
+.composer-tool-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+.composer-input-area {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.composer-textarea {
+  width: 100%;
+  height: 80px;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  font-family: inherit;
+  font-size: 12.5px;
+  color: var(--gray-800);
+  resize: none;
+  outline: none;
+  transition: border-color var(--transition-fast);
+}
+
+.composer-textarea:focus {
+  border-color: var(--primary-blue);
+}
+
+.composer-actions-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.composer-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--gray-500);
+  cursor: pointer;
+  user-select: none;
+}
+
+.composer-checkbox-label input {
+  width: 14px;
+  height: 14px;
+  accent-color: var(--primary-blue);
+  cursor: pointer;
+}
+
+.composer-send-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 18px;
+  background: var(--primary-blue);
+  color: var(--white);
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: var(--radius-sm);
+  transition: background var(--transition-fast);
+  border: none;
+  cursor: pointer;
+}
+
+.composer-send-btn:hover {
+  background: var(--primary-blue-hover);
+}
+
+.composer-send-btn.gmail {
+  background: #EA4335;
+}
+
+.composer-send-btn.gmail:hover {
+  background: #D33426;
+}
+
+.composer-send-btn svg {
+  width: 12px;
+  height: 12px;
 }
 
 /* Inbox Right Panel */
 .inbox-right {
-  width: 120px;
+  width: 280px;
   background: var(--white);
   flex-shrink: 0;
+  border-left: 1px solid var(--gray-200);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.inbox-right-detail {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+}
+
+.inbox-right-header {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--gray-200);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--gray-700);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  flex-shrink: 0;
+}
+
+.inbox-right-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.metadata-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.metadata-section-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--gray-500);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--gray-100);
+}
+
+.customer-profile-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--gray-50);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-md);
+  padding: 10px;
+}
+
+.customer-profile-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-full);
+  background: var(--gray-200);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--gray-600);
+  font-weight: 600;
+  font-size: 11.5px;
+  flex-shrink: 0;
+}
+
+.customer-profile-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.customer-profile-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--gray-800);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.customer-profile-email {
+  font-size: 10.5px;
+  color: var(--gray-500);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.metadata-form-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.metadata-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.metadata-field label {
+  font-size: 10.5px;
+  font-weight: 500;
+  color: var(--gray-500);
+}
+
+.metadata-select {
+  padding: 7px 10px;
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  color: var(--gray-700);
+  background: var(--white);
+  outline: none;
+  cursor: pointer;
+  transition: border-color var(--transition-fast);
+  font-family: inherit;
+}
+
+.metadata-select:focus {
+  border-color: var(--primary-blue);
+}
+
+.sla-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #B45309;
+  background: #FEF3C7;
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  align-self: flex-start;
+}
+
+.sla-badge svg {
+  width: 12px;
+  height: 12px;
+}
+
+.tag-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.metadata-tag {
+  font-size: 10px;
+  font-weight: 500;
+  background: var(--gray-100);
+  border: 1px solid var(--gray-200);
+  color: var(--gray-600);
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+}
+
+.metadata-tag.urgent {
+  background: #FEE2E2;
+  border-color: #FCA5A5;
+  color: #B91C1C;
+}
+
+/* Source Filter Pills Bar */
+.inbox-source-filters {
+  display: flex;
+  gap: 6px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--gray-200);
+  background: var(--gray-50);
+  overflow-x: auto;
+  flex-shrink: 0;
+}
+
+.source-filter-pill {
+  padding: 4px 10px;
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-full);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--gray-600);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+}
+
+.source-filter-pill:hover {
+  background: var(--gray-50);
+  border-color: var(--gray-300);
+  color: var(--gray-800);
+}
+
+.source-filter-pill.active {
+  background: var(--primary-blue-light);
+  border-color: var(--primary-blue);
+  color: var(--primary-blue);
+}
+
+.source-filter-pill.active.gmail {
+  background: #FEE2E2;
+  border-color: #FCA5A5;
+  color: #B91C1C;
 }
 
 /* ================================================================
@@ -1193,6 +1730,462 @@ ul, li {
 .page.active .channel-card:nth-child(4) { animation-delay: 0.25s; }
 .page.active .channel-card:nth-child(5) { animation-delay: 0.3s; }
 .page.active .channel-card:nth-child(6) { animation-delay: 0.35s; }
+.page.active .channel-card:nth-child(7) { animation-delay: 0.4s; }
+
+/* ── Gmail Configuration Panel ────────────────────── */
+.gmail-config-panel {
+  flex: 1;
+  padding: 0 8px;
+  overflow-y: auto;
+}
+
+.gmail-config-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--gray-200);
+  margin-bottom: 4px;
+}
+
+.gmail-config-heading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.gmail-back-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--gray-600);
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  transition: background var(--transition-fast);
+}
+.gmail-back-btn:hover { background: var(--gray-100); }
+.gmail-back-btn svg { width: 18px; height: 18px; }
+
+.gmail-config-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--gray-800);
+  letter-spacing: 0.5px;
+}
+
+.gmail-connect-btn {
+  background: var(--white);
+  color: #EA4335;
+  border: 1.5px solid #EA4335;
+  border-radius: var(--radius-sm);
+  padding: 8px 16px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+.gmail-connect-btn:hover { background: #EA4335; color: var(--white); }
+
+.gmail-tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid var(--gray-200);
+  margin: 16px 0;
+}
+
+.gmail-tab {
+  flex: 1;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  padding: 12px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--gray-500);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+.gmail-tab:hover { color: var(--gray-700); }
+.gmail-tab.active {
+  color: #EA4335;
+  border-bottom-color: #EA4335;
+  font-weight: 600;
+}
+
+.gmail-tab-content {
+  display: none;
+  padding: 4px 0;
+}
+.gmail-tab-content.active {
+  display: block;
+  animation: fadeIn 0.3s ease both;
+}
+
+.gmail-info-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 14px 16px;
+  background: #FEF3CD;
+  border: 1px solid #F0D060;
+  border-radius: var(--radius-md);
+  margin-bottom: 20px;
+  font-size: 0.82rem;
+  color: #664D03;
+  line-height: 1.5;
+}
+.gmail-info-banner svg {
+  flex-shrink: 0;
+  color: #B88A00;
+  margin-top: 1px;
+}
+
+/* Gmail Form Styles */
+.gmail-config-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.gmail-form-section {
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--gray-100);
+}
+.gmail-form-section:last-of-type {
+  border-bottom: none;
+}
+
+.gmail-form-section-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--gray-800);
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.gmail-form-section-title svg {
+  color: var(--gray-500);
+}
+
+.gmail-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.gmail-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.gmail-form-group label {
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--gray-600);
+  letter-spacing: 0.2px;
+}
+
+.gmail-form-group input[type="text"],
+.gmail-form-group input[type="email"],
+.gmail-form-group input[type="number"],
+.gmail-form-group input[type="password"],
+.gmail-form-group select {
+  padding: 9px 12px;
+  border: 1px solid var(--gray-300);
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+  font-family: inherit;
+  color: var(--gray-800);
+  background: var(--white);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+  outline: none;
+}
+.gmail-form-group input:focus,
+.gmail-form-group select:focus {
+  border-color: #EA4335;
+  box-shadow: 0 0 0 3px rgba(234, 67, 53, 0.1);
+}
+
+.gmail-form-group select[multiple] {
+  min-height: 80px;
+}
+
+.gmail-password-wrapper {
+  position: relative;
+  display: flex;
+}
+.gmail-password-wrapper input {
+  flex: 1;
+  padding-right: 40px;
+}
+.gmail-toggle-password {
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--gray-400);
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  transition: color var(--transition-fast);
+}
+.gmail-toggle-password:hover { color: var(--gray-700); }
+.gmail-toggle-password svg { width: 16px; height: 16px; }
+
+.gmail-form-group-checkbox {
+  grid-column: span 2;
+}
+
+.gmail-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 0.85rem !important;
+  font-weight: 400 !important;
+  color: var(--gray-700) !important;
+}
+.gmail-checkbox-label input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: #EA4335;
+  cursor: pointer;
+}
+
+.gmail-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding-top: 16px;
+}
+
+.gmail-btn-primary {
+  background: #EA4335;
+  color: var(--white);
+  border: 1.5px solid #EA4335;
+  border-radius: var(--radius-sm);
+  padding: 10px 24px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+.gmail-btn-primary:hover {
+  background: #D33426;
+  border-color: #D33426;
+  box-shadow: 0 2px 8px rgba(234, 67, 53, 0.3);
+}
+
+.gmail-btn-secondary {
+  background: var(--white);
+  color: var(--gray-700);
+  border: 1.5px solid var(--gray-300);
+  border-radius: var(--radius-sm);
+  padding: 10px 24px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+.gmail-btn-secondary:hover {
+  border-color: var(--gray-500);
+  background: var(--gray-50);
+}
+
+/* Gmail Forwarding Styles */
+.gmail-forwarding-box {
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-md);
+  padding: 20px;
+}
+
+.gmail-forwarding-label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--gray-700);
+  margin-bottom: 10px;
+  display: block;
+}
+
+.gmail-forwarding-copy {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.gmail-forwarding-copy input {
+  flex: 1;
+  padding: 10px 14px;
+  border: 1px solid var(--gray-300);
+  border-radius: var(--radius-sm);
+  font-family: 'Courier New', monospace;
+  font-size: 0.85rem;
+  color: var(--gray-800);
+  background: var(--gray-50);
+  outline: none;
+}
+
+.gmail-copy-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px;
+  background: var(--primary-blue);
+  color: var(--white);
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+}
+.gmail-copy-btn:hover { background: var(--primary-blue-hover); }
+.gmail-copy-btn svg { width: 14px; height: 14px; }
+
+.gmail-forwarding-steps {
+  padding-top: 16px;
+  border-top: 1px solid var(--gray-100);
+}
+.gmail-forwarding-steps h4 {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--gray-800);
+  margin-bottom: 12px;
+}
+.gmail-forwarding-steps ol {
+  list-style: decimal;
+  padding-left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.gmail-forwarding-steps li {
+  font-size: 0.82rem;
+  color: var(--gray-600);
+  line-height: 1.5;
+  list-style: decimal;
+}
+.gmail-forwarding-steps li strong {
+  color: var(--gray-800);
+}
+
+/* Gmail Connected Accounts */
+.gmail-connected-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+  color: var(--gray-400);
+}
+.gmail-connected-empty svg {
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
+.gmail-connected-empty p {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--gray-600);
+  margin-bottom: 6px;
+}
+.gmail-connected-empty span {
+  font-size: 0.85rem;
+  color: var(--gray-500);
+  line-height: 1.5;
+}
+
+.gmail-connected-list {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+}
+
+.gmail-account-card {
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-md);
+  padding: 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transition: all var(--transition-fast);
+}
+.gmail-account-card:hover {
+  border-color: var(--primary-blue);
+  box-shadow: var(--shadow-md);
+}
+
+.gmail-account-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-full);
+  background: linear-gradient(135deg, #EA4335, #FBBC05);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--white);
+  font-size: 14px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.gmail-account-info {
+  flex: 1;
+  min-width: 0;
+}
+.gmail-account-email {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--gray-800);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.gmail-account-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 4px;
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: var(--green-online);
+}
+.gmail-account-status svg { width: 12px; height: 12px; }
+
+/* Gmail test connection toast */
+.gmail-toast {
+  position: fixed;
+  bottom: 80px;
+  right: 24px;
+  padding: 12px 20px;
+  border-radius: var(--radius-md);
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--white);
+  z-index: 600;
+  animation: fadeIn 0.3s ease both;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+.gmail-toast.success { background: #059669; }
+.gmail-toast.error { background: #DC2626; }
+.gmail-toast.info { background: var(--primary-blue); }
 
 /* ── Scrollbar Styling ────────────────────────────── */
 ::-webkit-scrollbar {
@@ -1511,3 +2504,154 @@ ul, li {
   transform: scale(1.1);
   box-shadow: 0 6px 20px rgba(45, 127, 249, 0.5);
 }
+
+/* ── Google Client ID Modal Overlay ───────────────── */
+.gmail-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(3px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.2s ease both;
+}
+
+.gmail-modal-card {
+  width: 520px;
+  max-width: 90%;
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: slideInDown 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes slideInDown {
+  from { opacity: 0; transform: translateY(-24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.gmail-modal-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--gray-200);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.gmail-modal-header h3 {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--gray-800);
+}
+
+.gmail-modal-close {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: var(--gray-400);
+  cursor: pointer;
+  transition: color var(--transition-fast);
+  line-height: 1;
+}
+
+.gmail-modal-close:hover {
+  color: var(--gray-700);
+}
+
+.gmail-modal-body {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  overflow-y: auto;
+  max-height: 65vh;
+}
+
+.gmail-modal-body p {
+  font-size: 12.5px;
+  color: var(--gray-600);
+  line-height: 1.5;
+}
+
+.setup-instructions-box {
+  background: var(--gray-50);
+  border: 1px solid var(--gray-200);
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+  font-size: 11.5px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.setup-instructions-box h4 {
+  font-weight: 600;
+  color: var(--gray-700);
+  font-size: 12px;
+}
+
+.setup-instructions-box ol {
+  list-style: decimal;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.setup-instructions-box li {
+  line-height: 1.5;
+  color: var(--gray-600);
+  list-style: decimal;
+}
+
+.setup-instructions-box a {
+  color: var(--primary-blue);
+  font-weight: 600;
+  text-decoration: underline;
+}
+
+.gmail-modal-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.gmail-modal-form-group label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--gray-600);
+}
+
+.gmail-modal-form-group input {
+  padding: 10px 12px;
+  border: 1px solid var(--gray-300);
+  border-radius: var(--radius-sm);
+  font-size: 12.5px;
+  outline: none;
+  font-family: inherit;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.gmail-modal-form-group input:focus {
+  border-color: #EA4335;
+  box-shadow: 0 0 0 3px rgba(234, 67, 53, 0.1);
+}
+
+.gmail-modal-footer {
+  padding: 14px 20px;
+  border-top: 1px solid var(--gray-200);
+  background: var(--gray-50);
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+

@@ -1,16 +1,19 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Carapal360 — Social Listening, Analytics & Customer Experience Platform">
   <title>Carapal360 — Suite</title>
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='11' fill='none' stroke='%232D7FF9' stroke-width='2'/%3E%3Ccircle cx='12' cy='12' r='2' fill='%232D7FF9'/%3E%3C/svg%3E">
+  <link rel="icon"
+    href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='11' fill='none' stroke='%232D7FF9' stroke-width='2'/%3E%3Ccircle cx='12' cy='12' r='2' fill='%232D7FF9'/%3E%3C/svg%3E">
   <link rel="stylesheet" href="styles.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
+
 <body>
   <div class="app-layout">
 
@@ -20,25 +23,28 @@
     <header class="header" id="header">
       <div class="header-logo">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" style="margin-right:4px;">
-          <circle cx="12" cy="12" r="11" stroke="#2D7FF9" stroke-width="2"/>
-          <path d="M8 12C8 9.79 9.79 8 12 8C14.21 8 16 9.79 16 12C16 14.21 14.21 16 12 16" stroke="#2D7FF9" stroke-width="2" stroke-linecap="round"/>
-          <circle cx="12" cy="12" r="2" fill="#2D7FF9"/>
+          <circle cx="12" cy="12" r="11" stroke="#2D7FF9" stroke-width="2" />
+          <path d="M8 12C8 9.79 9.79 8 12 8C14.21 8 16 9.79 16 12C16 14.21 14.21 16 12 16" stroke="#2D7FF9"
+            stroke-width="2" stroke-linecap="round" />
+          <circle cx="12" cy="12" r="2" fill="#2D7FF9" />
         </svg>
         <span class="logo-text">carapal<span>360</span></span>
       </div>
       <div class="header-right">
         <!-- Mail Icon -->
         <button class="header-icon-btn" id="header-mail-btn" aria-label="Messages">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="2" y="4" width="20" height="16" rx="2"/>
-            <polyline points="22,4 12,13 2,4"/>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+            stroke-linejoin="round">
+            <rect x="2" y="4" width="20" height="16" rx="2" />
+            <polyline points="22,4 12,13 2,4" />
           </svg>
         </button>
         <!-- Notification Bell -->
         <button class="header-icon-btn" id="header-notif-btn" aria-label="Notifications">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/>
-            <path d="M13.73 21a2 2 0 01-3.46 0"/>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+            stroke-linejoin="round">
+            <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9" />
+            <path d="M13.73 21a2 2 0 01-3.46 0" />
           </svg>
           <span class="notification-badge">109</span>
         </button>
@@ -60,57 +66,64 @@
         <div class="sidebar-nav">
           <!-- Home / Dashboard -->
           <div class="sidebar-item active" data-page="dashboard" data-tooltip="Home">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
-              <polyline points="9,22 9,12 15,12 15,22"/>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+              stroke-linejoin="round">
+              <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
+              <polyline points="9,22 9,12 15,12 15,22" />
             </svg>
           </div>
           <!-- Social Inbox -->
           <div class="sidebar-item" data-page="inbox" data-tooltip="Social Inbox">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+              stroke-linejoin="round">
+              <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
             </svg>
           </div>
           <!-- Dashboard Grid -->
           <div class="sidebar-item" data-page="dashboard" data-tooltip="Modules">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="3" y="3" width="7" height="7" rx="1"/>
-              <rect x="14" y="3" width="7" height="7" rx="1"/>
-              <rect x="3" y="14" width="7" height="7" rx="1"/>
-              <rect x="14" y="14" width="7" height="7" rx="1"/>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+              stroke-linejoin="round">
+              <rect x="3" y="3" width="7" height="7" rx="1" />
+              <rect x="14" y="3" width="7" height="7" rx="1" />
+              <rect x="3" y="14" width="7" height="7" rx="1" />
+              <rect x="14" y="14" width="7" height="7" rx="1" />
             </svg>
           </div>
           <!-- Publish -->
           <div class="sidebar-item" data-tooltip="Publish">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
-              <polyline points="17,8 12,3 7,8"/>
-              <line x1="12" y1="3" x2="12" y2="15"/>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+              stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+              <polyline points="17,8 12,3 7,8" />
+              <line x1="12" y1="3" x2="12" y2="15" />
             </svg>
           </div>
           <!-- Moderation / Shield -->
           <div class="sidebar-item" data-tooltip="Moderation">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+              stroke-linejoin="round">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
             </svg>
           </div>
           <!-- Team -->
           <div class="sidebar-item" data-tooltip="Team">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
-              <circle cx="9" cy="7" r="4"/>
-              <path d="M23 21v-2a4 4 0 00-3-3.87"/>
-              <path d="M16 3.13a4 4 0 010 7.75"/>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+              stroke-linejoin="round">
+              <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
+              <circle cx="9" cy="7" r="4" />
+              <path d="M23 21v-2a4 4 0 00-3-3.87" />
+              <path d="M16 3.13a4 4 0 010 7.75" />
             </svg>
           </div>
           <!-- Reports -->
           <div class="sidebar-item" data-tooltip="Reports">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
-              <polyline points="14,2 14,8 20,8"/>
-              <line x1="16" y1="13" x2="8" y2="13"/>
-              <line x1="16" y1="17" x2="8" y2="17"/>
-              <polyline points="10,9 9,9 8,9"/>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+              stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+              <polyline points="14,2 14,8 20,8" />
+              <line x1="16" y1="13" x2="8" y2="13" />
+              <line x1="16" y1="17" x2="8" y2="17" />
+              <polyline points="10,9 9,9 8,9" />
             </svg>
           </div>
 
@@ -118,9 +131,11 @@
 
           <!-- Settings -->
           <div class="sidebar-item" data-page="settings" data-tooltip="Settings">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="3"/>
-              <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+              stroke-linejoin="round">
+              <circle cx="12" cy="12" r="3" />
+              <path
+                d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" />
             </svg>
           </div>
         </div>
@@ -151,10 +166,11 @@
             <!-- Listen (selected by default) -->
             <div class="action-card selected" data-action="listen" id="card-listen">
               <div class="action-card-icon">
-                <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M24 4L10 18H4v12h6l14 14V4z"/>
-                  <path d="M32 16a8 8 0 010 16"/>
-                  <path d="M36 10a14 14 0 010 28"/>
+                <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"
+                  stroke-linejoin="round">
+                  <path d="M24 4L10 18H4v12h6l14 14V4z" />
+                  <path d="M32 16a8 8 0 010 16" />
+                  <path d="M36 10a14 14 0 010 28" />
                 </svg>
               </div>
               <div class="action-card-title">Listen</div>
@@ -164,11 +180,12 @@
             <!-- Analyze -->
             <div class="action-card" data-action="analyze" id="card-analyze">
               <div class="action-card-icon">
-                <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                  <rect x="6" y="24" width="8" height="18" rx="1"/>
-                  <rect x="20" y="14" width="8" height="28" rx="1"/>
-                  <rect x="34" y="6" width="8" height="36" rx="1"/>
-                  <line x1="4" y1="44" x2="44" y2="44"/>
+                <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"
+                  stroke-linejoin="round">
+                  <rect x="6" y="24" width="8" height="18" rx="1" />
+                  <rect x="20" y="14" width="8" height="28" rx="1" />
+                  <rect x="34" y="6" width="8" height="36" rx="1" />
+                  <line x1="4" y1="44" x2="44" y2="44" />
                 </svg>
               </div>
               <div class="action-card-title">Analyze</div>
@@ -178,18 +195,19 @@
             <!-- Compare -->
             <div class="action-card" data-action="compare" id="card-compare">
               <div class="action-card-icon">
-                <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                  <rect x="4" y="6" width="16" height="20" rx="2"/>
-                  <rect x="28" y="6" width="16" height="20" rx="2"/>
-                  <line x1="12" y1="12" x2="12" y2="12.01"/>
-                  <line x1="12" y1="16" x2="16" y2="16"/>
-                  <line x1="12" y1="20" x2="16" y2="20"/>
-                  <line x1="36" y1="12" x2="36" y2="12.01"/>
-                  <line x1="36" y1="16" x2="40" y2="16"/>
-                  <line x1="36" y1="20" x2="40" y2="20"/>
-                  <path d="M20 16h8" stroke-dasharray="2 2"/>
-                  <polyline points="16,32 24,38 32,32"/>
-                  <line x1="24" y1="26" x2="24" y2="38"/>
+                <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"
+                  stroke-linejoin="round">
+                  <rect x="4" y="6" width="16" height="20" rx="2" />
+                  <rect x="28" y="6" width="16" height="20" rx="2" />
+                  <line x1="12" y1="12" x2="12" y2="12.01" />
+                  <line x1="12" y1="16" x2="16" y2="16" />
+                  <line x1="12" y1="20" x2="16" y2="20" />
+                  <line x1="36" y1="12" x2="36" y2="12.01" />
+                  <line x1="36" y1="16" x2="40" y2="16" />
+                  <line x1="36" y1="20" x2="40" y2="20" />
+                  <path d="M20 16h8" stroke-dasharray="2 2" />
+                  <polyline points="16,32 24,38 32,32" />
+                  <line x1="24" y1="26" x2="24" y2="38" />
                 </svg>
               </div>
               <div class="action-card-title">Compare</div>
@@ -199,12 +217,13 @@
             <!-- Ideate -->
             <div class="action-card" data-action="ideate" id="card-ideate">
               <div class="action-card-icon">
-                <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M18 38h12"/>
-                  <path d="M20 42h8"/>
-                  <path d="M24 4a14 14 0 00-8 25.4V34h16v-4.6A14 14 0 0024 4z"/>
-                  <line x1="24" y1="18" x2="24" y2="26"/>
-                  <line x1="20" y1="22" x2="28" y2="22"/>
+                <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"
+                  stroke-linejoin="round">
+                  <path d="M18 38h12" />
+                  <path d="M20 42h8" />
+                  <path d="M24 4a14 14 0 00-8 25.4V34h16v-4.6A14 14 0 0024 4z" />
+                  <line x1="24" y1="18" x2="24" y2="26" />
+                  <line x1="20" y1="22" x2="28" y2="22" />
                 </svg>
               </div>
               <div class="action-card-title">Ideate</div>
@@ -214,13 +233,14 @@
             <!-- Update & Announcement -->
             <div class="action-card" data-action="updates" id="card-updates">
               <div class="action-card-icon">
-                <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M22 4a14 14 0 0114 14c0 5-2 8.5-5 11l-1 1v6H18v-6l-1-1c-3-2.5-5-6-5-11A14 14 0 0122 4z"/>
-                  <path d="M18 40h12"/>
-                  <path d="M20 44h8"/>
-                  <line x1="24" y1="10" x2="24" y2="10.01" stroke-width="3"/>
-                  <path d="M24 16v8"/>
-                  <circle cx="24" cy="28" r="1.5" fill="currentColor"/>
+                <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"
+                  stroke-linejoin="round">
+                  <path d="M22 4a14 14 0 0114 14c0 5-2 8.5-5 11l-1 1v6H18v-6l-1-1c-3-2.5-5-6-5-11A14 14 0 0122 4z" />
+                  <path d="M18 40h12" />
+                  <path d="M20 44h8" />
+                  <line x1="24" y1="10" x2="24" y2="10.01" stroke-width="3" />
+                  <path d="M24 16v8" />
+                  <circle cx="24" cy="28" r="1.5" fill="currentColor" />
                 </svg>
               </div>
               <div class="action-card-title">Update &<br>Announcement</div>
@@ -236,28 +256,31 @@
               <!-- Brand Listening -->
               <div class="listening-card" id="listen-brand">
                 <div class="listening-card-icon">
-                  <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M6 18c0-2 1-3 3-3h2l4-6h18l4 6h2c2 0 3 1 3 3v18c0 2-1 3-3 3H9c-2 0-3-1-3-3V18z"/>
-                    <circle cx="24" cy="26" r="8"/>
-                    <circle cx="24" cy="26" r="3"/>
+                  <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <path d="M6 18c0-2 1-3 3-3h2l4-6h18l4 6h2c2 0 3 1 3 3v18c0 2-1 3-3 3H9c-2 0-3-1-3-3V18z" />
+                    <circle cx="24" cy="26" r="8" />
+                    <circle cx="24" cy="26" r="3" />
                   </svg>
                 </div>
                 <div class="listening-card-title">Brand Listening</div>
-                <div class="listening-card-desc">Understand whats happening around your Brand, campaign or competitor</div>
+                <div class="listening-card-desc">Understand whats happening around your Brand, campaign or competitor
+                </div>
               </div>
 
               <!-- Influencer -->
               <div class="listening-card" id="listen-influencer">
                 <div class="listening-card-icon">
-                  <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M8 30l12-8V10L8 18v12z"/>
-                    <path d="M20 22l12 8V42l-12-8V22z"/>
-                    <circle cx="36" cy="14" r="4"/>
-                    <path d="M24 8l6-4"/>
-                    <path d="M30 4l4 2"/>
-                    <line x1="36" y1="6" x2="40" y2="4"/>
-                    <line x1="40" y1="10" x2="44" y2="10"/>
-                    <line x1="40" y1="16" x2="44" y2="18"/>
+                  <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <path d="M8 30l12-8V10L8 18v12z" />
+                    <path d="M20 22l12 8V42l-12-8V22z" />
+                    <circle cx="36" cy="14" r="4" />
+                    <path d="M24 8l6-4" />
+                    <path d="M30 4l4 2" />
+                    <line x1="36" y1="6" x2="40" y2="4" />
+                    <line x1="40" y1="10" x2="44" y2="10" />
+                    <line x1="40" y1="16" x2="44" y2="18" />
                   </svg>
                 </div>
                 <div class="listening-card-title">Influencer</div>
@@ -267,10 +290,12 @@
               <!-- Voice of Customer -->
               <div class="listening-card" id="listen-voc">
                 <div class="listening-card-icon">
-                  <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M38 24c0 8-6.3 14-14 14-2.5 0-4.8-.6-6.8-1.8L8 38l2-8.2A13.8 13.8 0 0110 24c0-8 6.3-14 14-14s14 6 14 14z"/>
-                    <line x1="18" y1="20" x2="30" y2="20"/>
-                    <line x1="18" y1="26" x2="26" y2="26"/>
+                  <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <path
+                      d="M38 24c0 8-6.3 14-14 14-2.5 0-4.8-.6-6.8-1.8L8 38l2-8.2A13.8 13.8 0 0110 24c0-8 6.3-14 14-14s14 6 14 14z" />
+                    <line x1="18" y1="20" x2="30" y2="20" />
+                    <line x1="18" y1="26" x2="26" y2="26" />
                   </svg>
                 </div>
                 <div class="listening-card-title">Voice of Customer</div>
@@ -280,10 +305,11 @@
               <!-- Ecommerce Reviews -->
               <div class="listening-card" id="listen-ecommerce">
                 <div class="listening-card-icon">
-                  <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M8 8h4l4 20h20l4-14H16"/>
-                    <circle cx="18" cy="36" r="3"/>
-                    <circle cx="34" cy="36" r="3"/>
+                  <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <path d="M8 8h4l4 20h20l4-14H16" />
+                    <circle cx="18" cy="36" r="3" />
+                    <circle cx="34" cy="36" r="3" />
                   </svg>
                 </div>
                 <div class="listening-card-title">Ecommerce Reviews</div>
@@ -293,14 +319,16 @@
               <!-- Location Reviews -->
               <div class="listening-card" id="listen-location">
                 <div class="listening-card-icon">
-                  <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M24 4C16.3 4 10 10.3 10 18c0 10 14 26 14 26s14-16 14-26c0-7.7-6.3-14-14-14z"/>
-                    <circle cx="24" cy="18" r="5"/>
-                    <path d="M4 24c0 0 4-2 8-1s8 3 12 2 8-3 12-2 8 1 8 1"/>
+                  <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <path d="M24 4C16.3 4 10 10.3 10 18c0 10 14 26 14 26s14-16 14-26c0-7.7-6.3-14-14-14z" />
+                    <circle cx="24" cy="18" r="5" />
+                    <path d="M4 24c0 0 4-2 8-1s8 3 12 2 8-3 12-2 8 1 8 1" />
                   </svg>
                 </div>
                 <div class="listening-card-title">Location Reviews</div>
-                <div class="listening-card-desc">Track all locations - Google My Business, Zomato, Tripadvisor, Yelp, Facebook Recommendations</div>
+                <div class="listening-card-desc">Track all locations - Google My Business, Zomato, Tripadvisor, Yelp,
+                  Facebook Recommendations</div>
               </div>
 
             </div>
@@ -319,74 +347,83 @@
             <div class="inbox-toolbar">
               <div class="toolbar-tabs">
                 <div class="toolbar-tab active" data-toolbar="messages" title="Messages">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <rect x="2" y="4" width="20" height="16" rx="2"/>
-                    <polyline points="22,4 12,13 2,4"/>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <rect x="2" y="4" width="20" height="16" rx="2" />
+                    <polyline points="22,4 12,13 2,4" />
                   </svg>
                 </div>
                 <div class="toolbar-tab" data-toolbar="users" title="Users">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
-                    <circle cx="9" cy="7" r="4"/>
-                    <path d="M23 21v-2a4 4 0 00-3-3.87"/>
-                    <path d="M16 3.13a4 4 0 010 7.75"/>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
+                    <circle cx="9" cy="7" r="4" />
+                    <path d="M23 21v-2a4 4 0 00-3-3.87" />
+                    <path d="M16 3.13a4 4 0 010 7.75" />
                   </svg>
                 </div>
                 <div class="toolbar-tab" data-toolbar="company" title="Company">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <rect x="4" y="2" width="16" height="20" rx="2"/>
-                    <line x1="9" y1="6" x2="9" y2="6.01"/>
-                    <line x1="15" y1="6" x2="15" y2="6.01"/>
-                    <line x1="9" y1="10" x2="9" y2="10.01"/>
-                    <line x1="15" y1="10" x2="15" y2="10.01"/>
-                    <line x1="9" y1="14" x2="9" y2="14.01"/>
-                    <line x1="15" y1="14" x2="15" y2="14.01"/>
-                    <line x1="9" y1="18" x2="15" y2="18"/>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <rect x="4" y="2" width="16" height="20" rx="2" />
+                    <line x1="9" y1="6" x2="9" y2="6.01" />
+                    <line x1="15" y1="6" x2="15" y2="6.01" />
+                    <line x1="9" y1="10" x2="9" y2="10.01" />
+                    <line x1="15" y1="10" x2="15" y2="10.01" />
+                    <line x1="9" y1="14" x2="9" y2="14.01" />
+                    <line x1="15" y1="14" x2="15" y2="14.01" />
+                    <line x1="9" y1="18" x2="15" y2="18" />
                   </svg>
                 </div>
                 <div class="toolbar-tab" data-toolbar="saved" title="Saved">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z" />
                   </svg>
                 </div>
               </div>
               <div class="toolbar-actions">
                 <!-- Filter -->
                 <button class="toolbar-action-btn" title="Filter">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <polygon points="22,3 2,3 10,12.46 10,19 14,21 14,12.46"/>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <polygon points="22,3 2,3 10,12.46 10,19 14,21 14,12.46" />
                   </svg>
                 </button>
                 <!-- Smiley -->
                 <button class="toolbar-action-btn" title="Sentiment">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="12" cy="12" r="10"/>
-                    <path d="M8 14s1.5 2 4 2 4-2 4-2"/>
-                    <line x1="9" y1="9" x2="9.01" y2="9"/>
-                    <line x1="15" y1="9" x2="15.01" y2="9"/>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10" />
+                    <path d="M8 14s1.5 2 4 2 4-2 4-2" />
+                    <line x1="9" y1="9" x2="9.01" y2="9" />
+                    <line x1="15" y1="9" x2="15.01" y2="9" />
                   </svg>
                 </button>
                 <!-- Search -->
                 <button class="toolbar-action-btn" title="Search">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="11" cy="11" r="8"/>
-                    <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="8" />
+                    <line x1="21" y1="21" x2="16.65" y2="16.65" />
                   </svg>
                 </button>
                 <!-- Analytics -->
                 <button class="toolbar-action-btn" title="Analytics">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="18" y1="20" x2="18" y2="10"/>
-                    <line x1="12" y1="20" x2="12" y2="4"/>
-                    <line x1="6" y1="20" x2="6" y2="14"/>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <line x1="18" y1="20" x2="18" y2="10" />
+                    <line x1="12" y1="20" x2="12" y2="4" />
+                    <line x1="6" y1="20" x2="6" y2="14" />
                   </svg>
                 </button>
                 <!-- Download -->
                 <button class="toolbar-action-btn" title="Download">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
-                    <polyline points="7,10 12,15 17,10"/>
-                    <line x1="12" y1="15" x2="12" y2="3"/>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+                    <polyline points="7,10 12,15 17,10" />
+                    <line x1="12" y1="15" x2="12" y2="3" />
                   </svg>
                 </button>
               </div>
@@ -395,28 +432,41 @@
             <!-- Filter Bar -->
             <div class="inbox-filter-bar">
               <div class="filter-status">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
-                  <circle cx="9" cy="7" r="4"/>
-                  <path d="M23 21v-2a4 4 0 00-3-3.87"/>
-                  <path d="M16 3.13a4 4 0 010 7.75"/>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                  stroke-linejoin="round">
+                  <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
+                  <circle cx="9" cy="7" r="4" />
+                  <path d="M23 21v-2a4 4 0 00-3-3.87" />
+                  <path d="M16 3.13a4 4 0 010 7.75" />
                 </svg>
                 <span id="inbox-source-label">Assigned/Reassigned/Ongoing</span>
-                <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <polyline points="6,9 12,15 18,9"/>
+                <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                  stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="6,9 12,15 18,9" />
                 </svg>
               </div>
               <div class="filter-actions">
                 <!-- Refresh -->
                 <button class="filter-action-btn" title="Refresh">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="23,4 23,10 17,10"/>
-                    <path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <polyline points="23,4 23,10 17,10" />
+                    <path d="M20.49 15a9 9 0 11-2.12-9.36L23 10" />
                   </svg>
                 </button>
                 <!-- Select All Checkbox -->
-                <div class="filter-action-btn" title="Select all" style="border:1.5px solid #D1D5DB; border-radius:3px; width:16px; height:16px; cursor:pointer;"></div>
+                <div class="filter-action-btn" title="Select all"
+                  style="border:1.5px solid #D1D5DB; border-radius:3px; width:16px; height:16px; cursor:pointer;"></div>
               </div>
+            </div>
+
+            <!-- Source Filter Pills -->
+            <div class="inbox-source-filters" id="inbox-source-filters">
+              <button class="source-filter-pill active" data-filter="all">All</button>
+              <button class="source-filter-pill" data-filter="facebook">Facebook</button>
+              <button class="source-filter-pill" data-filter="twitter">Twitter</button>
+              <button class="source-filter-pill" data-filter="gmail" id="filter-pill-gmail"
+                style="display: none;">Gmail</button>
             </div>
 
             <!-- Case Items -->
@@ -425,25 +475,49 @@
               <!-- Case 1: Impact Guru -->
               <div class="case-item" id="case-1">
                 <div class="case-avatar" style="background: linear-gradient(135deg, #6366f1, #8b5cf6);">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><circle cx="12" cy="7" r="4"/><path d="M5.5 21a6.5 6.5 0 0113 0"/></svg>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                    <circle cx="12" cy="7" r="4" />
+                    <path d="M5.5 21a6.5 6.5 0 0113 0" />
+                  </svg>
                 </div>
                 <div class="case-content">
                   <div class="case-source-label">@ImpactGuru</div>
                   <div class="case-author">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="#1DA1F2"><path d="M23.643 4.937c-.835.37-1.732.62-2.675.733.962-.576 1.7-1.49 2.048-2.578-.9.534-1.897.922-2.958 1.13-.85-.904-2.06-1.47-3.4-1.47-2.572 0-4.658 2.086-4.658 4.66 0 .364.042.718.12 1.06-3.873-.195-7.304-2.05-9.602-4.868-.4.69-.63 1.49-.63 2.342 0 1.616.823 3.043 2.072 3.878-.764-.025-1.482-.234-2.11-.583v.06c0 2.257 1.605 4.14 3.737 4.568-.392.106-.803.162-1.227.162-.3 0-.593-.028-.877-.082.593 1.85 2.313 3.198 4.352 3.234-1.595 1.25-3.604 1.995-5.786 1.995-.376 0-.747-.022-1.112-.065 2.062 1.323 4.51 2.093 7.14 2.093 8.57 0 13.255-7.098 13.255-13.254 0-.2-.005-.402-.014-.602.91-.658 1.7-1.477 2.323-2.41z"/></svg>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="#1DA1F2">
+                      <path
+                        d="M23.643 4.937c-.835.37-1.732.62-2.675.733.962-.576 1.7-1.49 2.048-2.578-.9.534-1.897.922-2.958 1.13-.85-.904-2.06-1.47-3.4-1.47-2.572 0-4.658 2.086-4.658 4.66 0 .364.042.718.12 1.06-3.873-.195-7.304-2.05-9.602-4.868-.4.69-.63 1.49-.63 2.342 0 1.616.823 3.043 2.072 3.878-.764-.025-1.482-.234-2.11-.583v.06c0 2.257 1.605 4.14 3.737 4.568-.392.106-.803.162-1.227.162-.3 0-.593-.028-.877-.082.593 1.85 2.313 3.198 4.352 3.234-1.595 1.25-3.604 1.995-5.786 1.995-.376 0-.747-.022-1.112-.065 2.062 1.323 4.51 2.093 7.14 2.093 8.57 0 13.255-7.098 13.255-13.254 0-.2-.005-.402-.014-.602.91-.658 1.7-1.477 2.323-2.41z" />
+                    </svg>
                     Impact Guru
                   </div>
-                  <div class="case-text">On their way home from a wedding, my parents met with a devastating <span class="highlight">#accident</span>. I los...</div>
+                  <div class="case-text">On their way home from a wedding, my parents met with a devastating <span
+                      class="highlight">#accident</span>. I los...</div>
                   <div class="case-meta">
                     <div class="case-actions">
                       <div class="case-action-icon" title="Emoji">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                          stroke-linecap="round" stroke-linejoin="round">
+                          <circle cx="12" cy="12" r="10" />
+                          <path d="M8 14s1.5 2 4 2 4-2 4-2" />
+                          <line x1="9" y1="9" x2="9.01" y2="9" />
+                          <line x1="15" y1="9" x2="15.01" y2="9" />
+                        </svg>
                       </div>
                       <div class="case-action-icon" title="Reply" style="color:#F59E0B;">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="22,4 12,13 2,4"/></svg>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                          stroke-linecap="round" stroke-linejoin="round">
+                          <rect x="2" y="4" width="20" height="16" rx="2" />
+                          <polyline points="22,4 12,13 2,4" />
+                        </svg>
                       </div>
                       <div class="case-action-icon" title="Share">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                          stroke-linecap="round" stroke-linejoin="round">
+                          <circle cx="18" cy="5" r="3" />
+                          <circle cx="6" cy="12" r="3" />
+                          <circle cx="18" cy="19" r="3" />
+                          <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
+                          <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+                        </svg>
                       </div>
                     </div>
                     <div class="case-timestamp">02:30 PM Wed, Jun 17 | Tweet</div>
@@ -458,20 +532,40 @@
                 <div class="case-content">
                   <div class="case-source-label">Impact Guru</div>
                   <div class="case-author">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="#4267B2"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="#4267B2">
+                      <path
+                        d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+                    </svg>
                     Avneesh Gautam
                   </div>
                   <div class="case-text">God bless you 🙏</div>
                   <div class="case-meta">
                     <div class="case-actions">
                       <div class="case-action-icon" title="Emoji">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                          stroke-linecap="round" stroke-linejoin="round">
+                          <circle cx="12" cy="12" r="10" />
+                          <path d="M8 14s1.5 2 4 2 4-2 4-2" />
+                          <line x1="9" y1="9" x2="9.01" y2="9" />
+                          <line x1="15" y1="9" x2="15.01" y2="9" />
+                        </svg>
                       </div>
                       <div class="case-action-icon" title="Reply" style="color:#F59E0B;">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="22,4 12,13 2,4"/></svg>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                          stroke-linecap="round" stroke-linejoin="round">
+                          <rect x="2" y="4" width="20" height="16" rx="2" />
+                          <polyline points="22,4 12,13 2,4" />
+                        </svg>
                       </div>
                       <div class="case-action-icon" title="Share">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                          stroke-linecap="round" stroke-linejoin="round">
+                          <circle cx="18" cy="5" r="3" />
+                          <circle cx="6" cy="12" r="3" />
+                          <circle cx="18" cy="19" r="3" />
+                          <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
+                          <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+                        </svg>
                       </div>
                     </div>
                     <div class="case-timestamp">07:28 AM Wed, Jun 17 | Comment</div>
@@ -486,20 +580,40 @@
                 <div class="case-content">
                   <div class="case-source-label">Impact Guru</div>
                   <div class="case-author">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="#4267B2"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="#4267B2">
+                      <path
+                        d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+                    </svg>
                     Kerwin Jason
                   </div>
                   <div class="case-text">Amen</div>
                   <div class="case-meta">
                     <div class="case-actions">
                       <div class="case-action-icon" title="Emoji">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                          stroke-linecap="round" stroke-linejoin="round">
+                          <circle cx="12" cy="12" r="10" />
+                          <path d="M8 14s1.5 2 4 2 4-2 4-2" />
+                          <line x1="9" y1="9" x2="9.01" y2="9" />
+                          <line x1="15" y1="9" x2="15.01" y2="9" />
+                        </svg>
                       </div>
                       <div class="case-action-icon" title="Reply" style="color:#F59E0B;">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="22,4 12,13 2,4"/></svg>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                          stroke-linecap="round" stroke-linejoin="round">
+                          <rect x="2" y="4" width="20" height="16" rx="2" />
+                          <polyline points="22,4 12,13 2,4" />
+                        </svg>
                       </div>
                       <div class="case-action-icon" title="Share">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                          stroke-linecap="round" stroke-linejoin="round">
+                          <circle cx="18" cy="5" r="3" />
+                          <circle cx="6" cy="12" r="3" />
+                          <circle cx="18" cy="19" r="3" />
+                          <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
+                          <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+                        </svg>
                       </div>
                     </div>
                     <div class="case-timestamp">05:00 AM Wed, Jun 17 | Comment</div>
@@ -514,20 +628,40 @@
                 <div class="case-content">
                   <div class="case-source-label">Impact Guru</div>
                   <div class="case-author">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="#4267B2"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="#4267B2">
+                      <path
+                        d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+                    </svg>
                     Namita Naskar
                   </div>
                   <div class="case-text">god bless you</div>
                   <div class="case-meta">
                     <div class="case-actions">
                       <div class="case-action-icon" title="Emoji">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                          stroke-linecap="round" stroke-linejoin="round">
+                          <circle cx="12" cy="12" r="10" />
+                          <path d="M8 14s1.5 2 4 2 4-2 4-2" />
+                          <line x1="9" y1="9" x2="9.01" y2="9" />
+                          <line x1="15" y1="9" x2="15.01" y2="9" />
+                        </svg>
                       </div>
                       <div class="case-action-icon" title="Reply" style="color:#F59E0B;">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="22,4 12,13 2,4"/></svg>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                          stroke-linecap="round" stroke-linejoin="round">
+                          <rect x="2" y="4" width="20" height="16" rx="2" />
+                          <polyline points="22,4 12,13 2,4" />
+                        </svg>
                       </div>
                       <div class="case-action-icon" title="Share">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                          stroke-linecap="round" stroke-linejoin="round">
+                          <circle cx="18" cy="5" r="3" />
+                          <circle cx="6" cy="12" r="3" />
+                          <circle cx="18" cy="19" r="3" />
+                          <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
+                          <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+                        </svg>
                       </div>
                     </div>
                     <div class="case-timestamp">18 | Comment</div>
@@ -541,31 +675,41 @@
             <!-- Pagination -->
             <div class="case-pagination">
               <div class="smiley-btn">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                  stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10" />
+                  <path d="M8 14s1.5 2 4 2 4-2 4-2" />
+                  <line x1="9" y1="9" x2="9.01" y2="9" />
+                  <line x1="15" y1="9" x2="15.01" y2="9" />
+                </svg>
               </div>
               <div class="pagination-nav">
                 <span>Showing</span>
                 <div class="pagination-arrow" title="Previous page">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15,18 9,12 15,6"/></svg>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="15,18 9,12 15,6" />
+                  </svg>
                 </div>
                 <input class="pagination-input" type="text" value="1" aria-label="Page number">
                 <span>of 19</span>
                 <div class="pagination-arrow" title="Next page">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9,6 15,12 9,18"/></svg>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="9,6 15,12 9,18" />
+                  </svg>
                 </div>
               </div>
             </div>
           </div>
 
           <!-- Center Panel: Detail View -->
-          <div class="inbox-center">
-            <div class="inbox-empty-state">
+          <div class="inbox-center" id="inbox-center">
+            <div class="inbox-empty-state" id="inbox-empty-state">
               Select Case to work or click on play mode for sequence
             </div>
           </div>
 
           <!-- Right Panel: Info -->
-          <div class="inbox-right"></div>
+          <div class="inbox-right" id="inbox-right"></div>
         </div>
 
         <!-- ────────────────────────────────────────
@@ -583,9 +727,11 @@
               <!-- Workspace Management -->
               <div class="settings-card" id="settings-workspace">
                 <div class="settings-card-icon orange">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="12" cy="12" r="3"/>
-                    <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="3" />
+                    <path
+                      d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" />
                   </svg>
                 </div>
                 <div class="settings-card-label">Workspace<br>Management</div>
@@ -594,11 +740,12 @@
               <!-- Manage Channels -->
               <div class="settings-card" id="settings-manage-channels" data-navigate="channels">
                 <div class="settings-card-icon orange">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
-                    <circle cx="9" cy="7" r="4"/>
-                    <path d="M23 21v-2a4 4 0 00-3-3.87"/>
-                    <path d="M16 3.13a4 4 0 010 7.75"/>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
+                    <circle cx="9" cy="7" r="4" />
+                    <path d="M23 21v-2a4 4 0 00-3-3.87" />
+                    <path d="M16 3.13a4 4 0 010 7.75" />
                   </svg>
                 </div>
                 <div class="settings-card-label">Manage<br>Channels</div>
@@ -607,11 +754,12 @@
               <!-- Bulk Operations -->
               <div class="settings-card" id="settings-bulk">
                 <div class="settings-card-icon orange">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <rect x="2" y="6" width="8" height="12" rx="2"/>
-                    <rect x="14" y="6" width="8" height="12" rx="2"/>
-                    <line x1="10" y1="10" x2="14" y2="10"/>
-                    <line x1="10" y1="14" x2="14" y2="14"/>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <rect x="2" y="6" width="8" height="12" rx="2" />
+                    <rect x="14" y="6" width="8" height="12" rx="2" />
+                    <line x1="10" y1="10" x2="14" y2="10" />
+                    <line x1="10" y1="14" x2="14" y2="14" />
                   </svg>
                 </div>
                 <div class="settings-card-label">Bulk<br>Operations</div>
@@ -620,11 +768,12 @@
               <!-- Download Request -->
               <div class="settings-card" id="settings-download">
                 <div class="settings-card-icon orange">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
-                    <polyline points="14,2 14,8 20,8"/>
-                    <line x1="12" y1="12" x2="12" y2="18"/>
-                    <polyline points="9,15 12,18 15,15"/>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+                    <polyline points="14,2 14,8 20,8" />
+                    <line x1="12" y1="12" x2="12" y2="18" />
+                    <polyline points="9,15 12,18 15,15" />
                   </svg>
                 </div>
                 <div class="settings-card-label">Download<br>Request</div>
@@ -633,10 +782,11 @@
               <!-- Organizer -->
               <div class="settings-card" id="settings-organizer">
                 <div class="settings-card-icon orange">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <rect x="3" y="3" width="18" height="18" rx="2"/>
-                    <line x1="3" y1="9" x2="21" y2="9"/>
-                    <line x1="9" y1="21" x2="9" y2="9"/>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <rect x="3" y="3" width="18" height="18" rx="2" />
+                    <line x1="3" y1="9" x2="21" y2="9" />
+                    <line x1="9" y1="21" x2="9" y2="9" />
                   </svg>
                 </div>
                 <div class="settings-card-label">Organizer</div>
@@ -645,9 +795,10 @@
               <!-- Caseform Configuration -->
               <div class="settings-card" id="settings-caseform">
                 <div class="settings-card-icon orange">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M9 11l3 3L22 4"/>
-                    <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <path d="M9 11l3 3L22 4" />
+                    <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" />
                   </svg>
                 </div>
                 <div class="settings-card-label">Caseform<br>Configuration</div>
@@ -664,10 +815,11 @@
               <!-- Publish Settings -->
               <div class="settings-card" id="settings-publish">
                 <div class="settings-card-icon orange">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
-                    <polyline points="17,8 12,3 7,8"/>
-                    <line x1="12" y1="3" x2="12" y2="15"/>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+                    <polyline points="17,8 12,3 7,8" />
+                    <line x1="12" y1="3" x2="12" y2="15" />
                   </svg>
                 </div>
                 <div class="settings-card-label">Publish<br>Settings</div>
@@ -676,9 +828,10 @@
               <!-- Email Signatures -->
               <div class="settings-card" id="settings-email-sig">
                 <div class="settings-card-icon orange">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <rect x="2" y="4" width="20" height="16" rx="2"/>
-                    <polyline points="22,4 12,13 2,4"/>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <rect x="2" y="4" width="20" height="16" rx="2" />
+                    <polyline points="22,4 12,13 2,4" />
                   </svg>
                 </div>
                 <div class="settings-card-label">Email<br>Signatures</div>
@@ -687,10 +840,11 @@
               <!-- FAQs -->
               <div class="settings-card" id="settings-faqs">
                 <div class="settings-card-icon orange">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="12" cy="12" r="10"/>
-                    <path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/>
-                    <line x1="12" y1="17" x2="12.01" y2="17"/>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10" />
+                    <path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3" />
+                    <line x1="12" y1="17" x2="12.01" y2="17" />
                   </svg>
                 </div>
                 <div class="settings-card-label">FAQs</div>
@@ -699,10 +853,11 @@
               <!-- Media Library -->
               <div class="settings-card" id="settings-media">
                 <div class="settings-card-icon orange">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <rect x="3" y="3" width="18" height="18" rx="2"/>
-                    <circle cx="8.5" cy="8.5" r="1.5"/>
-                    <polyline points="21,15 16,10 5,21"/>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <rect x="3" y="3" width="18" height="18" rx="2" />
+                    <circle cx="8.5" cy="8.5" r="1.5" />
+                    <polyline points="21,15 16,10 5,21" />
                   </svg>
                 </div>
                 <div class="settings-card-label">Media<br>Library</div>
@@ -718,10 +873,11 @@
 
               <div class="settings-card" id="settings-custom-sites">
                 <div class="settings-card-icon green">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="12" cy="12" r="10"/>
-                    <line x1="2" y1="12" x2="22" y2="12"/>
-                    <path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="2" y1="12" x2="22" y2="12" />
+                    <path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z" />
                   </svg>
                 </div>
                 <div class="settings-card-label">Custom<br>Sites</div>
@@ -729,11 +885,13 @@
 
               <div class="settings-card" id="settings-news">
                 <div class="settings-card-icon green">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M4 22h16a2 2 0 002-2V4a2 2 0 00-2-2H8a2 2 0 00-2 2v16a2 2 0 01-2 2zm0 0a2 2 0 01-2-2v-9c0-1.1.9-2 2-2h2"/>
-                    <line x1="10" y1="6" x2="18" y2="6"/>
-                    <line x1="10" y1="10" x2="18" y2="10"/>
-                    <line x1="10" y1="14" x2="14" y2="14"/>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <path
+                      d="M4 22h16a2 2 0 002-2V4a2 2 0 00-2-2H8a2 2 0 00-2 2v16a2 2 0 01-2 2zm0 0a2 2 0 01-2-2v-9c0-1.1.9-2 2-2h2" />
+                    <line x1="10" y1="6" x2="18" y2="6" />
+                    <line x1="10" y1="10" x2="18" y2="10" />
+                    <line x1="10" y1="14" x2="14" y2="14" />
                   </svg>
                 </div>
                 <div class="settings-card-label">News/Blogs<br>Push</div>
@@ -741,11 +899,12 @@
 
               <div class="settings-card" id="settings-integration">
                 <div class="settings-card-icon green">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <rect x="2" y="6" width="8" height="12" rx="2"/>
-                    <rect x="14" y="6" width="8" height="12" rx="2"/>
-                    <line x1="10" y1="10" x2="14" y2="10"/>
-                    <line x1="10" y1="14" x2="14" y2="14"/>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <rect x="2" y="6" width="8" height="12" rx="2" />
+                    <rect x="14" y="6" width="8" height="12" rx="2" />
+                    <line x1="10" y1="10" x2="14" y2="10" />
+                    <line x1="10" y1="14" x2="14" y2="14" />
                   </svg>
                 </div>
                 <div class="settings-card-label">Integration</div>
@@ -753,13 +912,14 @@
 
               <div class="settings-card" id="settings-ip">
                 <div class="settings-card-icon green">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="12" cy="12" r="3"/>
-                    <circle cx="12" cy="12" r="8"/>
-                    <line x1="12" y1="2" x2="12" y2="4"/>
-                    <line x1="12" y1="20" x2="12" y2="22"/>
-                    <line x1="2" y1="12" x2="4" y2="12"/>
-                    <line x1="20" y1="12" x2="22" y2="12"/>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="3" />
+                    <circle cx="12" cy="12" r="8" />
+                    <line x1="12" y1="2" x2="12" y2="4" />
+                    <line x1="12" y1="20" x2="12" y2="22" />
+                    <line x1="2" y1="12" x2="4" y2="12" />
+                    <line x1="20" y1="12" x2="22" y2="12" />
                   </svg>
                 </div>
                 <div class="settings-card-label">IP Address</div>
@@ -767,10 +927,12 @@
 
               <div class="settings-card" id="settings-packaging">
                 <div class="settings-card-icon green">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/>
-                    <polyline points="3.27,6.96 12,12.01 20.73,6.96"/>
-                    <line x1="12" y1="22.08" x2="12" y2="12"/>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <path
+                      d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z" />
+                    <polyline points="3.27,6.96 12,12.01 20.73,6.96" />
+                    <line x1="12" y1="22.08" x2="12" y2="12" />
                   </svg>
                 </div>
                 <div class="settings-card-label">Packaging</div>
@@ -778,11 +940,12 @@
 
               <div class="settings-card" id="settings-vendors">
                 <div class="settings-card-icon green">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <rect x="2" y="7" width="20" height="14" rx="2"/>
-                    <path d="M16 7V5a4 4 0 00-8 0v2"/>
-                    <line x1="12" y1="12" x2="12" y2="16"/>
-                    <circle cx="12" cy="14" r="1" fill="currentColor"/>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <rect x="2" y="7" width="20" height="14" rx="2" />
+                    <path d="M16 7V5a4 4 0 00-8 0v2" />
+                    <line x1="12" y1="12" x2="12" y2="16" />
+                    <circle cx="12" cy="14" r="1" fill="currentColor" />
                   </svg>
                 </div>
                 <div class="settings-card-label">Vendors</div>
@@ -790,11 +953,12 @@
 
               <div class="settings-card" id="settings-audit">
                 <div class="settings-card-icon green">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <rect x="3" y="3" width="18" height="18" rx="2"/>
-                    <line x1="8" y1="8" x2="16" y2="8"/>
-                    <line x1="8" y1="12" x2="16" y2="12"/>
-                    <line x1="8" y1="16" x2="13" y2="16"/>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <rect x="3" y="3" width="18" height="18" rx="2" />
+                    <line x1="8" y1="8" x2="16" y2="8" />
+                    <line x1="8" y1="12" x2="16" y2="12" />
+                    <line x1="8" y1="16" x2="13" y2="16" />
                   </svg>
                 </div>
                 <div class="settings-card-label">Audit Logs</div>
@@ -802,15 +966,16 @@
 
               <div class="settings-card" id="settings-crm">
                 <div class="settings-card-icon green">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <rect x="2" y="2" width="20" height="20" rx="2"/>
-                    <path d="M9 2v20"/>
-                    <path d="M13 8h4"/>
-                    <path d="M13 12h4"/>
-                    <path d="M13 16h2"/>
-                    <circle cx="5.5" cy="8" r="1" fill="currentColor"/>
-                    <circle cx="5.5" cy="12" r="1" fill="currentColor"/>
-                    <circle cx="5.5" cy="16" r="1" fill="currentColor"/>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <rect x="2" y="2" width="20" height="20" rx="2" />
+                    <path d="M9 2v20" />
+                    <path d="M13 8h4" />
+                    <path d="M13 12h4" />
+                    <path d="M13 16h2" />
+                    <circle cx="5.5" cy="8" r="1" fill="currentColor" />
+                    <circle cx="5.5" cy="12" r="1" fill="currentColor" />
+                    <circle cx="5.5" cy="16" r="1" fill="currentColor" />
                   </svg>
                 </div>
                 <div class="settings-card-label">CRM Plug-In</div>
@@ -826,10 +991,11 @@
 
               <div class="settings-card" id="settings-intent">
                 <div class="settings-card-icon maroon">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="12" cy="12" r="10"/>
-                    <circle cx="12" cy="12" r="6"/>
-                    <circle cx="12" cy="12" r="2"/>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10" />
+                    <circle cx="12" cy="12" r="6" />
+                    <circle cx="12" cy="12" r="2" />
                   </svg>
                 </div>
                 <div class="settings-card-label">Manage<br>Intent</div>
@@ -837,11 +1003,12 @@
 
               <div class="settings-card" id="settings-content">
                 <div class="settings-card-icon maroon">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <rect x="3" y="3" width="18" height="18" rx="2"/>
-                    <line x1="8" y1="8" x2="16" y2="8"/>
-                    <line x1="8" y1="12" x2="16" y2="12"/>
-                    <line x1="8" y1="16" x2="12" y2="16"/>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <rect x="3" y="3" width="18" height="18" rx="2" />
+                    <line x1="8" y1="8" x2="16" y2="8" />
+                    <line x1="8" y1="12" x2="16" y2="12" />
+                    <line x1="8" y1="16" x2="12" y2="16" />
                   </svg>
                 </div>
                 <div class="settings-card-label">Manage<br>Content</div>
@@ -849,11 +1016,12 @@
 
               <div class="settings-card" id="settings-group-insights">
                 <div class="settings-card-icon maroon">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <rect x="3" y="3" width="7" height="7" rx="1"/>
-                    <rect x="14" y="3" width="7" height="7" rx="1"/>
-                    <rect x="3" y="14" width="7" height="7" rx="1"/>
-                    <rect x="14" y="14" width="7" height="7" rx="1"/>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <rect x="3" y="3" width="7" height="7" rx="1" />
+                    <rect x="14" y="3" width="7" height="7" rx="1" />
+                    <rect x="3" y="14" width="7" height="7" rx="1" />
+                    <rect x="14" y="14" width="7" height="7" rx="1" />
                   </svg>
                 </div>
                 <div class="settings-card-label">Manage Group<br>Insights</div>
@@ -861,9 +1029,10 @@
 
               <div class="settings-card" id="settings-segment">
                 <div class="settings-card-icon maroon">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="12" cy="12" r="10"/>
-                    <path d="M12 2v10l7 4"/>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10" />
+                    <path d="M12 2v10l7 4" />
                   </svg>
                 </div>
                 <div class="settings-card-label">Manage<br>Segment</div>
@@ -871,10 +1040,11 @@
 
               <div class="settings-card" id="settings-training">
                 <div class="settings-card-icon maroon">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="12" cy="12" r="10"/>
-                    <line x1="12" y1="8" x2="12" y2="12"/>
-                    <line x1="12" y1="16" x2="12.01" y2="16"/>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="12" y1="8" x2="12" y2="12" />
+                    <line x1="12" y1="16" x2="12.01" y2="16" />
                   </svg>
                 </div>
                 <div class="settings-card-label">Training<br>Module</div>
@@ -882,9 +1052,10 @@
 
               <div class="settings-card" id="settings-exit-playmode">
                 <div class="settings-card-icon maroon">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <rect x="4" y="4" width="16" height="16" rx="2"/>
-                    <polygon points="10,8 16,12 10,16" fill="currentColor"/>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <rect x="4" y="4" width="16" height="16" rx="2" />
+                    <polygon points="10,8 16,12 10,16" fill="currentColor" />
                   </svg>
                 </div>
                 <div class="settings-card-label">Manage Exit-<br>Playmode</div>
@@ -918,11 +1089,12 @@
                 <!-- Social -->
                 <div class="source-card active" data-source="social" id="source-social">
                   <div class="source-card-icon">
-                    <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <path d="M6 40l8-8"/>
-                      <path d="M14 32l20-20"/>
-                      <path d="M34 12l6-6"/>
-                      <path d="M28 6h12v12"/>
+                    <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                      stroke-linejoin="round">
+                      <path d="M6 40l8-8" />
+                      <path d="M14 32l20-20" />
+                      <path d="M34 12l6-6" />
+                      <path d="M28 6h12v12" />
                     </svg>
                   </div>
                   <div class="source-card-label">Social</div>
@@ -931,10 +1103,11 @@
                 <!-- App Reviews -->
                 <div class="source-card" data-source="app-reviews" id="source-app-reviews">
                   <div class="source-card-icon">
-                    <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <rect x="12" y="4" width="24" height="40" rx="3"/>
-                      <line x1="20" y1="8" x2="28" y2="8"/>
-                      <circle cx="24" cy="38" r="2"/>
+                    <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                      stroke-linejoin="round">
+                      <rect x="12" y="4" width="24" height="40" rx="3" />
+                      <line x1="20" y1="8" x2="28" y2="8" />
+                      <circle cx="24" cy="38" r="2" />
                     </svg>
                   </div>
                   <div class="source-card-label">App<br>Reviews</div>
@@ -943,10 +1116,11 @@
                 <!-- e-Commerce Reviews -->
                 <div class="source-card" data-source="ecommerce" id="source-ecommerce">
                   <div class="source-card-icon">
-                    <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <path d="M6 6h6l6 24h18l4-16H16"/>
-                      <circle cx="20" cy="38" r="3"/>
-                      <circle cx="34" cy="38" r="3"/>
+                    <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                      stroke-linejoin="round">
+                      <path d="M6 6h6l6 24h18l4-16H16" />
+                      <circle cx="20" cy="38" r="3" />
+                      <circle cx="34" cy="38" r="3" />
                       <text x="20" y="18" font-size="8" fill="currentColor" stroke="none" font-weight="bold">e</text>
                     </svg>
                   </div>
@@ -956,14 +1130,15 @@
                 <!-- Location Reviews -->
                 <div class="source-card" data-source="location" id="source-location">
                   <div class="source-card-icon">
-                    <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <rect x="8" y="8" width="32" height="32" rx="2"/>
-                      <rect x="14" y="14" width="8" height="10" rx="1"/>
-                      <rect x="26" y="14" width="8" height="10" rx="1"/>
-                      <rect x="14" y="28" width="8" height="10" rx="1"/>
-                      <rect x="26" y="28" width="8" height="10" rx="1"/>
-                      <line x1="24" y1="8" x2="24" y2="40"/>
-                      <line x1="8" y1="26" x2="40" y2="26"/>
+                    <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                      stroke-linejoin="round">
+                      <rect x="8" y="8" width="32" height="32" rx="2" />
+                      <rect x="14" y="14" width="8" height="10" rx="1" />
+                      <rect x="26" y="14" width="8" height="10" rx="1" />
+                      <rect x="14" y="28" width="8" height="10" rx="1" />
+                      <rect x="26" y="28" width="8" height="10" rx="1" />
+                      <line x1="24" y1="8" x2="24" y2="40" />
+                      <line x1="8" y1="26" x2="40" y2="26" />
                     </svg>
                   </div>
                   <div class="source-card-label">Location<br>Reviews</div>
@@ -972,12 +1147,13 @@
                 <!-- Messaging Apps -->
                 <div class="source-card" data-source="messaging" id="source-messaging">
                   <div class="source-card-icon">
-                    <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <rect x="8" y="6" width="32" height="24" rx="3"/>
-                      <line x1="16" y1="14" x2="32" y2="14"/>
-                      <line x1="16" y1="20" x2="28" y2="20"/>
-                      <line x1="16" y1="26" x2="24" y2="26"/>
-                      <path d="M16 30v8l8-8"/>
+                    <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                      stroke-linejoin="round">
+                      <rect x="8" y="6" width="32" height="24" rx="3" />
+                      <line x1="16" y1="14" x2="32" y2="14" />
+                      <line x1="16" y1="20" x2="28" y2="20" />
+                      <line x1="16" y1="26" x2="24" y2="26" />
+                      <path d="M16 30v8l8-8" />
                     </svg>
                   </div>
                   <div class="source-card-label">Messaging<br>Apps</div>
@@ -986,10 +1162,11 @@
                 <!-- Others -->
                 <div class="source-card" data-source="others" id="source-others">
                   <div class="source-card-icon">
-                    <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <circle cx="14" cy="24" r="3"/>
-                      <circle cx="24" cy="24" r="3"/>
-                      <circle cx="34" cy="24" r="3"/>
+                    <svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                      stroke-linejoin="round">
+                      <circle cx="14" cy="24" r="3" />
+                      <circle cx="24" cy="24" r="3" />
+                      <circle cx="34" cy="24" r="3" />
                     </svg>
                   </div>
                   <div class="source-card-label">Others</div>
@@ -1007,7 +1184,9 @@
                 <div class="channel-card" id="channel-x">
                   <div class="channel-card-logo">
                     <svg viewBox="0 0 24 24" width="40" height="40">
-                      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" fill="#000"/>
+                      <path
+                        d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"
+                        fill="#000" />
                     </svg>
                   </div>
                   <div class="channel-card-name">X</div>
@@ -1017,7 +1196,9 @@
                 <div class="channel-card" id="channel-facebook">
                   <div class="channel-card-logo">
                     <svg viewBox="0 0 24 24" width="40" height="40">
-                      <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" fill="#1877F2"/>
+                      <path
+                        d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"
+                        fill="#1877F2" />
                     </svg>
                   </div>
                   <div class="channel-card-name">Facebook Pages</div>
@@ -1027,8 +1208,10 @@
                 <div class="channel-card" id="channel-youtube">
                   <div class="channel-card-logo">
                     <svg viewBox="0 0 24 24" width="40" height="40">
-                      <path d="M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814z" fill="#FF0000"/>
-                      <polygon points="9.545,15.568 15.818,12 9.545,8.432" fill="#fff"/>
+                      <path
+                        d="M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814z"
+                        fill="#FF0000" />
+                      <polygon points="9.545,15.568 15.818,12 9.545,8.432" fill="#fff" />
                     </svg>
                   </div>
                   <div class="channel-card-name">YouTube</div>
@@ -1038,7 +1221,9 @@
                 <div class="channel-card" id="channel-linkedin">
                   <div class="channel-card-logo">
                     <svg viewBox="0 0 24 24" width="40" height="40">
-                      <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" fill="#0A66C2"/>
+                      <path
+                        d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"
+                        fill="#0A66C2" />
                     </svg>
                   </div>
                   <div class="channel-card-name">LinkedIn Company Page</div>
@@ -1050,16 +1235,16 @@
                     <svg viewBox="0 0 48 48" width="40" height="40">
                       <defs>
                         <radialGradient id="ig-grad" cx="30%" cy="107%" r="150%">
-                          <stop offset="0%" stop-color="#fdf497"/>
-                          <stop offset="5%" stop-color="#fdf497"/>
-                          <stop offset="45%" stop-color="#fd5949"/>
-                          <stop offset="60%" stop-color="#d6249f"/>
-                          <stop offset="90%" stop-color="#285AEB"/>
+                          <stop offset="0%" stop-color="#fdf497" />
+                          <stop offset="5%" stop-color="#fdf497" />
+                          <stop offset="45%" stop-color="#fd5949" />
+                          <stop offset="60%" stop-color="#d6249f" />
+                          <stop offset="90%" stop-color="#285AEB" />
                         </radialGradient>
                       </defs>
-                      <rect x="2" y="2" width="44" height="44" rx="12" fill="url(#ig-grad)"/>
-                      <circle cx="24" cy="24" r="9" fill="none" stroke="#fff" stroke-width="3"/>
-                      <circle cx="35" cy="13" r="2.5" fill="#fff"/>
+                      <rect x="2" y="2" width="44" height="44" rx="12" fill="url(#ig-grad)" />
+                      <circle cx="24" cy="24" r="9" fill="none" stroke="#fff" stroke-width="3" />
+                      <circle cx="35" cy="13" r="2.5" fill="#fff" />
                     </svg>
                   </div>
                   <div class="channel-card-name">Instagram Business</div>
@@ -1069,12 +1254,15 @@
                 <div class="channel-card" id="channel-tumblr">
                   <div class="channel-card-logo">
                     <svg viewBox="0 0 24 24" width="40" height="40">
-                      <path d="M14.563 24c-5.093 0-7.031-3.756-7.031-6.411V9.747H5.116V6.648c3.63-1.313 4.512-4.596 4.71-6.469C9.84.053 9.94 0 10.066 0h3.86v6.114h5.283v3.633H13.92v7.46c.011 1.01.245 2.412 2.316 2.412.78-.003 1.819-.252 2.366-.493l1.398 3.406c-.546.713-3.014 1.468-4.216 1.468h-1.221z" fill="#36465D"/>
+                      <path
+                        d="M14.563 24c-5.093 0-7.031-3.756-7.031-6.411V9.747H5.116V6.648c3.63-1.313 4.512-4.596 4.71-6.469C9.84.053 9.94 0 10.066 0h3.86v6.114h5.283v3.633H13.92v7.46c.011 1.01.245 2.412 2.316 2.412.78-.003 1.819-.252 2.366-.493l1.398 3.406c-.546.713-3.014 1.468-4.216 1.468h-1.221z"
+                        fill="#36465D" />
                     </svg>
                   </div>
                   <div class="channel-card-name">Tumblr</div>
                 </div>
 
+<<<<<<< HEAD
                 <!-- Google Play Store -->
                 <div class="channel-card" id="channel-playstore">
                   <div class="channel-card-logo">
@@ -1085,6 +1273,39 @@
                   <div class="channel-card-name">Google Play Store</div>
                 </div>
 
+                <!-- Gmail -->
+                <div class="channel-card" id="channel-gmail">
+                  <div class="channel-card-logo">
+                    <svg viewBox="0 0 48 48" width="40" height="40">
+                      <path
+                        d="M5.5 8h37a3.5 3.5 0 013.5 3.5v25a3.5 3.5 0 01-3.5 3.5h-37A3.5 3.5 0 012 36.5v-25A3.5 3.5 0 015.5 8z"
+                        fill="#F1F1F1" />
+                      <path d="M2 11.5l22 15 22-15" fill="none" stroke="#EA4335" stroke-width="0" />
+                      <path d="M2 11.5V36.5A3.5 3.5 0 005.5 40h3V18.5L2 11.5z" fill="#4285F4" />
+                      <path d="M42.5 40h3a3.5 3.5 0 003.5-3.5V11.5l-6.5 7v21.5z" fill="#34A853" />
+                      <path d="M8.5 18.5V40h31V18.5L24 30 8.5 18.5z" fill="#C5221F" opacity="0.05" />
+                      <path d="M2 11.5l6.5 7L24 30l15.5-11.5 6.5-7A3.5 3.5 0 0042.5 8h-37A3.5 3.5 0 002 11.5z"
+                        fill="#EA4335" />
+                      <path
+                        d="M8.5 18.5L2 11.5A3.5 3.5 0 015.5 8h0l18.5 14L42.5 8h0A3.5 3.5 0 0146 11.5l-6.5 7L24 30 8.5 18.5z"
+                        fill="#EA4335" />
+                      <path d="M8.5 18.5V40h31V18.5L24 30 8.5 18.5z" fill="white" />
+                      <path d="M8.5 40V18.5L24 30l15.5-11.5V40H8.5z" fill="#EEEEEE" opacity="0.4" />
+                      <path d="M2 11.5l6.5 7L24 30l15.5-11.5 6.5-7" fill="none" stroke="#EA4335" stroke-width="0" />
+                      <!-- Simplified Gmail M logo -->
+                      <rect x="6" y="10" width="36" height="28" rx="3" fill="#F1F1F1" />
+                      <path d="M6 13l18 12 18-12" fill="none" stroke="#EA4335" stroke-width="2.5"
+                        stroke-linejoin="round" />
+                      <path d="M6 13v22a3 3 0 003 3h3V19L6 13z" fill="#4285F4" />
+                      <path d="M36 38h3a3 3 0 003-3V13l-6 6v19z" fill="#34A853" />
+                      <path d="M12 19v19h24V19l-12 8-12-8z" fill="#C5221F" opacity="0.08" />
+                      <path d="M6 13l6 6 12 8 12-8 6-6" fill="none" stroke="#EA4335" stroke-width="0" />
+                      <path d="M6 13a3 3 0 013-3h30a3 3 0 013 3l-18 12L6 13z" fill="#EA4335" />
+                    </svg>
+                  </div>
+                  <div class="channel-card-name">Gmail</div>
+                </div>
+
               </div>
             </div>
 
@@ -1093,9 +1314,17 @@
               <div class="fb-pages-header">
                 <div class="fb-pages-heading">
                   <button class="fb-back-btn" id="fb-back-btn" aria-label="Back to channels">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12,19 5,12 12,5"/></svg>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                      stroke-linejoin="round">
+                      <line x1="19" y1="12" x2="5" y2="12" />
+                      <polyline points="12,19 5,12 12,5" />
+                    </svg>
                   </button>
-                  <svg class="fb-pages-icon" viewBox="0 0 24 24" width="22" height="22"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" fill="#1877F2"/></svg>
+                  <svg class="fb-pages-icon" viewBox="0 0 24 24" width="22" height="22">
+                    <path
+                      d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"
+                      fill="#1877F2" />
+                  </svg>
                   <span class="fb-pages-title">FACEBOOK PAGES</span>
                 </div>
                 <button id="fb-add-channel-btn" class="btn primary">+ ADD FACEBOOK</button>
@@ -1159,6 +1388,265 @@
 
             </div>
 
+            <!-- Right Panel (alt): Gmail Configuration (hidden until Gmail selected) -->
+            <div class="gmail-config-panel" id="gmail-config-panel" style="display:none;">
+              <div class="gmail-config-header">
+                <div class="gmail-config-heading">
+                  <button class="gmail-back-btn" id="gmail-back-btn" aria-label="Back to channels">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                      stroke-linejoin="round">
+                      <line x1="19" y1="12" x2="5" y2="12" />
+                      <polyline points="12,19 5,12 12,5" />
+                    </svg>
+                  </button>
+                  <svg class="gmail-config-icon" viewBox="0 0 48 48" width="22" height="22">
+                    <rect x="6" y="10" width="36" height="28" rx="3" fill="#F1F1F1" />
+                    <path d="M6 13a3 3 0 013-3h30a3 3 0 013 3l-18 12L6 13z" fill="#EA4335" />
+                    <path d="M6 13v22a3 3 0 003 3h3V19L6 13z" fill="#4285F4" />
+                    <path d="M36 38h3a3 3 0 003-3V13l-6 6v19z" fill="#34A853" />
+                    <path d="M12 19v19h24V19l-12 8-12-8z" fill="white" />
+                  </svg>
+                  <span class="gmail-config-title">GMAIL CONFIGURATION</span>
+                </div>
+                <button class="gmail-connect-btn" id="gmail-connect-btn">+ CONNECT GMAIL</button>
+              </div>
+
+              <div class="gmail-tabs" id="gmail-tabs">
+                <button class="gmail-tab active" data-gmailtab="imap">IMAP/SMTP Setup</button>
+                <button class="gmail-tab" data-gmailtab="forwarding">Email Forwarding</button>
+                <button class="gmail-tab" data-gmailtab="connected">Connected Accounts</button>
+              </div>
+
+              <!-- IMAP/SMTP Setup Form -->
+              <div class="gmail-tab-content active" id="gmail-tab-imap">
+                <div class="gmail-info-banner" id="gmail-info-banner"
+                  style="display: flex; flex-direction: column; gap: 8px; align-items: flex-start; padding: 12px 16px; background-color: #f3f4f6; border-left: 4px solid #3b82f6; border-radius: 4px; margin-bottom: 15px;">
+                  <div style="display: flex; align-items: center; gap: 8px; font-weight: 600; color: #1e3a8a;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"
+                      stroke-linejoin="round" width="18" height="18" style="flex-shrink: 0;">
+                      <circle cx="12" cy="12" r="10" />
+                      <line x1="12" y1="16" x2="12" y2="12" />
+                      <line x1="12" y1="8" x2="12.01" y2="8" />
+                    </svg>
+                    <span>Google App Password &amp; Sync Server Required</span>
+                  </div>
+                  <span style="font-size: 12px; line-height: 1.5; color: #4b5563;">
+                    1. Ensure you are running the custom backend server (<strong>python server.py</strong>).<br>
+                    2. Enable <strong>IMAP</strong> in Gmail Settings (Settings &rarr; Forwarding and POP/IMAP).<br>
+                    3. Enable <strong>2-Step Verification</strong> on your Google Account.<br>
+                    4. Generate a 16-character <strong>App Password</strong> (Security &rarr; App Passwords) and use it
+                    as your password below.
+                  </span>
+                </div>
+
+                <form class="gmail-config-form" id="gmail-config-form" autocomplete="off">
+                  <div class="gmail-form-section">
+                    <h3 class="gmail-form-section-title">Account Details</h3>
+                    <div class="gmail-form-grid">
+                      <div class="gmail-form-group">
+                        <label for="gmail-display-name">Display Name</label>
+                        <input type="text" id="gmail-display-name" placeholder="e.g. Support Team" />
+                      </div>
+                      <div class="gmail-form-group">
+                        <label for="gmail-email">Email Address</label>
+                        <input type="email" id="gmail-email" placeholder="support@yourcompany.com" />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="gmail-form-section">
+                    <h3 class="gmail-form-section-title">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round" width="16" height="16">
+                        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+                        <polyline points="7,10 12,15 17,10" />
+                        <line x1="12" y1="15" x2="12" y2="3" />
+                      </svg>
+                      Incoming Mail (IMAP)
+                    </h3>
+                    <div class="gmail-form-grid">
+                      <div class="gmail-form-group">
+                        <label for="gmail-imap-host">IMAP Server</label>
+                        <input type="text" id="gmail-imap-host" value="imap.gmail.com" />
+                      </div>
+                      <div class="gmail-form-group">
+                        <label for="gmail-imap-port">Port</label>
+                        <input type="number" id="gmail-imap-port" value="993" />
+                      </div>
+                      <div class="gmail-form-group">
+                        <label for="gmail-imap-security">Security</label>
+                        <select id="gmail-imap-security">
+                          <option value="ssl" selected>SSL/TLS</option>
+                          <option value="starttls">STARTTLS</option>
+                          <option value="none">None</option>
+                        </select>
+                      </div>
+                      <div class="gmail-form-group">
+                        <label for="gmail-imap-username">Username</label>
+                        <input type="email" id="gmail-imap-username" placeholder="you@gmail.com" />
+                      </div>
+                      <div class="gmail-form-group">
+                        <label for="gmail-imap-password">Password / App Password</label>
+                        <div class="gmail-password-wrapper">
+                          <input type="password" id="gmail-imap-password" placeholder="••••••••••••••••" />
+                          <button type="button" class="gmail-toggle-password" data-target="gmail-imap-password"
+                            aria-label="Toggle password visibility">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                              stroke-linecap="round" stroke-linejoin="round">
+                              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                              <circle cx="12" cy="12" r="3" />
+                            </svg>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="gmail-form-section">
+                    <h3 class="gmail-form-section-title">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round" width="16" height="16">
+                        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+                        <polyline points="17,8 12,3 7,8" />
+                        <line x1="12" y1="3" x2="12" y2="15" />
+                      </svg>
+                      Outgoing Mail (SMTP)
+                    </h3>
+                    <div class="gmail-form-grid">
+                      <div class="gmail-form-group">
+                        <label for="gmail-smtp-host">SMTP Server</label>
+                        <input type="text" id="gmail-smtp-host" value="smtp.gmail.com" />
+                      </div>
+                      <div class="gmail-form-group">
+                        <label for="gmail-smtp-port">Port</label>
+                        <input type="number" id="gmail-smtp-port" value="587" />
+                      </div>
+                      <div class="gmail-form-group">
+                        <label for="gmail-smtp-security">Security</label>
+                        <select id="gmail-smtp-security">
+                          <option value="starttls" selected>STARTTLS</option>
+                          <option value="ssl">SSL/TLS</option>
+                          <option value="none">None</option>
+                        </select>
+                      </div>
+                      <div class="gmail-form-group">
+                        <label for="gmail-smtp-auth">Authentication</label>
+                        <select id="gmail-smtp-auth">
+                          <option value="login" selected>Login (Normal Password)</option>
+                          <option value="oauth2">OAuth 2.0</option>
+                          <option value="plain">PLAIN</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="gmail-form-section">
+                    <h3 class="gmail-form-section-title">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round" width="16" height="16">
+                        <circle cx="12" cy="12" r="3" />
+                        <path
+                          d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z" />
+                      </svg>
+                      Advanced Options
+                    </h3>
+                    <div class="gmail-form-grid">
+                      <div class="gmail-form-group">
+                        <label for="gmail-sync-interval">Sync Interval</label>
+                        <select id="gmail-sync-interval">
+                          <option value="1">Every 1 minute</option>
+                          <option value="5" selected>Every 5 minutes</option>
+                          <option value="15">Every 15 minutes</option>
+                          <option value="30">Every 30 minutes</option>
+                          <option value="60">Every 1 hour</option>
+                        </select>
+                      </div>
+                      <div class="gmail-form-group">
+                        <label for="gmail-folders">Monitored Folders</label>
+                        <select id="gmail-folders" multiple>
+                          <option value="INBOX" selected>Inbox</option>
+                          <option value="[Gmail]/Sent Mail">Sent Mail</option>
+                          <option value="[Gmail]/Drafts">Drafts</option>
+                          <option value="[Gmail]/Spam">Spam</option>
+                        </select>
+                      </div>
+                      <div class="gmail-form-group gmail-form-group-checkbox">
+                        <label class="gmail-checkbox-label">
+                          <input type="checkbox" id="gmail-auto-assign" />
+                          <span>Auto-assign incoming emails to team</span>
+                        </label>
+                      </div>
+                      <div class="gmail-form-group gmail-form-group-checkbox">
+                        <label class="gmail-checkbox-label">
+                          <input type="checkbox" id="gmail-create-case" checked />
+                          <span>Auto-create case for new emails</span>
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="gmail-form-actions">
+                    <button type="button" class="gmail-btn-secondary" id="gmail-test-btn">Test Connection</button>
+                    <button type="submit" class="gmail-btn-primary" id="gmail-save-btn">Save &amp; Connect</button>
+                  </div>
+                </form>
+              </div>
+
+              <!-- Email Forwarding Tab -->
+              <div class="gmail-tab-content" id="gmail-tab-forwarding">
+                <div class="gmail-info-banner">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round" width="18" height="18">
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="12" y1="16" x2="12" y2="12" />
+                    <line x1="12" y1="8" x2="12.01" y2="8" />
+                  </svg>
+                  <span>Forward emails from your Gmail to Carapal360 to automatically create cases. Copy the forwarding
+                    address below and add it in your Gmail <strong>Settings → Forwarding</strong>.</span>
+                </div>
+                <div class="gmail-forwarding-box">
+                  <label class="gmail-forwarding-label">Your Forwarding Address</label>
+                  <div class="gmail-forwarding-copy">
+                    <input type="text" id="gmail-forwarding-address" value="roshansalunke91@gmail.com" readonly />
+                    <button type="button" class="gmail-copy-btn" id="gmail-copy-btn" title="Copy to clipboard">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                        <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+                      </svg>
+                      <span>Copy</span>
+                    </button>
+                  </div>
+                  <div class="gmail-forwarding-steps">
+                    <h4>Setup Steps:</h4>
+                    <ol>
+                      <li>Open <strong>Gmail</strong> and go to <strong>Settings</strong> (gear icon) → <strong>See all
+                          settings</strong></li>
+                      <li>Click the <strong>Forwarding and POP/IMAP</strong> tab</li>
+                      <li>Click <strong>Add a forwarding address</strong></li>
+                      <li>Paste the address above and click <strong>Next → Proceed → OK</strong></li>
+                      <li>A confirmation code will be sent — enter it in Gmail to verify</li>
+                      <li>Select <strong>"Forward a copy of incoming mail to…"</strong> and choose the address</li>
+                      <li>Click <strong>Save Changes</strong></li>
+                    </ol>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Connected Accounts Tab -->
+              <div class="gmail-tab-content" id="gmail-tab-connected">
+                <div class="gmail-connected-empty" id="gmail-connected-empty">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+                    stroke-linejoin="round" width="48" height="48">
+                    <rect x="2" y="4" width="20" height="16" rx="2" />
+                    <polyline points="22,4 12,13 2,4" />
+                  </svg>
+                  <p>No Gmail accounts connected yet.</p>
+                  <span>Click <strong>+ CONNECT GMAIL</strong> or configure IMAP/SMTP to add your first account.</span>
+                </div>
+                <div class="gmail-connected-list" id="gmail-connected-list" style="display:none;"></div>
+              </div>
+            </div>
           </div>
 
         </div>
@@ -1167,12 +1655,49 @@
     </div>
   </div>
 
+  <!-- Google Client ID Setup Modal -->
+  <div id="gmail-client-id-modal" class="gmail-modal-overlay" style="display: none;">
+    <div class="gmail-modal-card">
+      <div class="gmail-modal-header">
+        <h3>Configure Google OAuth Client</h3>
+        <button class="gmail-modal-close" id="gmail-modal-close-btn">&times;</button>
+      </div>
+      <div class="gmail-modal-body">
+        <p>To connect your real Gmail inbox directly from localhost, you need a Google OAuth Client ID.</p>
+        <div class="setup-instructions-box">
+          <h4>How to get a Google Client ID:</h4>
+          <ol>
+            <li>Go to the <a href="https://console.cloud.google.com/" target="_blank">Google Cloud Console</a>.</li>
+            <li>Create a new project or select an existing one.</li>
+            <li>Go to **APIs & Services → Library**, search for **Gmail API**, and click **Enable**.</li>
+            <li>Go to **APIs & Services → OAuth consent screen**, configure it for "External" users, and add the scopes
+              `https://www.googleapis.com/auth/gmail.readonly` and `https://www.googleapis.com/auth/gmail.send`.</li>
+            <li>Go to **APIs & Services → Credentials**, click **Create Credentials → OAuth client ID**.</li>
+            <li>Select Application type: **Web application**.</li>
+            <li>Under **Authorized JavaScript origins**, add: `http://localhost:8080` (and `http://localhost` if
+              needed).</li>
+            <li>Click **Create**, copy the **Client ID**, and paste it below.</li>
+          </ol>
+        </div>
+        <div class="gmail-modal-form-group">
+          <label for="gmail-modal-client-id">Google Client ID</label>
+          <input type="text" id="gmail-modal-client-id" placeholder="e.g. 123456-abcdef.apps.googleusercontent.com" />
+        </div>
+      </div>
+      <div class="gmail-modal-footer">
+        <button class="gmail-btn-secondary" id="gmail-modal-cancel-btn">Cancel</button>
+        <button class="gmail-btn-primary" id="gmail-modal-save-btn">Save &amp; Continue</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Help Button (floating) -->
   <button id="help-fab" class="help-fab" aria-label="Help">
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <circle cx="12" cy="12" r="10"/>
-      <path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/>
-      <line x1="12" y1="17" x2="12.01" y2="17"/>
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+      stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="10" />
+      <path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3" />
+      <line x1="12" y1="17" x2="12.01" y2="17" />
     </svg>
   </button>
 
@@ -1181,4 +1706,5 @@
   <script src="google.js?v=5"></script>
   <script src="app.js?v=5"></script>
 </body>
+
 </html>
