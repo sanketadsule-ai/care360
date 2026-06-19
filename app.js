@@ -744,15 +744,13 @@ Billing Dept.`,
           if (FB && page.accessToken) {
             cases = await FB.getPageCases(page);
             
-            // Save the newly fetched REAL messages to our DB so they persist
+            // Save the newly fetched REAL messages to our dedicated FB table so they persist
             if (cases.length > 0) {
               const dbPayload = cases.map(c => ({
-                gmail_message_id: c.id, // Using this column generically as unique message ID
-                subject: 'Facebook ' + c.type,
-                sender_name: c.author,
-                sender_email: c.author,
-                recipient_email: page.id,
-                body_text: c.text,
+                fb_post_id: c.id, 
+                post_type: c.type,
+                author_name: c.author,
+                message_text: c.text,
                 received_at: c.createdTime
               }));
 
@@ -760,7 +758,7 @@ Billing Dept.`,
               fetch('/api/connected-channels').then(r => r.json()).then(chData => {
                 const ch = (chData.data || []).find(x => x.account_email === page.id);
                 if (ch) {
-                  fetch('/api/platform-messages', {
+                  fetch('/api/facebook-messages', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ channel_id: ch.id, messages: dbPayload })
@@ -2706,57 +2704,96 @@ Collab Manager`
       .catch(err => console.error('Failed to restore channels from DB:', err));
 
     // Restore All Messages from the database
-    fetch('/api/platform-messages')
-      .then(r => r.json())
-      .then(data => {
-        if (data.success && data.data && data.data.length > 0) {
-          // Only add messages that aren't already in state
-          const existingIds = new Set(state.cases.map(c => c.gmailMessageId || c.id).filter(Boolean));
-          let addedCount = 0;
-          data.data.forEach(dbMsg => {
-            if (dbMsg.gmail_message_id && !existingIds.has(dbMsg.gmail_message_id)) {
-              
-              // Formatting depends on platform
-              const platform = dbMsg.platform || 'gmail';
-              const sourceLabel = platform === 'gmail' ? 'Gmail Support' : (platform === 'google_play' ? 'Google Play' : platform);
-              const msgType = platform === 'gmail' ? 'Email' : (platform === 'google_play' ? 'Review' : 'Message');
-              
-              state.cases.push({
-                id: (platform === 'gmail' ? 'gmail-msg-' : 'msg-') + dbMsg.gmail_message_id,
-                gmailMessageId: dbMsg.gmail_message_id,
-                source: sourceLabel,
-                author: dbMsg.sender_email,
-                authorName: dbMsg.sender_name,
-                channel: platform,
-                avatarGradient: AVATAR_GRADIENTS[Math.abs(hashCode(dbMsg.sender_email || '')) % AVATAR_GRADIENTS.length],
-                text: (dbMsg.body_text || '').substring(0, 120),
-                createdTime: dbMsg.received_at || dbMsg.created_at,
-                type: msgType,
-                status: dbMsg.status === 'open' ? 'Open' : 'Closed',
-                priority: 'Medium',
-                assignedTo: 'Unassigned',
-                emailSubject: dbMsg.subject || '(No Subject)',
-                emailAttachments: [],
-                messages: [{
-                  id: 'msg-db-' + dbMsg.id,
-                  sender: (dbMsg.sender_name || '') + ' <' + (dbMsg.sender_email || '') + '>',
-                  text: dbMsg.body_text || '',
-                  timestamp: dbMsg.received_at || dbMsg.created_at,
-                  isAgent: false
-                }]
-              });
-              addedCount++;
-            }
-          });
-          if (addedCount > 0) {
-            state.cases.sort((a, b) => new Date(b.createdTime) - new Date(a.createdTime));
-            saveState();
-            renderAllCases();
-            console.log('Restored', addedCount, 'messages from database');
+    Promise.all([
+      fetch('/api/platform-messages').then(r => r.json()),
+      fetch('/api/facebook-messages').then(r => r.json())
+    ])
+    .then(([platformData, fbData]) => {
+      let addedCount = 0;
+      const existingIds = new Set(state.cases.map(c => c.gmailMessageId || c.fbPostId || c.id).filter(Boolean));
+
+      // Process general platform messages
+      if (platformData.success && platformData.data && platformData.data.length > 0) {
+        platformData.data.forEach(dbMsg => {
+          if (dbMsg.gmail_message_id && !existingIds.has(dbMsg.gmail_message_id)) {
+            const platform = dbMsg.platform || 'gmail';
+            const sourceLabel = platform === 'gmail' ? 'Gmail Support' : (platform === 'google_play' ? 'Google Play' : platform);
+            const msgType = platform === 'gmail' ? 'Email' : (platform === 'google_play' ? 'Review' : 'Message');
+            
+            state.cases.push({
+              id: (platform === 'gmail' ? 'gmail-msg-' : 'msg-') + dbMsg.gmail_message_id,
+              gmailMessageId: dbMsg.gmail_message_id,
+              source: sourceLabel,
+              author: dbMsg.sender_email,
+              authorName: dbMsg.sender_name,
+              channel: platform,
+              avatarGradient: AVATAR_GRADIENTS[Math.abs(hashCode(dbMsg.sender_email || '')) % AVATAR_GRADIENTS.length],
+              text: (dbMsg.body_text || '').substring(0, 120),
+              createdTime: dbMsg.received_at || dbMsg.created_at,
+              type: msgType,
+              status: dbMsg.status === 'open' ? 'Open' : 'Closed',
+              priority: 'Medium',
+              assignedTo: 'Unassigned',
+              emailSubject: dbMsg.subject || '(No Subject)',
+              emailAttachments: [],
+              messages: [{
+                id: 'msg-db-' + dbMsg.id,
+                sender: (dbMsg.sender_name || '') + ' <' + (dbMsg.sender_email || '') + '>',
+                text: dbMsg.body_text || '',
+                timestamp: dbMsg.received_at || dbMsg.created_at,
+                isAgent: false
+              }]
+            });
+            existingIds.add(dbMsg.gmail_message_id);
+            addedCount++;
           }
-        }
-      })
-      .catch(err => console.error('Failed to restore messages from DB:', err));
+        });
+      }
+
+      // Process dedicated facebook messages
+      if (fbData.success && fbData.data && fbData.data.length > 0) {
+        fbData.data.forEach(fbMsg => {
+          if (fbMsg.fb_post_id && !existingIds.has(fbMsg.fb_post_id)) {
+            const platform = fbMsg.platform || 'facebook';
+            
+            state.cases.push({
+              id: fbMsg.fb_post_id,
+              fbPostId: fbMsg.fb_post_id,
+              source: 'Facebook Page',
+              author: fbMsg.author_name,
+              authorName: fbMsg.author_name,
+              channel: platform,
+              avatarGradient: AVATAR_GRADIENTS[Math.abs(hashCode(fbMsg.author_name || '')) % AVATAR_GRADIENTS.length],
+              text: (fbMsg.message_text || '').substring(0, 120),
+              createdTime: fbMsg.received_at || fbMsg.created_at,
+              type: fbMsg.post_type || 'Comment',
+              status: fbMsg.status === 'open' ? 'Open' : 'Closed',
+              priority: 'Medium',
+              assignedTo: 'Unassigned',
+              emailSubject: 'Facebook ' + (fbMsg.post_type || 'Comment'),
+              emailAttachments: [],
+              messages: [{
+                id: 'fb-db-' + fbMsg.id,
+                sender: fbMsg.author_name || 'Facebook User',
+                text: fbMsg.message_text || '',
+                timestamp: fbMsg.received_at || fbMsg.created_at,
+                isAgent: false
+              }]
+            });
+            existingIds.add(fbMsg.fb_post_id);
+            addedCount++;
+          }
+        });
+      }
+
+      if (addedCount > 0) {
+        state.cases.sort((a, b) => new Date(b.createdTime) - new Date(a.createdTime));
+        saveState();
+        renderAllCases();
+        console.log('Restored', addedCount, 'messages from database');
+      }
+    })
+    .catch(err => console.error('Failed to restore messages from DB:', err));
 
     renderAllCases();
     renderConnectedGmailAccounts();

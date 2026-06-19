@@ -59,6 +59,21 @@ async function ensureTables() {
       created_at        TIMESTAMP DEFAULT NOW()
     );
   `);
+
+  await p.query(`
+    CREATE TABLE IF NOT EXISTS facebook_messages (
+      id                SERIAL PRIMARY KEY,
+      channel_id        INTEGER REFERENCES connected_channels(id),
+      fb_post_id        VARCHAR(255) UNIQUE,
+      post_type         VARCHAR(50), 
+      author_name       VARCHAR(255),
+      message_text      TEXT,
+      received_at       TIMESTAMP,
+      status            VARCHAR(50) DEFAULT 'open',
+      is_read           BOOLEAN DEFAULT FALSE,
+      created_at        TIMESTAMP DEFAULT NOW()
+    );
+  `);
 }
 
 module.exports = { getPool, ensureTables };
