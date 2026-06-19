@@ -1903,7 +1903,7 @@ Billing Dept.`,
       try {
         tokenClient = google.accounts.oauth2.initTokenClient({
           client_id: clientId,
-          scope: 'https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/gmail.send',
+          scope: 'https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/gmail.send https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile',
           callback: async (tokenResponse) => {
             if (tokenResponse.error) {
               showGmailToast('Google Login failed: ' + tokenResponse.error, 'error');
