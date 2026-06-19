@@ -377,12 +377,14 @@ Billing Dept.`,
       }
       if (card.id === 'channel-playstore') {
         showPlaystorePanel();
-        if (card.id === 'channel-gmail') {
-          showGmailPanel();
-          return;
-        }
-        card.classList.toggle('selected');
-      });
+        return;
+      }
+      if (card.id === 'channel-gmail') {
+        showGmailPanel();
+        return;
+      }
+      card.classList.toggle('selected');
+    });
   });
 
   function showFacebookPanel() {
