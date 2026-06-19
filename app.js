@@ -1940,21 +1940,26 @@ Billing Dept.`,
                   showGmailToast(`✓ Connected Gmail account: ${profile.email}`, 'success');
                   showGmailToast('🔄 Loading emails from your Gmail inbox...', 'info');
 
-                  // Save the Gmail channel to the backend DB
-                  fetch('/api/channels', {
+                  // Save the Gmail channel to the backend DB (Vercel Serverless)
+                  fetch('/api/connected-channels', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                      pages: [{
-                        id: profile.email,
-                        name: account.name,
-                        pictureUrl: profile.picture || '',
-                        accessToken: token,
-                        isAdmin: true,
-                        platform: 'gmail'
-                      }]
+                      platform: 'gmail',
+                      account_email: profile.email,
+                      account_name: account.name,
+                      avatar_url: profile.picture || '',
+                      access_token: token
                     })
-                  }).catch((err) => console.error('Failed to save Gmail channel to DB:', err));
+                  })
+                  .then(r => r.json())
+                  .then(data => {
+                    if (data.success) {
+                      console.log('Gmail channel saved to DB, id:', data.data.id);
+                      account.dbChannelId = data.data.id;
+                    }
+                  })
+                  .catch((err) => console.error('Failed to save Gmail channel to DB:', err));
 
                   await fetchGmailEmailsForAccount(account);
 
@@ -2038,23 +2043,39 @@ Billing Dept.`,
             
             // Prepare for DB insert
             newDbMessages.push({
-              channel_id: account.email,
-              platform_message_id: mappedCase.id,
-              type: mappedCase.type,
-              author_name: mappedCase.author,
-              content: mappedCase.text,
-              platform_created_at: mappedCase.createdTime
+              gmail_message_id: mappedCase.gmailMessageId || rawMsg.id,
+              subject: mappedCase.emailSubject || '(No Subject)',
+              sender_email: mappedCase.author,
+              sender_name: mappedCase.authorName || mappedCase.author,
+              recipient_email: account.email,
+              body_text: mappedCase.messages && mappedCase.messages[0] ? mappedCase.messages[0].text : mappedCase.text,
+              received_at: mappedCase.createdTime
             });
           }
         });
 
-        // Save synced messages to the backend DB
+        // Save synced messages to the backend DB (Vercel Serverless)
         if (newDbMessages.length > 0) {
-          fetch('/api/messages', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ messages: newDbMessages })
-          }).catch((err) => console.error('Failed to save Gmail messages to DB:', err));
+          // First, get the channel_id from the DB
+          fetch('/api/connected-channels')
+            .then(r => r.json())
+            .then(chData => {
+              const ch = (chData.data || []).find(c => c.account_email === account.email && c.platform === 'gmail');
+              const channelId = ch ? ch.id : null;
+              if (channelId) {
+                fetch('/api/gmail-messages', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ channel_id: channelId, messages: newDbMessages })
+                })
+                .then(r => r.json())
+                .then(data => console.log('Gmail messages saved to DB:', data))
+                .catch(err => console.error('Failed to save Gmail messages to DB:', err));
+              } else {
+                console.warn('No channel_id found in DB for', account.email);
+              }
+            })
+            .catch(err => console.error('Failed to lookup channel for DB save:', err));
         }
 
         state.cases.sort((a, b) => new Date(b.createdTime) - new Date(a.createdTime));
@@ -2577,6 +2598,84 @@ Collab Manager`
     }
 
     // ── On Page Load Initialization ──────────────────────
+    // Restore connected accounts from the database (source of truth)
+    fetch('/api/connected-channels')
+      .then(r => r.json())
+      .then(data => {
+        if (data.success && data.data && data.data.length > 0) {
+          const dbAccounts = data.data
+            .filter(ch => ch.platform === 'gmail')
+            .map(ch => ({
+              email: ch.account_email,
+              name: ch.account_name,
+              dbChannelId: ch.id,
+              connectedAt: new Date(ch.connected_at).getTime()
+            }));
+
+          // Merge DB accounts into state (keep access tokens from localStorage if available)
+          dbAccounts.forEach(dbAcc => {
+            const existing = state.connectedAccounts.find(x => x.email === dbAcc.email);
+            if (!existing) {
+              state.connectedAccounts.push(dbAcc);
+            } else {
+              existing.dbChannelId = dbAcc.dbChannelId;
+            }
+          });
+
+          saveState();
+          renderConnectedGmailAccounts();
+          console.log('Restored', dbAccounts.length, 'Gmail accounts from database');
+        }
+      })
+      .catch(err => console.error('Failed to restore channels from DB:', err));
+
+    // Restore Gmail messages from the database
+    fetch('/api/gmail-messages')
+      .then(r => r.json())
+      .then(data => {
+        if (data.success && data.data && data.data.length > 0) {
+          // Only add messages that aren't already in state
+          const existingIds = new Set(state.cases.map(c => c.gmailMessageId).filter(Boolean));
+          let addedCount = 0;
+          data.data.forEach(dbMsg => {
+            if (dbMsg.gmail_message_id && !existingIds.has(dbMsg.gmail_message_id)) {
+              state.cases.push({
+                id: 'gmail-msg-' + dbMsg.gmail_message_id,
+                gmailMessageId: dbMsg.gmail_message_id,
+                source: 'Gmail Support',
+                author: dbMsg.sender_email,
+                authorName: dbMsg.sender_name,
+                channel: 'gmail',
+                avatarGradient: AVATAR_GRADIENTS[Math.abs(hashCode(dbMsg.sender_email || '')) % AVATAR_GRADIENTS.length],
+                text: (dbMsg.body_text || '').substring(0, 120),
+                createdTime: dbMsg.received_at || dbMsg.created_at,
+                type: 'Email',
+                status: dbMsg.status === 'open' ? 'Open' : 'Closed',
+                priority: 'Medium',
+                assignedTo: 'Unassigned',
+                emailSubject: dbMsg.subject || '(No Subject)',
+                emailAttachments: [],
+                messages: [{
+                  id: 'msg-db-' + dbMsg.id,
+                  sender: (dbMsg.sender_name || '') + ' <' + (dbMsg.sender_email || '') + '>',
+                  text: dbMsg.body_text || '',
+                  timestamp: dbMsg.received_at || dbMsg.created_at,
+                  isAgent: false
+                }]
+              });
+              addedCount++;
+            }
+          });
+          if (addedCount > 0) {
+            state.cases.sort((a, b) => new Date(b.createdTime) - new Date(a.createdTime));
+            saveState();
+            renderAllCases();
+            console.log('Restored', addedCount, 'Gmail messages from database');
+          }
+        }
+      })
+      .catch(err => console.error('Failed to restore messages from DB:', err));
+
     renderAllCases();
     renderConnectedGmailAccounts();
     if (state.connectedAccounts.length > 0) {
