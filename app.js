@@ -2767,6 +2767,8 @@ Collab Manager`
     // Expose a way to add Twitter account from the popup
     window.addTwitterAccount = function(account) {
       account.channel = 'twitter';
+      account.email = account.username; // Use username as unique identifier for DB
+      
       const idx = state.connectedAccounts.findIndex(x => x.username === account.username && x.channel === 'twitter');
       if (idx !== -1) {
         state.connectedAccounts[idx] = account;
@@ -2775,7 +2777,26 @@ Collab Manager`
       }
       saveState();
       renderConnectedGmailAccounts(); // re-render the connected accounts list
-      showGmailToast('Twitter account connected successfully!', 'success');
+      
+      // Save Twitter channel to database
+      fetch('/api/connected-channels', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          platform: 'twitter',
+          account_email: account.username,
+          account_name: account.name || ('@' + account.username),
+          avatar_url: '', // Twitter API v2 doesn't give profile picture easily without extra scopes
+          access_token: account.accessToken
+        })
+      })
+      .then(r => r.json())
+      .then(data => {
+        if (data.success) {
+          showGmailToast('Twitter account connected & saved to DB!', 'success');
+        }
+      })
+      .catch(console.error);
       
       // trigger a sync
       generateIncomingTwitterMentions();
@@ -2788,7 +2809,7 @@ Collab Manager`
       
       showGmailToast('Syncing fresh mentions from Twitter...', 'info');
       try {
-        const response = await fetch('/api/twitter/sync', {
+        const response = await fetch('/api/twitter-sync', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ access_token: twAccount.accessToken })
@@ -2831,7 +2852,7 @@ Collab Manager`
 
     async function sendRealTwitterReply(c, replyText, twAccount) {
       try {
-        const response = await fetch('/api/twitter/reply', {
+        const response = await fetch('/api/twitter-reply', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({

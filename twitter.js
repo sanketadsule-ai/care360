@@ -43,11 +43,12 @@
     localStorage.setItem('twitter_code_verifier', codeVerifier);
 
     const codeChallenge = await generateCodeChallenge(codeVerifier);
+    const redirectUri = window.location.origin + '/twitter_auth.html';
 
     const authUrl = 'https://twitter.com/i/oauth2/authorize' +
       '?response_type=code' +
       '&client_id=' + encodeURIComponent(cfg.TWITTER_CLIENT_ID) +
-      '&redirect_uri=' + encodeURIComponent(cfg.TWITTER_REDIRECT_URI) +
+      '&redirect_uri=' + encodeURIComponent(redirectUri) +
       '&scope=' + encodeURIComponent(cfg.TWITTER_SCOPES) +
       '&state=' + encodeURIComponent(state) +
       '&code_challenge=' + encodeURIComponent(codeChallenge) +
@@ -78,13 +79,14 @@
 
       // We have the code! Send it to our backend to exchange for tokens.
       try {
-        const response = await fetch('/api/twitter/token', {
+        const redirectUri = window.location.origin + '/twitter_auth.html';
+        const response = await fetch('/api/twitter-token', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             code: code,
             code_verifier: codeVerifier,
-            redirect_uri: cfg.TWITTER_REDIRECT_URI,
+            redirect_uri: redirectUri,
             client_id: cfg.TWITTER_CLIENT_ID
           })
         });
