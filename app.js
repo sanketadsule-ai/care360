@@ -500,11 +500,19 @@ Billing Dept.`,
           const pagesWithPlatform = fbPages.map(p => ({ ...p, platform: callbackData.platform }));
 
           // Save channels to the database backend
-          fetch('/api/channels', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ pages: pagesWithPlatform })
-          }).catch((err) => console.error('Failed to save to DB:', err));
+          pagesWithPlatform.forEach(p => {
+            fetch('/api/connected-channels', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                platform: p.platform,
+                account_email: p.id,
+                account_name: p.name,
+                avatar_url: p.pictureUrl || '',
+                access_token: p.accessToken || fbAccessToken
+              })
+            }).catch(err => console.error('Failed to save FB/IG to DB:', err));
+          });
         } catch (err) {
           setStatus(err.message || 'Failed to load pages from Facebook Graph API.', 'error');
         }
@@ -524,11 +532,19 @@ Billing Dept.`,
           FB.getPages(fbAccessToken)
             .then((pages) => {
               renderPages(pages);
-              fetch('/api/channels', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ pages })
-              }).catch((err) => console.error('Failed to save to DB:', err));
+              pages.forEach(p => {
+                fetch('/api/connected-channels', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    platform: 'facebook',
+                    account_email: p.id,
+                    account_name: p.name,
+                    avatar_url: p.pictureUrl || '',
+                    access_token: p.accessToken || fbAccessToken
+                  })
+                }).catch(err => console.error('Failed to save FB to DB:', err));
+              });
             })
             .catch((err) => setStatus(err.message || 'Could not load pages.', 'error'));
           return;
@@ -570,36 +586,41 @@ Billing Dept.`,
       if (googleToken) {
         navigateTo('channels');
         activateSidebarFor('settings');
-        setTimeout(() => {
-          // Render the connected account into the Play Store panel
-          const playstoreGrid = document.createElement('div');
-          playstoreGrid.className = 'fb-pages-grid';
-
-          const mockPage = {
-            id: 'google_play_' + Date.now(),
-            name: 'Google Play Developer Account',
-            isAdmin: true,
-            platform: 'google_play',
-            pictureUrl: 'https://upload.wikimedia.org/wikipedia/commons/d/d0/Google_Play_Arrow_logo.svg'
-          };
-
-          const card = buildPageCard(mockPage);
-          playstoreGrid.appendChild(card);
-          playstorePanel.appendChild(playstoreGrid);
-
-          // Save to DB
-          fetch('/api/channels', {
+        
+        // We need the package name to fetch reviews
+        const packageName = prompt('Google Play connection successful!\n\nPlease enter your App Package Name (e.g., com.impactguru.app) to fetch reviews:');
+        
+        if (packageName) {
+          setPlaystoreStatus('Saving to database...', 'info');
+          
+          fetch('/api/connected-channels', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              pages: [{
-                ...mockPage,
-                accessToken: googleToken
-              }]
+              platform: 'google_play',
+              account_email: packageName, // We use account_email field for package name
+              account_name: 'Play Store: ' + packageName,
+              avatar_url: 'https://upload.wikimedia.org/wikipedia/commons/d/d0/Google_Play_Arrow_logo.svg',
+              access_token: googleToken
             })
-          }).catch((err) => console.error('Failed to save to DB:', err));
-
-        }, 300);
+          })
+          .then(r => r.json())
+          .then(data => {
+            if (data.success) {
+              setPlaystoreStatus('Connected!', 'success');
+              // We will reload state to fetch the new channel from DB
+              setTimeout(() => window.location.reload(), 1500);
+            } else {
+              setPlaystoreStatus('Failed to save to database.', 'error');
+            }
+          })
+          .catch(err => {
+            console.error(err);
+            setPlaystoreStatus('Database error.', 'error');
+          });
+        } else {
+          setPlaystoreStatus('Package name is required.', 'error');
+        }
       }
     }
 
@@ -705,40 +726,49 @@ Billing Dept.`,
         let cases = [];
 
         if (page.platform === 'google_play') {
-          // Generate mock Google Play reviews for testing
-          cases = [
-            {
-              id: 'play_1',
-              source: 'Google Play',
-              author: 'John Doe',
-              text: 'Great app! Really easy to use.',
-              createdTime: new Date().toISOString(),
-              type: '5-Star Review'
-            },
-            {
-              id: 'play_2',
-              source: 'Google Play',
-              author: 'Jane Smith',
-              text: 'It keeps crashing when I open the settings. Please fix!',
-              createdTime: new Date(Date.now() - 3600000).toISOString(), // 1 hour ago
-              type: '1-Star Review'
-            }
-          ];
-        } else {
-          // Fetch normalized messages from our own database instead of Facebook directly
-          const res = await fetch('/api/messages?channel_id=' + page.id);
+          // Fetch stored Play Store reviews from our database
+          const res = await fetch('/api/platform-messages?channel_id=' + encodeURIComponent(page.id));
           const data = await res.json();
-
           if (!res.ok) throw new Error(data.error || 'Failed to fetch messages');
-
+          
           cases = (data.data || []).map(msg => ({
             id: msg.id,
-            source: msg.channel ? msg.channel.name : page.name,
-            author: msg.author_name,
-            text: msg.content,
-            createdTime: msg.platform_created_at,
-            type: msg.type
+            source: 'Google Play',
+            author: msg.sender_name,
+            text: msg.body_text,
+            createdTime: msg.received_at,
+            type: 'Review'
           }));
+        } else {
+          // REAL Facebook Data Fetch
+          if (FB && page.accessToken) {
+            cases = await FB.getPageCases(page);
+            
+            // Save the newly fetched REAL messages to our DB so they persist
+            if (cases.length > 0) {
+              const dbPayload = cases.map(c => ({
+                gmail_message_id: c.id, // Using this column generically as unique message ID
+                subject: 'Facebook ' + c.type,
+                sender_name: c.author,
+                sender_email: c.author,
+                recipient_email: page.id,
+                body_text: c.text,
+                received_at: c.createdTime
+              }));
+
+              // First get the numeric channel ID
+              fetch('/api/connected-channels').then(r => r.json()).then(chData => {
+                const ch = (chData.data || []).find(x => x.account_email === page.id);
+                if (ch) {
+                  fetch('/api/platform-messages', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ channel_id: ch.id, messages: dbPayload })
+                  }).catch(console.error);
+                }
+              });
+            }
+          }
         }
 
         renderCases(cases, page.name);
@@ -1920,7 +1950,7 @@ Billing Dept.`,
       try {
         tokenClient = google.accounts.oauth2.initTokenClient({
           client_id: clientId,
-          scope: 'https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/gmail.send',
+          scope: 'https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/gmail.send https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile',
           callback: async (tokenResponse) => {
             if (tokenResponse.error) {
               showGmailToast('Google Login failed: ' + tokenResponse.error, 'error');
@@ -1956,6 +1986,27 @@ Billing Dept.`,
 
                   showGmailToast(`✓ Connected Gmail account: ${profile.email}`, 'success');
                   showGmailToast('🔄 Loading emails from your Gmail inbox...', 'info');
+
+                  // Save the Gmail channel to the backend DB (Vercel Serverless)
+                  fetch('/api/connected-channels', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      platform: 'gmail',
+                      account_email: profile.email,
+                      account_name: account.name,
+                      avatar_url: profile.picture || '',
+                      access_token: token
+                    })
+                  })
+                  .then(r => r.json())
+                  .then(data => {
+                    if (data.success) {
+                      console.log('Gmail channel saved to DB, id:', data.data.id);
+                      account.dbChannelId = data.data.id;
+                    }
+                  })
+                  .catch((err) => console.error('Failed to save Gmail channel to DB:', err));
 
                   await fetchGmailEmailsForAccount(account);
 
@@ -2001,7 +2052,8 @@ Billing Dept.`,
             requestGoogleAuth(window.CARAPAL_CONFIG.GOOGLE_CLIENT_ID || localStorage.getItem('gmail_google_client_id'));
             return;
           }
-          throw new Error('Failed to retrieve messages');
+          const errorText = await listRes.text();
+          throw new Error('Google API Error ' + listRes.status + ': ' + errorText);
         }
 
         const listData = await listRes.json();
@@ -2028,13 +2080,50 @@ Billing Dept.`,
 
         const details = await Promise.all(detailPromises);
 
+        const newDbMessages = [];
+
         details.forEach((rawMsg) => {
           if (!rawMsg) return;
           const mappedCase = parseGmailMessage(rawMsg, account.email);
           if (mappedCase) {
             state.cases.push(mappedCase);
+            
+            // Prepare for DB insert
+            newDbMessages.push({
+              gmail_message_id: mappedCase.gmailMessageId || rawMsg.id,
+              subject: mappedCase.emailSubject || '(No Subject)',
+              sender_email: mappedCase.author,
+              sender_name: mappedCase.authorName || mappedCase.author,
+              recipient_email: account.email,
+              body_text: mappedCase.messages && mappedCase.messages[0] ? mappedCase.messages[0].text : mappedCase.text,
+              received_at: mappedCase.createdTime
+            });
           }
         });
+
+        // Save synced messages to the backend DB (Vercel Serverless)
+        if (newDbMessages.length > 0) {
+          // First, get the channel_id from the DB
+          fetch('/api/connected-channels')
+            .then(r => r.json())
+            .then(chData => {
+              const ch = (chData.data || []).find(c => c.account_email === account.email && c.platform === 'gmail');
+              const channelId = ch ? ch.id : null;
+              if (channelId) {
+                fetch('/api/platform-messages', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ channel_id: channelId, messages: newDbMessages })
+                })
+                .then(r => r.json())
+                .then(data => console.log('Gmail messages saved to DB:', data))
+                .catch(err => console.error('Failed to save Gmail messages to DB:', err));
+              } else {
+                console.warn('No channel_id found in DB for', account.email);
+              }
+            })
+            .catch(err => console.error('Failed to lookup channel for DB save:', err));
+        }
 
         state.cases.sort((a, b) => new Date(b.createdTime) - new Date(a.createdTime));
         saveState();
@@ -2042,7 +2131,7 @@ Billing Dept.`,
 
       } catch (err) {
         console.error('Error syncing Gmail emails:', err);
-        showGmailToast('Failed to sync emails from Gmail inbox.', 'error');
+        showGmailToast('Failed to sync emails: ' + err.message.substring(0, 100), 'error');
       }
     }
 
@@ -2556,6 +2645,119 @@ Collab Manager`
     }
 
     // ── On Page Load Initialization ──────────────────────
+    // Restore connected accounts from the database (source of truth)
+    fetch('/api/connected-channels')
+      .then(r => r.json())
+      .then(data => {
+        if (data.success && data.data && data.data.length > 0) {
+          const dbAccounts = data.data.map(ch => ({
+            email: ch.account_email,
+            name: ch.account_name,
+            dbChannelId: ch.id,
+            platform: ch.platform,
+            pictureUrl: ch.avatar_url,
+            accessToken: ch.access_token,
+            isAdmin: true, // assume true if saved
+            connectedAt: new Date(ch.connected_at).getTime()
+          }));
+
+          // Render FB/IG/PlayStore pages from DB
+          const fbPages = dbAccounts.filter(x => x.platform === 'facebook');
+          const igPages = dbAccounts.filter(x => x.platform === 'instagram');
+          const playPages = dbAccounts.filter(x => x.platform === 'google_play');
+
+          if (typeof renderPages !== 'undefined') {
+            if (fbPages.length > 0) renderPages(fbPages, 'facebook');
+            if (igPages.length > 0) renderPages(igPages, 'instagram');
+          }
+
+          if (playPages.length > 0) {
+            const playstoreGrid = document.createElement('div');
+            playstoreGrid.className = 'fb-pages-grid';
+            playPages.forEach(pp => {
+              const card = buildPageCard(pp);
+              playstoreGrid.appendChild(card);
+            });
+            const playstorePanel = document.getElementById('playstore-panel');
+            if (playstorePanel) playstorePanel.appendChild(playstoreGrid);
+            const playstoreStatus = document.getElementById('playstore-status');
+            if (playstoreStatus) {
+              playstoreStatus.textContent = 'Restored from Database';
+              playstoreStatus.style.display = '';
+            }
+          }
+
+          // Merge Gmail accounts into state (keep access tokens from localStorage if available)
+          const gmailAccounts = dbAccounts.filter(x => x.platform === 'gmail');
+          gmailAccounts.forEach(dbAcc => {
+            const existing = state.connectedAccounts.find(x => x.email === dbAcc.email);
+            if (!existing) {
+              state.connectedAccounts.push(dbAcc);
+            } else {
+              existing.dbChannelId = dbAcc.dbChannelId;
+            }
+          });
+
+          saveState();
+          renderConnectedGmailAccounts();
+          console.log('Restored', dbAccounts.length, 'total channels from database');
+        }
+      })
+      .catch(err => console.error('Failed to restore channels from DB:', err));
+
+    // Restore All Messages from the database
+    fetch('/api/platform-messages')
+      .then(r => r.json())
+      .then(data => {
+        if (data.success && data.data && data.data.length > 0) {
+          // Only add messages that aren't already in state
+          const existingIds = new Set(state.cases.map(c => c.gmailMessageId || c.id).filter(Boolean));
+          let addedCount = 0;
+          data.data.forEach(dbMsg => {
+            if (dbMsg.gmail_message_id && !existingIds.has(dbMsg.gmail_message_id)) {
+              
+              // Formatting depends on platform
+              const platform = dbMsg.platform || 'gmail';
+              const sourceLabel = platform === 'gmail' ? 'Gmail Support' : (platform === 'google_play' ? 'Google Play' : platform);
+              const msgType = platform === 'gmail' ? 'Email' : (platform === 'google_play' ? 'Review' : 'Message');
+              
+              state.cases.push({
+                id: (platform === 'gmail' ? 'gmail-msg-' : 'msg-') + dbMsg.gmail_message_id,
+                gmailMessageId: dbMsg.gmail_message_id,
+                source: sourceLabel,
+                author: dbMsg.sender_email,
+                authorName: dbMsg.sender_name,
+                channel: platform,
+                avatarGradient: AVATAR_GRADIENTS[Math.abs(hashCode(dbMsg.sender_email || '')) % AVATAR_GRADIENTS.length],
+                text: (dbMsg.body_text || '').substring(0, 120),
+                createdTime: dbMsg.received_at || dbMsg.created_at,
+                type: msgType,
+                status: dbMsg.status === 'open' ? 'Open' : 'Closed',
+                priority: 'Medium',
+                assignedTo: 'Unassigned',
+                emailSubject: dbMsg.subject || '(No Subject)',
+                emailAttachments: [],
+                messages: [{
+                  id: 'msg-db-' + dbMsg.id,
+                  sender: (dbMsg.sender_name || '') + ' <' + (dbMsg.sender_email || '') + '>',
+                  text: dbMsg.body_text || '',
+                  timestamp: dbMsg.received_at || dbMsg.created_at,
+                  isAgent: false
+                }]
+              });
+              addedCount++;
+            }
+          });
+          if (addedCount > 0) {
+            state.cases.sort((a, b) => new Date(b.createdTime) - new Date(a.createdTime));
+            saveState();
+            renderAllCases();
+            console.log('Restored', addedCount, 'messages from database');
+          }
+        }
+      })
+      .catch(err => console.error('Failed to restore messages from DB:', err));
+
     renderAllCases();
     renderConnectedGmailAccounts();
     if (state.connectedAccounts.length > 0) {

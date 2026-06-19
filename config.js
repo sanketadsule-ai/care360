@@ -20,7 +20,6 @@ window.CARAPAL_CONFIG = {
   FB_APP_ID: '910067414827041',
 
   // 👇 PASTE YOUR GOOGLE OAUTH CLIENT ID HERE (e.g. 'xxxx.apps.googleusercontent.com')
-  GOOGLE_CLIENT_ID: '282172866930-91vun3ocj044bnfft49lb2f17f95beun.apps.googleusercontent.com',
 
   FB_API_VERSION: 'v25.0',
 
