@@ -136,35 +136,78 @@
 
   // ── Fetch a page's feed and flatten comments to "cases" ──
   async function getPageCases(page) {
-    const res = await graphApi('/' + page.id + '/feed', page.accessToken, {
-      limit: '25',
-      fields: 'id,message,created_time,from,comments.limit(25){id,message,from,created_time}',
-    });
-
     const cases = [];
-    (res.data || []).forEach((post) => {
-      if (post.message) {
+
+    // 1. Fetch regular feed posts and comments
+    try {
+      const feedRes = await graphApi('/' + page.id + '/feed', page.accessToken, {
+        limit: '25',
+        fields: 'id,message,story,created_time,from,comments.limit(25){id,message,from,created_time}',
+      });
+
+      (feedRes.data || []).forEach((post) => {
+        const text = post.message || post.story || 'Facebook Post';
         cases.push({
           id: post.id,
           source: page.name,
           author: (post.from && post.from.name) || page.name,
-          text: post.message,
+          text: text,
           createdTime: post.created_time,
           type: 'Post',
         });
-      }
-      const comments = (post.comments && post.comments.data) || [];
-      comments.forEach((c) => {
-        cases.push({
-          id: c.id,
-          source: page.name,
-          author: (c.from && c.from.name) || 'Facebook User',
-          text: c.message || '',
-          createdTime: c.created_time,
-          type: 'Comment',
+        
+        const comments = (post.comments && post.comments.data) || [];
+        comments.forEach((c) => {
+          cases.push({
+            id: c.id,
+            source: page.name,
+            author: (c.from && c.from.name) || 'Facebook User',
+            text: c.message || '',
+            createdTime: c.created_time,
+            type: 'Comment',
+          });
         });
       });
-    });
+    } catch (e) {
+      console.warn("Failed to fetch FB feed:", e);
+    }
+
+    // 2. Fetch Facebook Reels and their comments
+    try {
+      const reelsRes = await graphApi('/' + page.id + '/video_reels', page.accessToken, {
+        limit: '25',
+        fields: 'id,description,updated_time,comments.limit(25){id,message,from,created_time}',
+      });
+
+      (reelsRes.data || []).forEach((reel) => {
+        const text = reel.description || 'Facebook Reel';
+        cases.push({
+          id: reel.id,
+          source: page.name,
+          author: page.name, // Reels are posted by the page itself
+          text: text,
+          createdTime: reel.updated_time,
+          type: 'Reel',
+        });
+
+        const comments = (reel.comments && reel.comments.data) || [];
+        comments.forEach((c) => {
+          cases.push({
+            id: c.id,
+            source: page.name,
+            author: (c.from && c.from.name) || 'Facebook User',
+            text: c.message || '',
+            createdTime: c.created_time,
+            type: 'Comment',
+          });
+        });
+      });
+    } catch (e) {
+      console.warn("Failed to fetch FB Reels:", e);
+    }
+
+    // Sort all combined items by createdTime descending
+    cases.sort((a, b) => new Date(b.createdTime) - new Date(a.createdTime));
 
     return cases;
   }
