@@ -45,9 +45,9 @@ class Care360RequestHandler(http.server.SimpleHTTPRequestHandler):
         url_parts = urllib.parse.urlparse(self.path)
         path = url_parts.path
         
-        if path == '/api/twitter/connect':
+        if path == '/api/twitter-connect':
             self.handle_twitter_connect()
-        elif path == '/api/twitter/sync':
+        elif path == '/api/twitter-sync':
             self.handle_twitter_sync_get()
         else:
             # Fall through to serve static files

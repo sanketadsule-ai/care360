@@ -1,16 +1,14 @@
 /**
  * Carapal360 — Twitter (X) Integration
- * Uses server-side tokens from .env to connect directly.
+ * Uses server-side tokens to connect directly (works on both localhost and Vercel).
  */
 (function () {
   'use strict';
 
-  const cfg = window.CARAPAL_CONFIG || {};
-
-  // Connect to Twitter using server-stored tokens (bypasses OAuth popup)
+  // Connect to Twitter using server-stored tokens
   async function connect() {
     try {
-      const res = await fetch('/api/twitter/connect');
+      const res = await fetch('/api/twitter-connect');
       const data = await res.json();
 
       if (data.success && data.user) {
@@ -23,14 +21,14 @@
       }
     } catch (err) {
       console.error('Twitter connect error:', err);
-      alert('Could not reach the server. Make sure server.py is running.');
+      alert('Could not reach the server. Make sure server.py is running (for local) or env vars are set (for Vercel).');
     }
   }
 
   // Sync Twitter mentions and tweets
   async function sync() {
     try {
-      const res = await fetch('/api/twitter/sync');
+      const res = await fetch('/api/twitter-sync');
       const data = await res.json();
 
       if (data.success) {

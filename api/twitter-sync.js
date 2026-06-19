@@ -8,51 +8,59 @@ module.exports = async function handler(req, res) {
     return res.status(200).end();
   }
 
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
-
   try {
-    const { access_token } = req.body;
+    const accessToken = process.env.TWITTER_ACCESS_TOKEN || '';
 
-    if (!access_token) {
-      return res.status(400).json({ error: 'Missing access token' });
+    if (!accessToken) {
+      return res.status(200).json({ success: false, error: 'No TWITTER_ACCESS_TOKEN environment variable set.' });
     }
 
-    // Fetch user ID first to get mentions
+    // Fetch user ID
     const userRes = await fetch('https://api.twitter.com/2/users/me', {
-      headers: { 'Authorization': `Bearer ${access_token}` }
+      headers: { 'Authorization': `Bearer ${accessToken}` }
     });
 
     if (!userRes.ok) {
-      const err = await userRes.text();
-      return res.status(userRes.status).json({ error: 'Failed to fetch user ID', details: err });
+      const errText = await userRes.text();
+      return res.status(200).json({ success: false, error: `User lookup failed: ${errText}` });
     }
 
-    const userData = await userRes.json();
-    const userId = userData.data.id;
+    const userId = (await userRes.json()).data.id;
+
+    // Fetch recent tweets
+    let tweets = [];
+    try {
+      const tweetsRes = await fetch(
+        `https://api.twitter.com/2/users/${userId}/tweets?max_results=10&tweet.fields=created_at,text`,
+        { headers: { 'Authorization': `Bearer ${accessToken}` } }
+      );
+      if (tweetsRes.ok) {
+        const tweetsData = await tweetsRes.json();
+        tweets = tweetsData.data || [];
+      }
+    } catch (e) { /* ignore */ }
 
     // Fetch mentions
-    const mentionsUrl = `https://api.twitter.com/2/users/${userId}/mentions?max_results=10&tweet.fields=created_at,author_id`;
-    const mentionsRes = await fetch(mentionsUrl, {
-      headers: { 'Authorization': `Bearer ${access_token}` }
-    });
-
-    if (!mentionsRes.ok) {
-      if (mentionsRes.status === 404) {
-        return res.status(200).json({ success: true, mentions: [] });
+    let mentions = [];
+    try {
+      const mentionsRes = await fetch(
+        `https://api.twitter.com/2/users/${userId}/mentions?max_results=10&tweet.fields=created_at,author_id,text`,
+        { headers: { 'Authorization': `Bearer ${accessToken}` } }
+      );
+      if (mentionsRes.ok) {
+        const mentionsData = await mentionsRes.json();
+        mentions = mentionsData.data || [];
       }
-      const err = await mentionsRes.text();
-      return res.status(mentionsRes.status).json({ error: 'Failed to fetch mentions', details: err });
-    }
+    } catch (e) { /* ignore */ }
 
-    const mentionsData = await mentionsRes.json();
-    const mentions = mentionsData.data || [];
-
-    return res.status(200).json({ success: true, mentions });
+    return res.status(200).json({
+      success: true,
+      tweets,
+      mentions
+    });
 
   } catch (err) {
     console.error('Twitter sync error:', err);
-    return res.status(500).json({ error: 'Internal server error', details: err.message });
+    return res.status(200).json({ success: false, error: err.message });
   }
 };
