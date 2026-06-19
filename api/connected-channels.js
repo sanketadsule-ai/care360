@@ -6,7 +6,7 @@ const { getPool, ensureTables } = require('./db');
 module.exports = async function handler(req, res) {
   // CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
   if (req.method === 'OPTIONS') {
@@ -49,6 +49,21 @@ module.exports = async function handler(req, res) {
       );
 
       return res.status(200).json({ success: true, data: result.rows[0] });
+    }
+
+    // ─── DELETE: Remove a connected channel ───
+    if (req.method === 'DELETE') {
+      const { id } = req.body;
+      if (!id) {
+        return res.status(400).json({ error: 'id is required to delete a channel' });
+      }
+
+      await pool.query(
+        'DELETE FROM connected_channels WHERE id = $1',
+        [id]
+      );
+      
+      return res.status(200).json({ success: true, message: 'Channel deleted successfully' });
     }
 
     return res.status(405).json({ error: 'Method not allowed' });

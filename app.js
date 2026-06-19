@@ -534,14 +534,65 @@
       status.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20,6 9,17 4,12"/></svg>';
       status.appendChild(document.createTextNode('Connected'));
 
+      const viewContainer = document.createElement('div');
+      viewContainer.style.display = 'flex';
+      viewContainer.style.justifyContent = 'space-between';
+      viewContainer.style.alignItems = 'center';
+
       const view = document.createElement('div');
       view.className = 'fb-view-msgs';
       view.textContent = 'View messages →';
 
+      const removeBtn = document.createElement('button');
+      removeBtn.textContent = 'Remove';
+      removeBtn.style.padding = '4px 8px';
+      removeBtn.style.fontSize = '12px';
+      removeBtn.style.color = '#ef4444';
+      removeBtn.style.background = 'transparent';
+      removeBtn.style.border = '1px solid #ef4444';
+      removeBtn.style.borderRadius = '4px';
+      removeBtn.style.cursor = 'pointer';
+      removeBtn.onclick = (e) => {
+        e.stopPropagation(); // prevent card click
+        if (confirm(`Are you sure you want to remove ${page.name}?`)) {
+          removeBtn.textContent = 'Removing...';
+          const doRemove = () => {
+            card.remove();
+            state.connectedAccounts = state.connectedAccounts.filter(x => x.dbChannelId !== page.dbChannelId);
+            saveState();
+            // Optional: You could trigger a reload here to fully clear messages: window.location.reload();
+          };
+
+          if (page.dbChannelId) {
+            fetch('/api/connected-channels', {
+              method: 'DELETE',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ id: page.dbChannelId })
+            }).then(r => r.json()).then(res => {
+              if (res.success) {
+                doRemove();
+              } else {
+                alert('Failed to remove channel: ' + (res.error || 'Unknown error'));
+                removeBtn.textContent = 'Remove';
+              }
+            }).catch(err => {
+              console.error(err);
+              alert('Error removing channel');
+              removeBtn.textContent = 'Remove';
+            });
+          } else {
+            doRemove();
+          }
+        }
+      };
+
+      viewContainer.appendChild(view);
+      viewContainer.appendChild(removeBtn);
+
       info.appendChild(name);
       info.appendChild(handle);
       info.appendChild(status);
-      info.appendChild(view);
+      info.appendChild(viewContainer);
       card.appendChild(avatar);
       card.appendChild(info);
 
@@ -1683,18 +1734,38 @@
 
         yesBtn.addEventListener('click', function (e) {
           e.stopPropagation();
-          state.connectedAccounts = state.connectedAccounts.filter(x => x.email !== acc.email);
+          
+          const doRemove = () => {
+            state.connectedAccounts = state.connectedAccounts.filter(x => x.email !== acc.email);
 
-          if (state.connectedAccounts.length === 0) {
-            state.cases = state.cases.filter(x => x.channel !== 'gmail');
-            state.selectedCaseId = null;
-            stopEmailSyncLoop();
+            if (state.connectedAccounts.length === 0) {
+              state.cases = state.cases.filter(x => x.channel !== 'gmail');
+              state.selectedCaseId = null;
+              stopEmailSyncLoop();
+            }
+
+            saveState();
+            renderAllCases();
+            renderConnectedGmailAccounts();
+            showGmailToast('✓ Account disconnected and inbox synced', 'info');
+          };
+
+          if (acc.dbChannelId) {
+            yesBtn.textContent = '...';
+            fetch('/api/connected-channels', {
+              method: 'DELETE',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ id: acc.dbChannelId })
+            }).then(r => r.json()).then(res => {
+              if (res.success) doRemove();
+              else alert('Failed to disconnect channel.');
+            }).catch(err => {
+              console.error(err);
+              alert('Error disconnecting channel');
+            });
+          } else {
+            doRemove();
           }
-
-          saveState();
-          renderAllCases();
-          renderConnectedGmailAccounts();
-          showGmailToast('✓ Account disconnected and inbox synced', 'info');
         });
 
         noBtn.addEventListener('click', function (e) {
