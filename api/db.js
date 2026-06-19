@@ -5,8 +5,14 @@ let pool;
 
 function getPool() {
   if (!pool) {
+    let connString = process.env.DATABASE_URL || '';
+    // Strip ?sslmode=... so it doesn't override our explicit ssl config below
+    if (connString.includes('?')) {
+      connString = connString.split('?')[0];
+    }
+    
     pool = new Pool({
-      connectionString: process.env.DATABASE_URL,
+      connectionString: connString,
       ssl: { rejectUnauthorized: false },
       max: 5,
       idleTimeoutMillis: 30000,
