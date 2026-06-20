@@ -3032,5 +3032,51 @@ Collab Manager`
       }
     }
 
-  })();
 
+    // ── Fetch User Profile & Notifications ────────────────
+    async function fetchUserProfile() {
+      try {
+        const res = await fetch('/api/user-profile');
+        const data = await res.json();
+        if (data.success && data.data) {
+          const initialsSpan = document.getElementById('header-user-initials');
+          const notifBadge = document.getElementById('header-notif-badge');
+          const dropName = document.getElementById('dropdown-user-name');
+          const dropEmail = document.getElementById('dropdown-user-email');
+          
+          if (initialsSpan) initialsSpan.textContent = data.data.initials;
+          if (notifBadge) notifBadge.textContent = data.data.notification_count;
+          if (dropName) dropName.textContent = data.data.name;
+          if (dropEmail) dropEmail.textContent = data.data.email;
+        }
+      } catch (err) {
+        console.error('Failed to fetch user profile:', err);
+      }
+    }
+
+    // Call on load
+    fetchUserProfile();
+
+    // Profile Dropdown Toggle
+    const userAvatar = document.getElementById('user-avatar');
+    const profileDropdown = document.getElementById('profile-dropdown');
+    
+    if (userAvatar && profileDropdown) {
+      userAvatar.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (profileDropdown.style.display === 'none') {
+          profileDropdown.style.display = 'block';
+        } else {
+          profileDropdown.style.display = 'none';
+        }
+      });
+      
+      // Close dropdown when clicking outside
+      document.addEventListener('click', (e) => {
+        if (!profileDropdown.contains(e.target) && e.target !== userAvatar) {
+          profileDropdown.style.display = 'none';
+        }
+      });
+    }
+
+  })();
