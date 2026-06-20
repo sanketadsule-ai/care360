@@ -54,6 +54,16 @@ module.exports = async function handler(req, res) {
     }
 
     if (!userRes.ok) {
+      const bearerToken = process.env.TWITTER_BEARER_TOKEN || '';
+      if (bearerToken) {
+        console.log("OAuth failed, falling back to Bearer token in Vercel API...");
+        userRes = await fetch('https://api.twitter.com/2/users/by/username/TwitterDev?user.fields=profile_image_url,description', {
+          headers: { 'Authorization': `Bearer ${bearerToken}` }
+        });
+      }
+    }
+
+    if (!userRes.ok) {
       const errData = await userRes.text();
       return res.status(200).json({ success: false, error: `Twitter API error (${userRes.status}): ${errData}` });
     }
