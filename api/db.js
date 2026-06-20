@@ -74,6 +74,28 @@ async function ensureTables() {
       created_at        TIMESTAMP DEFAULT NOW()
     );
   `);
+
+  await p.query(`
+    CREATE TABLE IF NOT EXISTS users (
+      id            SERIAL PRIMARY KEY,
+      email         VARCHAR(255) UNIQUE NOT NULL,
+      name          VARCHAR(255) NOT NULL,
+      initials      VARCHAR(10),
+      avatar_url    VARCHAR(512),
+      role          VARCHAR(50) DEFAULT 'admin',
+      created_at    TIMESTAMP DEFAULT NOW()
+    );
+  `);
+
+  await p.query(`
+    CREATE TABLE IF NOT EXISTS notifications (
+      id            SERIAL PRIMARY KEY,
+      user_id       INTEGER REFERENCES users(id),
+      message       TEXT,
+      is_read       BOOLEAN DEFAULT FALSE,
+      created_at    TIMESTAMP DEFAULT NOW()
+    );
+  `);
 }
 
 module.exports = { getPool, ensureTables };

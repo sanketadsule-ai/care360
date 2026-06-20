@@ -2817,5 +2817,24 @@ Collab Manager`
       }
     }
 
-  })();
 
+    // ── Fetch User Profile & Notifications ────────────────
+    async function fetchUserProfile() {
+      try {
+        const res = await fetch('/api/user-profile');
+        const data = await res.json();
+        if (data.success && data.data) {
+          const initialsSpan = document.getElementById('header-user-initials');
+          const notifBadge = document.getElementById('header-notif-badge');
+          if (initialsSpan) initialsSpan.textContent = data.data.initials;
+          if (notifBadge) notifBadge.textContent = data.data.notification_count;
+        }
+      } catch (err) {
+        console.error('Failed to fetch user profile:', err);
+      }
+    }
+
+    // Call on load
+    fetchUserProfile();
+
+  })();
