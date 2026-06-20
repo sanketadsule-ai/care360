@@ -1664,6 +1664,49 @@
                 <div class="gmail-connected-list" id="gmail-connected-list" style="display:none;"></div>
               </div>
             </div>
+
+            <!-- Right Panel (alt): Twitter Configuration (hidden until Twitter selected) -->
+            <div class="gmail-config-panel" id="twitter-config-panel" style="display:none;">
+              <div class="gmail-config-header">
+                <div class="gmail-config-heading">
+                  <button class="gmail-back-btn" id="twitter-back-btn" aria-label="Back to channels">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                      stroke-linejoin="round">
+                      <line x1="19" y1="12" x2="5" y2="12" />
+                      <polyline points="12,19 5,12 12,5" />
+                    </svg>
+                  </button>
+                  <svg viewBox="0 0 24 24" width="22" height="22" style="margin-right:8px;">
+                    <path
+                      d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"
+                      fill="#000" />
+                  </svg>
+                  <span class="gmail-config-title">X (TWITTER) CONFIGURATION</span>
+                </div>
+                <div style="display:flex;gap:10px;">
+                  <button class="gmail-connect-btn" id="twitter-sync-btn" style="background: #e5e7eb; color: #374151; border: 1px solid #d1d5db;">SYNC MENTIONS</button>
+                  <button class="gmail-connect-btn" id="twitter-connect-btn">+ CONNECT TWITTER</button>
+                </div>
+              </div>
+
+              <div class="gmail-tabs" id="twitter-tabs">
+                <button class="gmail-tab active" data-twittertab="connected">Connected Accounts</button>
+              </div>
+
+              <!-- Connected Accounts Tab -->
+              <div class="gmail-tab-content active" id="twitter-tab-connected">
+                <div class="gmail-connected-empty" id="twitter-connected-empty">
+                  <svg viewBox="0 0 24 24" width="48" height="48">
+                    <path
+                      d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"
+                      fill="#ccc" />
+                  </svg>
+                  <p>No Twitter accounts connected yet.</p>
+                  <span>Click <strong>+ CONNECT TWITTER</strong> to authorize via OAuth.</span>
+                </div>
+                <div class="gmail-connected-list" id="twitter-connected-list" style="display:none;"></div>
+              </div>
+            </div>
           </div>
 
         </div>
@@ -1718,11 +1761,11 @@
     </svg>
   </button>
 
-  <script src="config.js?v=5"></script>
-  <script src="facebook.js?v=5"></script>
-  <script src="google.js?v=5"></script>
-  <script src="twitter.js?v=5"></script>
-  <script src="app.js?v=5"></script>
+  <script src="config.js?v=6"></script>
+  <script src="facebook.js?v=6"></script>
+  <script src="google.js?v=6"></script>
+  <script src="twitter.js?v=7"></script>
+  <script src="app.js?v=8"></script>
 </body>
 
 </html>

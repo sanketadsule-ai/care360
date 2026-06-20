@@ -13,9 +13,14 @@ module.exports = async function handler(req, res) {
   }
 
   try {
-    const { access_token, tweet_id, text } = req.body;
+    const { tweet_id, text } = req.body;
+    const access_token = process.env.TWITTER_ACCESS_TOKEN || '';
 
-    if (!access_token || !tweet_id || !text) {
+    if (!access_token) {
+      return res.status(200).json({ success: false, error: 'No TWITTER_ACCESS_TOKEN environment variable set.' });
+    }
+
+    if (!tweet_id || !text) {
       return res.status(400).json({ error: 'Missing parameters' });
     }
 

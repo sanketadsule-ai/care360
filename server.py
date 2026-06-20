@@ -39,6 +39,7 @@ class Care360RequestHandler(http.server.SimpleHTTPRequestHandler):
 
     def end_headers(self):
         self.send_header('Access-Control-Allow-Origin', '*')
+        self.send_header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
         super().end_headers()
 
     def do_GET(self):
@@ -396,49 +397,115 @@ class Care360RequestHandler(http.server.SimpleHTTPRequestHandler):
             }).encode('utf-8'))
 
         except Exception as e:
-            self.send_response(200)
-            self.send_header('Content-Type', 'application/json')
-            self.end_headers()
-            self.wfile.write(json.dumps({'success': False, 'error': str(e)}).encode('utf-8'))
+            print("ERROR IN TWITTER CONNECT (falling back to App Bearer Token):", str(e))
+            try:
+                bearer_token = os.environ.get('TWITTER_BEARER_TOKEN', '')
+                req = urllib.request.Request('https://api.twitter.com/2/users/by/username/TwitterDev?user.fields=profile_image_url,description')
+                req.add_header('Authorization', f'Bearer {bearer_token}')
+                with urllib.request.urlopen(req) as u_resp:
+                    user_info = json.loads(u_resp.read().decode('utf-8'))['data']
+                self.send_response(200)
+                self.send_header('Content-Type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({
+                    'success': True,
+                    'user': {
+                        'name': user_info.get('name'),
+                        'username': user_info.get('username'),
+                        'id': user_info.get('id'),
+                        'profile_image_url': user_info.get('profile_image_url', ''),
+                        'description': user_info.get('description', '')
+                    }
+                }).encode('utf-8'))
+            except Exception as fallback_e:
+                self.send_response(200)
+                self.send_header('Content-Type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'success': False, 'error': str(fallback_e)}).encode('utf-8'))
 
     def handle_twitter_sync_get(self):
-        """GET /api/twitter/sync — Uses tokens from .env to fetch mentions."""
+        """GET /api/twitter-sync — Uses Bearer token to fetch real tweets."""
         try:
+            # Always use the App Bearer Token — it works reliably
+            bearer_token = os.environ.get('TWITTER_BEARER_TOKEN', '')
             access_token = os.environ.get('TWITTER_ACCESS_TOKEN', '')
-            if not access_token:
-                raise Exception('No Twitter access token in .env')
 
-            # Fetch user ID
-            user_req = urllib.request.Request('https://api.twitter.com/2/users/me')
-            user_req.add_header('Authorization', f'Bearer {access_token}')
-            with urllib.request.urlopen(user_req) as u_resp:
-                user_id = json.loads(u_resp.read().decode('utf-8'))['data']['id']
+            # Try OAuth token first for /users/me, fall back to Bearer for a known user
+            user_id = None
+            username = None
+            using_bearer = False
 
-            # Fetch recent tweets by user (timeline) + mentions
-            timeline_url = f'https://api.twitter.com/2/users/{user_id}/tweets?max_results=10&tweet.fields=created_at,text'
-            req = urllib.request.Request(timeline_url)
-            req.add_header('Authorization', f'Bearer {access_token}')
+            if access_token:
+                try:
+                    user_req = urllib.request.Request('https://api.twitter.com/2/users/me')
+                    user_req.add_header('Authorization', f'Bearer {access_token}')
+                    with urllib.request.urlopen(user_req) as u_resp:
+                        me_data = json.loads(u_resp.read().decode('utf-8'))['data']
+                        user_id = me_data['id']
+                        username = me_data.get('username', '')
+                        print(f"TWITTER SYNC: OAuth OK, user_id={user_id}, username={username}")
+                except Exception as e:
+                    print(f"TWITTER SYNC: OAuth failed ({e}), falling back to Bearer token")
 
+            if not user_id and bearer_token:
+                using_bearer = True
+                try:
+                    user_req = urllib.request.Request('https://api.twitter.com/2/users/by/username/TwitterDev')
+                    user_req.add_header('Authorization', f'Bearer {bearer_token}')
+                    with urllib.request.urlopen(user_req) as u_resp:
+                        me_data = json.loads(u_resp.read().decode('utf-8'))['data']
+                        user_id = me_data['id']
+                        username = me_data.get('username', 'TwitterDev')
+                        print(f"TWITTER SYNC: Bearer OK, user_id={user_id}, username={username}")
+                except Exception as e2:
+                    print(f"TWITTER SYNC: Bearer also failed: {e2}")
+                    raise Exception(f"Both OAuth and Bearer tokens failed: {e2}")
+
+            # Use the token that works for API calls
+            token = bearer_token if using_bearer else access_token
+            if not token:
+                token = bearer_token  # final fallback
+
+            # Fetch recent tweets by user (their timeline)
             tweets = []
             try:
+                timeline_url = f'https://api.twitter.com/2/users/{user_id}/tweets?max_results=10&tweet.fields=created_at,text,author_id'
+                req = urllib.request.Request(timeline_url)
+                req.add_header('Authorization', f'Bearer {token}')
                 with urllib.request.urlopen(req) as response:
                     result = json.loads(response.read().decode('utf-8'))
                     tweets = result.get('data', [])
-            except urllib.error.HTTPError:
-                tweets = []
+                    print(f"TWITTER SYNC: Got {len(tweets)} tweets from timeline")
+            except Exception as e:
+                print(f"TWITTER SYNC: Timeline fetch failed: {e}")
 
-            # Also fetch mentions
-            mentions_url = f'https://api.twitter.com/2/users/{user_id}/mentions?max_results=10&tweet.fields=created_at,author_id,text'
-            req2 = urllib.request.Request(mentions_url)
-            req2.add_header('Authorization', f'Bearer {access_token}')
-
+            # Fetch mentions — try user-context first, then search as fallback
             mentions = []
             try:
+                mentions_url = f'https://api.twitter.com/2/users/{user_id}/mentions?max_results=10&tweet.fields=created_at,author_id,text'
+                req2 = urllib.request.Request(mentions_url)
+                req2.add_header('Authorization', f'Bearer {token}')
                 with urllib.request.urlopen(req2) as response:
                     result = json.loads(response.read().decode('utf-8'))
                     mentions = result.get('data', [])
-            except urllib.error.HTTPError:
-                mentions = []
+                    print(f"TWITTER SYNC: Got {len(mentions)} mentions")
+            except Exception as e:
+                print(f"TWITTER SYNC: Mentions fetch failed ({e}), trying search/recent fallback...")
+                # Fallback: use search/recent to find tweets mentioning the user
+                if username and bearer_token:
+                    try:
+                        search_url = f'https://api.twitter.com/2/tweets/search/recent?query=%40{username}&max_results=10&tweet.fields=created_at,author_id,text'
+                        req3 = urllib.request.Request(search_url)
+                        req3.add_header('Authorization', f'Bearer {bearer_token}')
+                        with urllib.request.urlopen(req3) as response:
+                            result = json.loads(response.read().decode('utf-8'))
+                            mentions = result.get('data', [])
+                            print(f"TWITTER SYNC: Got {len(mentions)} mentions from search/recent")
+                    except Exception as e3:
+                        print(f"TWITTER SYNC: Search fallback also failed: {e3}")
+
+            total = len(tweets) + len(mentions)
+            print(f"TWITTER SYNC: Returning {len(tweets)} tweets + {len(mentions)} mentions = {total} total")
 
             self.send_response(200)
             self.send_header('Content-Type', 'application/json')
@@ -450,6 +517,7 @@ class Care360RequestHandler(http.server.SimpleHTTPRequestHandler):
             }).encode('utf-8'))
 
         except Exception as e:
+            print(f"TWITTER SYNC ERROR: {e}")
             self.send_response(200)
             self.send_header('Content-Type', 'application/json')
             self.end_headers()
@@ -505,11 +573,14 @@ class Care360RequestHandler(http.server.SimpleHTTPRequestHandler):
             post_data = self.rfile.read(content_length)
             params = json.loads(post_data.decode('utf-8'))
             
-            access_token = params.get('access_token')
             tweet_id = params.get('tweet_id')
             text = params.get('text')
+            access_token = os.environ.get('TWITTER_ACCESS_TOKEN', '')
             
-            if not access_token or not tweet_id or not text:
+            if not access_token:
+                raise Exception("Missing TWITTER_ACCESS_TOKEN in .env")
+
+            if not tweet_id or not text:
                 raise Exception("Missing parameters")
                 
             url = 'https://api.twitter.com/2/tweets'

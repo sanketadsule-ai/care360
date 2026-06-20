@@ -32,7 +32,7 @@
   // ── Local State Persistence ──────────────────────────
   let state = {
     connectedAccounts: JSON.parse(localStorage.getItem('gmail_connected_accounts') || '[]'),
-    cases: JSON.parse(localStorage.getItem('inbox_cases') || '[]').filter(c => !c.id.toString().startsWith('case-') && !c.id.toString().startsWith('gmail-')),
+    cases: JSON.parse(localStorage.getItem('inbox_cases') || '[]').filter(c => !c.id.toString().startsWith('case-') && !c.id.toString().startsWith('gmail-') && !c.id.toString().startsWith('tw-mock-')),
     selectedCaseId: localStorage.getItem('inbox_selected_case_id') || null,
     activeFilter: 'all'
   };
@@ -192,7 +192,6 @@
     });
   });
 
-  // Channel card selection — Facebook opens its detail panel, Gmail opens its config panel
   const fbPanel = document.getElementById('fb-pages-panel');
   const igPanel = document.getElementById('ig-pages-panel');
   const playstorePanel = document.getElementById('playstore-panel');
@@ -208,7 +207,7 @@
         return;
       }
       if (card.id === 'channel-x') {
-        if (window.CarapalTwitter) window.CarapalTwitter.connect();
+        showTwitterPanel();
         return;
       }
       if (card.id === 'channel-playstore') {
@@ -227,9 +226,11 @@
     if (channelsPanel) channelsPanel.style.display = 'none';
     if (playstorePanel) playstorePanel.style.display = 'none';
     if (igPanel) igPanel.style.display = 'none';
-    if (fbPanel) fbPanel.style.display = '';
-    var gp = document.getElementById('gmail-config-panel');
+    const gp = document.getElementById('gmail-config-panel');
     if (gp) gp.style.display = 'none';
+    const tp = document.getElementById('twitter-config-panel');
+    if (tp) tp.style.display = 'none';
+    if (fbPanel) fbPanel.style.display = '';
   }
   function hideFacebookPanel() {
     if (fbPanel) fbPanel.style.display = 'none';
@@ -238,8 +239,12 @@
 
   function showIgPanel() {
     if (channelsPanel) channelsPanel.style.display = 'none';
-    if (playstorePanel) playstorePanel.style.display = 'none';
     if (fbPanel) fbPanel.style.display = 'none';
+    if (playstorePanel) playstorePanel.style.display = 'none';
+    const gp = document.getElementById('gmail-config-panel');
+    if (gp) gp.style.display = 'none';
+    const tp = document.getElementById('twitter-config-panel');
+    if (tp) tp.style.display = 'none';
     if (igPanel) igPanel.style.display = '';
   }
   function hideIgPanel() {
@@ -251,6 +256,10 @@
     if (channelsPanel) channelsPanel.style.display = 'none';
     if (fbPanel) fbPanel.style.display = 'none';
     if (igPanel) igPanel.style.display = 'none';
+    const gp = document.getElementById('gmail-config-panel');
+    if (gp) gp.style.display = 'none';
+    const tp = document.getElementById('twitter-config-panel');
+    if (tp) tp.style.display = 'none';
     if (playstorePanel) playstorePanel.style.display = '';
   }
   function hidePlaystorePanel() {
@@ -261,8 +270,33 @@
   function showGmailPanel() {
     if (channelsPanel) channelsPanel.style.display = 'none';
     if (fbPanel) fbPanel.style.display = 'none';
-    var gp = document.getElementById('gmail-config-panel');
+    if (playstorePanel) playstorePanel.style.display = 'none';
+    if (igPanel) igPanel.style.display = 'none';
+    const tp = document.getElementById('twitter-config-panel');
+    if (tp) tp.style.display = 'none';
+    const gp = document.getElementById('gmail-config-panel');
     if (gp) gp.style.display = '';
+  }
+  function hideGmailPanel() {
+    const gp = document.getElementById('gmail-config-panel');
+    if (gp) gp.style.display = 'none';
+    if (channelsPanel) channelsPanel.style.display = '';
+  }
+
+  function showTwitterPanel() {
+    if (channelsPanel) channelsPanel.style.display = 'none';
+    if (fbPanel) fbPanel.style.display = 'none';
+    if (playstorePanel) playstorePanel.style.display = 'none';
+    if (igPanel) igPanel.style.display = 'none';
+    const gp = document.getElementById('gmail-config-panel');
+    if (gp) gp.style.display = 'none';
+    const tp = document.getElementById('twitter-config-panel');
+    if (tp) tp.style.display = '';
+  }
+  function hideTwitterPanel() {
+    const tp = document.getElementById('twitter-config-panel');
+    if (tp) tp.style.display = 'none';
+    if (channelsPanel) channelsPanel.style.display = '';
   }
 
   const fbBackBtn = document.getElementById('fb-back-btn');
@@ -273,6 +307,23 @@
 
   const playstoreBackBtn = document.getElementById('playstore-back-btn');
   if (playstoreBackBtn) playstoreBackBtn.addEventListener('click', hidePlaystorePanel);
+
+  const twitterBackBtn = document.getElementById('twitter-back-btn');
+  if (twitterBackBtn) twitterBackBtn.addEventListener('click', hideTwitterPanel);
+
+  const twitterConnectBtn = document.getElementById('twitter-connect-btn');
+  if (twitterConnectBtn) {
+    twitterConnectBtn.addEventListener('click', () => {
+      if (window.CarapalTwitter) window.CarapalTwitter.connect();
+    });
+  }
+  
+  const twitterSyncBtn = document.getElementById('twitter-sync-btn');
+  if (twitterSyncBtn) {
+    twitterSyncBtn.addEventListener('click', () => {
+      if (typeof generateIncomingTwitterMentions === 'function') generateIncomingTwitterMentions();
+    });
+  }
 
   // ══════════════════════════════════════════════════════
   // FACEBOOK / INSTAGRAM INTEGRATION (Redirect-based OAuth)
@@ -1640,7 +1691,9 @@
       var emptyState = document.getElementById('gmail-connected-empty');
       var list = document.getElementById('gmail-connected-list');
 
-      if (state.connectedAccounts.length === 0) {
+      const gmailAccs = state.connectedAccounts.filter(x => x.channel !== 'twitter' && x.platform !== 'twitter');
+
+      if (gmailAccs.length === 0) {
         if (emptyState) emptyState.style.display = 'flex';
         if (list) { list.style.display = 'none'; list.innerHTML = ''; }
         return;
@@ -1652,7 +1705,7 @@
         list.innerHTML = '';
       }
 
-      state.connectedAccounts.forEach((acc) => {
+      gmailAccs.forEach((acc) => {
         var card = document.createElement('div');
         card.className = 'gmail-account-card';
 
@@ -1670,7 +1723,10 @@
         var status = document.createElement('div');
         status.className = 'gmail-account-status';
         status.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="12" height="12"><polyline points="20,6 9,17 4,12"/></svg>';
-        status.appendChild(document.createTextNode(acc.accessToken ? 'OAuth Active' : 'Connected'));
+        
+        let statusText = acc.accessToken ? 'OAuth Active' : 'Connected';
+        statusText += ' (Gmail)';
+        status.appendChild(document.createTextNode(statusText));
 
         // Disconnect Button Container
         var disconnectContainer = document.createElement('div');
@@ -1782,6 +1838,154 @@
         info.appendChild(disconnectContainer);
         card.appendChild(avatar);
         card.appendChild(info);
+        if (list) list.appendChild(card);
+      });
+    }
+
+    function renderConnectedTwitterAccounts() {
+      var emptyState = document.getElementById('twitter-connected-empty');
+      var list = document.getElementById('twitter-connected-list');
+
+      const twitterAccs = state.connectedAccounts.filter(x => x.channel === 'twitter' || x.platform === 'twitter');
+
+      if (twitterAccs.length === 0) {
+        if (emptyState) emptyState.style.display = 'flex';
+        if (list) { list.style.display = 'none'; list.innerHTML = ''; }
+        return;
+      }
+
+      if (emptyState) emptyState.style.display = 'none';
+      if (list) {
+        list.style.display = 'grid';
+        list.innerHTML = '';
+      }
+
+      twitterAccs.forEach((acc) => {
+        var card = document.createElement('div');
+        card.className = 'gmail-account-card'; // Reuse gmail card styling
+
+        var avatar = document.createElement('div');
+        avatar.className = 'gmail-account-avatar';
+        avatar.innerHTML = acc.pictureUrl || acc.avatar_url ? `<img src="${acc.pictureUrl || acc.avatar_url}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">` : (acc.name || acc.username || '?').split(/\s+/).slice(0, 2).map(function (w) { return w[0] || ''; }).join('').toUpperCase() || '?';
+
+        var info = document.createElement('div');
+        info.className = 'gmail-account-info';
+
+        var emailEl = document.createElement('div');
+        emailEl.className = 'gmail-account-email';
+        emailEl.textContent = acc.name || ('@' + acc.username) || acc.email;
+
+        var status = document.createElement('div');
+        status.className = 'gmail-account-status';
+        status.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="12" height="12"><polyline points="20,6 9,17 4,12"/></svg>';
+        status.appendChild(document.createTextNode('Connected (Twitter/X)'));
+
+        // Disconnect Button Container
+        var disconnectContainer = document.createElement('div');
+        disconnectContainer.style.marginTop = '6px';
+        disconnectContainer.style.display = 'flex';
+        disconnectContainer.style.alignItems = 'center';
+        disconnectContainer.style.gap = '8px';
+
+        var disconnectBtn = document.createElement('button');
+        disconnectBtn.style.fontSize = '10.5px';
+        disconnectBtn.style.fontWeight = '600';
+        disconnectBtn.style.color = '#B91C1C';
+        disconnectBtn.style.cursor = 'pointer';
+        disconnectBtn.style.background = 'none';
+        disconnectBtn.style.border = 'none';
+        disconnectBtn.style.padding = '0';
+        disconnectBtn.style.fontFamily = 'inherit';
+        disconnectBtn.textContent = 'Disconnect Account';
+
+        var confirmContainer = document.createElement('div');
+        confirmContainer.style.display = 'none';
+        confirmContainer.style.alignItems = 'center';
+        confirmContainer.style.gap = '6px';
+        confirmContainer.style.fontSize = '10.5px';
+
+        var confirmLabel = document.createElement('span');
+        confirmLabel.style.color = '#4B5563';
+        confirmLabel.style.fontWeight = '500';
+        confirmLabel.textContent = 'Are you sure?';
+
+        var yesBtn = document.createElement('button');
+        yesBtn.style.color = '#B91C1C';
+        yesBtn.style.fontWeight = '600';
+        yesBtn.style.cursor = 'pointer';
+        yesBtn.style.background = 'none';
+        yesBtn.style.border = 'none';
+        yesBtn.style.padding = '0';
+        yesBtn.style.fontFamily = 'inherit';
+        yesBtn.textContent = 'Yes';
+
+        var noBtn = document.createElement('button');
+        noBtn.style.color = '#4B5563';
+        noBtn.style.fontWeight = '600';
+        noBtn.style.cursor = 'pointer';
+        noBtn.style.background = 'none';
+        noBtn.style.border = 'none';
+        noBtn.style.padding = '0';
+        noBtn.style.fontFamily = 'inherit';
+        noBtn.textContent = 'No';
+
+        confirmContainer.appendChild(confirmLabel);
+        confirmContainer.appendChild(yesBtn);
+        confirmContainer.appendChild(document.createTextNode(' | '));
+        confirmContainer.appendChild(noBtn);
+
+        disconnectBtn.addEventListener('click', function (e) {
+          e.stopPropagation();
+          disconnectBtn.style.display = 'none';
+          confirmContainer.style.display = 'flex';
+        });
+
+        noBtn.addEventListener('click', function (e) {
+          e.stopPropagation();
+          confirmContainer.style.display = 'none';
+          disconnectBtn.style.display = 'inline-block';
+        });
+
+        yesBtn.addEventListener('click', function (e) {
+          e.stopPropagation();
+          const doRemove = () => {
+            state.connectedAccounts = state.connectedAccounts.filter(x => x.username !== acc.username && x.email !== acc.email);
+            state.cases = state.cases.filter(x => x.channel !== 'twitter');
+            state.selectedCaseId = null;
+            saveState();
+            renderAllCases();
+            renderConnectedTwitterAccounts();
+            showGmailToast('Twitter account disconnected.', 'success');
+          };
+
+          if (acc.dbChannelId) {
+            yesBtn.textContent = '...';
+            fetch('/api/connected-channels', {
+              method: 'DELETE',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ id: acc.dbChannelId })
+            }).then(r => r.json()).then(res => {
+              if (res.success) doRemove();
+              else alert('Failed to disconnect channel.');
+            }).catch(err => {
+              console.error(err);
+              alert('Error disconnecting channel');
+            });
+          } else {
+            doRemove();
+          }
+        });
+
+        disconnectContainer.appendChild(disconnectBtn);
+        disconnectContainer.appendChild(confirmContainer);
+
+        info.appendChild(emailEl);
+        info.appendChild(status);
+        info.appendChild(disconnectContainer);
+
+        card.appendChild(avatar);
+        card.appendChild(info);
+
         if (list) list.appendChild(card);
       });
     }
@@ -2701,8 +2905,15 @@ Collab Manager`
 
     renderAllCases();
     renderConnectedGmailAccounts();
+    renderConnectedTwitterAccounts();
     if (state.connectedAccounts.length > 0) {
       startEmailSyncLoop();
+    }
+    // Auto-sync Twitter on page load if connected
+    const hasTwitter = state.connectedAccounts.find(x => x.channel === 'twitter');
+    if (hasTwitter) {
+      console.log('Auto-syncing Twitter on page load...');
+      setTimeout(() => generateIncomingTwitterMentions(), 1500);
     }
 
     // Expose a way to add Twitter account from the popup
@@ -2717,9 +2928,9 @@ Collab Manager`
         state.connectedAccounts.push(account);
       }
       saveState();
-      renderConnectedGmailAccounts(); // re-render the connected accounts list
+      renderConnectedTwitterAccounts(); // re-render the connected accounts list
       
-      // Save Twitter channel to database
+      // Save Twitter channel to database (will fail locally if server.py doesn't handle POST /api/connected-channels, which is fine)
       fetch('/api/connected-channels', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -2727,8 +2938,8 @@ Collab Manager`
           platform: 'twitter',
           account_email: account.username,
           account_name: account.name || ('@' + account.username),
-          avatar_url: '', // Twitter API v2 doesn't give profile picture easily without extra scopes
-          access_token: account.accessToken
+          avatar_url: account.profile_image_url || '', 
+          access_token: '' // handled by .env securely
         })
       })
       .then(r => r.json())
@@ -2737,7 +2948,7 @@ Collab Manager`
           showGmailToast('Twitter account connected & saved to DB!', 'success');
         }
       })
-      .catch(console.error);
+      .catch(err => console.log('Skipping DB save (local mode)', err));
       
       // trigger a sync
       generateIncomingTwitterMentions();
@@ -2745,45 +2956,50 @@ Collab Manager`
 
     async function generateIncomingTwitterMentions() {
       if (state.connectedAccounts.length === 0) return;
-      const twAccount = state.connectedAccounts.find(x => x.channel === 'twitter' && x.accessToken);
+      const twAccount = state.connectedAccounts.find(x => x.channel === 'twitter');
       if (!twAccount) return;
       
       showGmailToast('Syncing fresh mentions from Twitter...', 'info');
       try {
-        const response = await fetch('/api/twitter-sync', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ access_token: twAccount.accessToken })
-        });
-        const result = await response.json();
-        if (result.success && result.mentions && result.mentions.length > 0) {
-          result.mentions.forEach(tweet => {
-            // map tweet to case
-            const newCase = {
-              id: 'tw-' + tweet.id,
-              channel: 'twitter',
-              author: tweet.author_id,
-              username: tweet.author_id, // we might want author name
-              avatar: '', // could use default avatar
-              text: tweet.text,
-              timestamp: new Date(tweet.created_at).getTime() || Date.now(),
-              status: 'open',
-              sentiment: 'neutral', // default
-              priority: 'high',
-              tags: ['mention'],
-              replies: []
-            };
-            if (!state.cases.find(c => c.id === newCase.id)) {
-              state.cases.unshift(newCase);
-            }
-          });
-          saveState();
-          renderAllCases();
-          showGmailToast('Twitter sync complete!', 'success');
-        } else if (result.success) {
-          showGmailToast('No new mentions found.', 'info');
+        if (window.CarapalTwitter) {
+          const syncData = await window.CarapalTwitter.sync();
+          let combined = [];
+          if (syncData.tweets && syncData.tweets.length > 0) {
+            combined = combined.concat(syncData.tweets);
+          }
+          if (syncData.mentions && syncData.mentions.length > 0) {
+            combined = combined.concat(syncData.mentions);
+          }
+          
+          if (combined.length === 0) {
+            showGmailToast('No new tweets or mentions found.', 'info');
+          } else {
+            combined.forEach(tweet => {
+              // map tweet to case
+              const newCase = {
+                id: 'tw-' + tweet.id,
+                channel: 'twitter',
+                author: tweet.author_id || twAccount.username,
+                username: tweet.author_id || twAccount.username,
+                avatar: '', // could use default avatar
+                text: tweet.text,
+                timestamp: new Date(tweet.created_at).getTime() || Date.now(),
+                status: 'open',
+                sentiment: 'neutral', // default
+                priority: 'high',
+                tags: ['tweet'],
+                replies: []
+              };
+              if (!state.cases.find(c => c.id === newCase.id)) {
+                state.cases.unshift(newCase);
+              }
+            });
+            saveState();
+            renderAllCases();
+            showGmailToast('Twitter sync complete!', 'success');
+          }
         } else {
-          showGmailToast('Failed to sync Twitter: ' + result.error, 'error');
+          showGmailToast('Failed to sync Twitter.', 'error');
         }
       } catch (err) {
         console.error(err);
@@ -2797,7 +3013,6 @@ Collab Manager`
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            access_token: twAccount.accessToken,
             tweet_id: c.id.replace('tw-', ''),
             text: replyText
           })
