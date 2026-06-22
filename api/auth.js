@@ -21,8 +21,17 @@ module.exports = async function handler(req, res) {
     if (!credential) return res.status(400).json({ error: 'Missing credential' });
 
     // Verify token with Google
-    const googleRes = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${credential}`);
-    const googleData = await googleRes.json();
+    const https = require('https');
+    const googleData = await new Promise((resolve, reject) => {
+      https.get(`https://oauth2.googleapis.com/tokeninfo?id_token=${credential}`, (res) => {
+        let data = '';
+        res.on('data', chunk => data += chunk);
+        res.on('end', () => {
+          try { resolve(JSON.parse(data)); } 
+          catch (e) { reject(e); }
+        });
+      }).on('error', reject);
+    });
     
     if (googleData.error) {
        return res.status(401).json({ error: 'Invalid Google token' });
