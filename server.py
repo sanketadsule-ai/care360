@@ -50,6 +50,11 @@ class Care360RequestHandler(http.server.SimpleHTTPRequestHandler):
             self.handle_twitter_connect()
         elif path == '/api/twitter-sync':
             self.handle_twitter_sync_get()
+        elif path == '/api/connected-channels':
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps({'success': True, 'data': []}).encode('utf-8'))
         else:
             # Fall through to serve static files
             super().do_GET()
@@ -70,6 +75,26 @@ class Care360RequestHandler(http.server.SimpleHTTPRequestHandler):
             self.handle_twitter_sync()
         elif path == '/api/twitter/reply':
             self.handle_twitter_reply()
+        elif path == '/api/connected-channels':
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps({'success': True, 'data': {}}).encode('utf-8'))
+        else:
+            self.send_response(404)
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps({'error': 'Endpoint not found'}).encode('utf-8'))
+
+    def do_DELETE(self):
+        url_parts = urllib.parse.urlparse(self.path)
+        path = url_parts.path
+        
+        if path == '/api/connected-channels':
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps({'success': True}).encode('utf-8'))
         else:
             self.send_response(404)
             self.send_header('Content-Type', 'application/json')
