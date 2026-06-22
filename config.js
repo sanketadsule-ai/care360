@@ -17,7 +17,7 @@
  */
 window.CARAPAL_CONFIG = {
   // 👇 PASTE YOUR FACEBOOK APP ID HERE
-  FB_APP_ID: '910067414827041',
+  FB_APP_ID: '1000563233479492',
 
   // 👇 PASTE YOUR GOOGLE OAUTH CLIENT ID HERE (e.g. 'xxxx.apps.googleusercontent.com')
 
