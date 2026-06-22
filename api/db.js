@@ -94,6 +94,8 @@ async function ensureTables() {
   
   // Migration for existing tables
   try {
+    await p.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS initials VARCHAR(10);`);
+    await p.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_url VARCHAR(512);`);
     await p.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS status VARCHAR(50) DEFAULT 'pending';`);
     await p.query(`ALTER TABLE users ALTER COLUMN role SET DEFAULT 'user';`);
   } catch (err) {
