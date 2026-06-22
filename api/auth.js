@@ -46,9 +46,9 @@ module.exports = async function handler(req, res) {
            initials = name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
        }
 
-       // Calculate next ID manually to bypass missing sequence issues
-       const maxIdRes = await pool.query('SELECT COALESCE(MAX(id), 0) + 1 AS next_id FROM users');
-       const nextId = maxIdRes.rows[0].next_id;
+       // The user's live database has 'id' configured as a TEXT/VARCHAR column.
+       // Generate a unique string ID to avoid type mismatches.
+       const nextId = Date.now().toString() + Math.floor(Math.random() * 10000).toString();
 
        const insertRes = await pool.query(
          `INSERT INTO users (id, email, name, initials, avatar_url, role, status)
