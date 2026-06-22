@@ -1,5 +1,5 @@
 const jwt = require('jsonwebtoken');
-const { getPool, ensureTables } = require('./db');
+const { getPool, ensureTables } = require('./_lib/db');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'carapal360-dev-secret';
 

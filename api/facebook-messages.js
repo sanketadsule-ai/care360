@@ -1,4 +1,4 @@
-const { getPool, ensureTables } = require('./db');
+const { getPool, ensureTables } = require('./_lib/db');
 
 module.exports = async function handler(req, res) {
   // CORS headers

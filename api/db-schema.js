@@ -1,5 +1,5 @@
 // Temporary diagnostic endpoint to inspect the live database schema
-const { getPool, ensureTables } = require('./db');
+const { getPool, ensureTables } = require('./_lib/db');
 
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');

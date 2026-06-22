@@ -1,5 +1,5 @@
-const { getPool, ensureTables } = require('./db');
-const { verifyAdmin } = require('./auth-helper');
+const { getPool, ensureTables } = require('./_lib/db');
+const { verifyAdmin } = require('./_lib/auth-helper');
 
 module.exports = async function handler(req, res) {
   // CORS headers

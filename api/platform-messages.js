@@ -1,7 +1,7 @@
 // Vercel Serverless Function: /api/platform-messages
 // GET  — list stored platform messages
 // POST — bulk upsert platform messages
-const { getPool, ensureTables } = require('./db');
+const { getPool, ensureTables } = require('./_lib/db');
 
 module.exports = async function handler(req, res) {
   // CORS headers
