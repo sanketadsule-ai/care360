@@ -20,18 +20,8 @@ module.exports = async function handler(req, res) {
     const { credential } = req.body;
     if (!credential) return res.status(400).json({ error: 'Missing credential' });
 
-    // Verify token with Google
-    const https = require('https');
-    const googleData = await new Promise((resolve, reject) => {
-      https.get(`https://oauth2.googleapis.com/tokeninfo?id_token=${credential}`, (res) => {
-        let data = '';
-        res.on('data', chunk => data += chunk);
-        res.on('end', () => {
-          try { resolve(JSON.parse(data)); } 
-          catch (e) { reject(e); }
-        });
-      }).on('error', reject);
-    });
+    const googleRes = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${credential}`);
+    const googleData = await googleRes.json();
     
     if (googleData.error) {
        return res.status(401).json({ error: 'Invalid Google token' });
@@ -56,10 +46,14 @@ module.exports = async function handler(req, res) {
            initials = name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
        }
 
+       // Calculate next ID manually to bypass missing sequence issues
+       const maxIdRes = await pool.query('SELECT COALESCE(MAX(id), 0) + 1 AS next_id FROM users');
+       const nextId = maxIdRes.rows[0].next_id;
+
        const insertRes = await pool.query(
-         `INSERT INTO users (email, name, initials, avatar_url, role, status)
-          VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
-         [email, name || email, initials, picture || '', role, status]
+         `INSERT INTO users (id, email, name, initials, avatar_url, role, status)
+          VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
+         [nextId, email, name || email, initials, picture || '', role, status]
        );
        user = insertRes.rows[0];
     }
