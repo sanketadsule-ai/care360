@@ -86,7 +86,7 @@
         localStorage.setItem('auth_user', JSON.stringify(authUser));
         checkAuthState();
       } else {
-        throw new Error(data.error || 'Login failed');
+        throw new Error(data.details ? `${data.error}: ${data.details}` : (data.error || 'Login failed'));
       }
     } catch (err) {
       if (errorMsg) {
