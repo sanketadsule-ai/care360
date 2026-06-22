@@ -94,6 +94,16 @@ async function ensureTables() {
   
   // Migration for existing tables
   try {
+    // Fix missing sequence on id if table was manually created without SERIAL
+    await p.query(`CREATE SEQUENCE IF NOT EXISTS users_id_seq;`);
+    await p.query(`ALTER TABLE users ALTER COLUMN id SET DEFAULT nextval('users_id_seq');`);
+    await p.query(`ALTER SEQUENCE users_id_seq OWNED BY users.id;`);
+    await p.query(`SELECT setval('users_id_seq', COALESCE((SELECT MAX(id)+1 FROM users), 1), false);`);
+  } catch (err) {
+    console.error('Sequence migration error for users table:', err.message);
+  }
+
+  try {
     await p.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS initials VARCHAR(10);`);
     await p.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_url VARCHAR(512);`);
     await p.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS status VARCHAR(50) DEFAULT 'pending';`);
