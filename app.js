@@ -615,10 +615,8 @@
           };
 
           if (page.dbChannelId) {
-            fetch('/api/connected-channels', {
-              method: 'DELETE',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ id: page.dbChannelId })
+            fetch('/api/connected-channels?id=' + encodeURIComponent(page.dbChannelId), {
+              method: 'DELETE'
             }).then(r => r.json()).then(res => {
               if (res.success) {
                 doRemove();
@@ -1808,10 +1806,8 @@
 
           if (acc.dbChannelId) {
             yesBtn.textContent = '...';
-            fetch('/api/connected-channels', {
-              method: 'DELETE',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ id: acc.dbChannelId })
+            fetch('/api/connected-channels?id=' + encodeURIComponent(acc.dbChannelId), {
+              method: 'DELETE'
             }).then(r => r.json()).then(res => {
               if (res.success) doRemove();
               else alert('Failed to disconnect channel.');
@@ -1960,10 +1956,8 @@
 
           if (acc.dbChannelId) {
             yesBtn.textContent = '...';
-            fetch('/api/connected-channels', {
-              method: 'DELETE',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ id: acc.dbChannelId })
+            fetch('/api/connected-channels?id=' + encodeURIComponent(acc.dbChannelId), {
+              method: 'DELETE'
             }).then(r => r.json()).then(res => {
               if (res.success) doRemove();
               else alert('Failed to disconnect channel.');

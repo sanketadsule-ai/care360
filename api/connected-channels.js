@@ -53,7 +53,7 @@ module.exports = async function handler(req, res) {
 
     // ─── DELETE: Remove a connected channel ───
     if (req.method === 'DELETE') {
-      const { id } = req.body;
+      const id = req.query.id || (req.body && req.body.id);
       if (!id) {
         return res.status(400).json({ error: 'id is required to delete a channel' });
       }
