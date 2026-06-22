@@ -61,6 +61,7 @@
       '&redirect_uri=' + encodeURIComponent(redirectUri) +
       '&scope=' + encodeURIComponent(scope) +
       '&response_type=token' +
+      '&auth_type=rerequest' +
       '&state=' + encodeURIComponent(state);
 
     window.location.href = authUrl;
@@ -129,7 +130,7 @@
       id: p.id,
       name: p.name,
       accessToken: p.access_token,
-      isAdmin: Array.isArray(p.tasks) && (p.tasks.includes('MANAGE') || p.tasks.includes('ADMINISTER')),
+      isAdmin: !p.tasks || (Array.isArray(p.tasks) && p.tasks.length > 0),
       pictureUrl: p.picture && p.picture.data ? p.picture.data.url : null,
     }));
   }
