@@ -26,6 +26,7 @@ function getPool() {
 async function ensureTables() {
   const p = getPool();
 
+  // 1. connected_channels (no foreign keys)
   await p.query(`
     CREATE TABLE IF NOT EXISTS connected_channels (
       id            SERIAL PRIMARY KEY,
@@ -41,6 +42,7 @@ async function ensureTables() {
     );
   `);
 
+  // 2. email_messages (depends on connected_channels)
   await p.query(`
     CREATE TABLE IF NOT EXISTS email_messages (
       id                SERIAL PRIMARY KEY,
@@ -60,6 +62,7 @@ async function ensureTables() {
     );
   `);
 
+  // 3. facebook_messages (depends on connected_channels)
   await p.query(`
     CREATE TABLE IF NOT EXISTS facebook_messages (
       id                SERIAL PRIMARY KEY,
@@ -75,6 +78,7 @@ async function ensureTables() {
     );
   `);
 
+  // 4. users (no foreign keys — MUST come before notifications)
   await p.query(`
     CREATE TABLE IF NOT EXISTS users (
       id            SERIAL PRIMARY KEY,
@@ -87,15 +91,36 @@ async function ensureTables() {
     );
   `);
 
-  await p.query(`
-    CREATE TABLE IF NOT EXISTS notifications (
-      id            SERIAL PRIMARY KEY,
-      user_id       INTEGER REFERENCES users(id),
-      message       TEXT,
-      is_read       BOOLEAN DEFAULT FALSE,
-      created_at    TIMESTAMP DEFAULT NOW()
-    );
-  `);
+  // 5. notifications (depends on users)
+  // Wrapped in try/catch: if the FK constraint is broken from a prior
+  // deployment, drop the table and recreate it so it doesn't block everything.
+  try {
+    await p.query(`
+      CREATE TABLE IF NOT EXISTS notifications (
+        id            SERIAL PRIMARY KEY,
+        user_id       INTEGER REFERENCES users(id),
+        message       TEXT,
+        is_read       BOOLEAN DEFAULT FALSE,
+        created_at    TIMESTAMP DEFAULT NOW()
+      );
+    `);
+  } catch (err) {
+    console.warn('notifications table creation failed, attempting to recreate:', err.message);
+    try {
+      await p.query('DROP TABLE IF EXISTS notifications CASCADE');
+      await p.query(`
+        CREATE TABLE IF NOT EXISTS notifications (
+          id            SERIAL PRIMARY KEY,
+          user_id       INTEGER REFERENCES users(id),
+          message       TEXT,
+          is_read       BOOLEAN DEFAULT FALSE,
+          created_at    TIMESTAMP DEFAULT NOW()
+        );
+      `);
+    } catch (retryErr) {
+      console.error('Failed to recreate notifications table:', retryErr.message);
+    }
+  }
 }
 
 module.exports = { getPool, ensureTables };
