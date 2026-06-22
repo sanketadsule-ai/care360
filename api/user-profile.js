@@ -7,24 +7,23 @@ module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
+  const { verifyAuth } = require('./auth-helper');
+
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
+
+  // Require authentication
+  const authUser = verifyAuth(req, res);
+  if (!authUser) return; // response already sent
 
   try {
     await ensureTables();
     const pool = getPool();
 
     if (req.method === 'GET') {
-      // 1. Ensure a default admin user exists
-      await pool.query(`
-        INSERT INTO users (email, name, initials, role) 
-        VALUES ($1, $2, $3, $4) 
-        ON CONFLICT (email) DO NOTHING
-      `, ['admin@carapal360.com', 'Sanket Adsule', 'SA', 'admin']);
-
-      // 2. Fetch the user profile
-      const userRes = await pool.query('SELECT * FROM users LIMIT 1');
+      // 2. Fetch the user profile from token ID
+      const userRes = await pool.query('SELECT * FROM users WHERE id = $1', [authUser.id]);
       if (userRes.rows.length === 0) {
         return res.status(404).json({ error: 'User not found' });
       }

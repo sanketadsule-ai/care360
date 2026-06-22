@@ -86,10 +86,19 @@ async function ensureTables() {
       name          VARCHAR(255) NOT NULL,
       initials      VARCHAR(10),
       avatar_url    VARCHAR(512),
-      role          VARCHAR(50) DEFAULT 'admin',
+      role          VARCHAR(50) DEFAULT 'user',
+      status        VARCHAR(50) DEFAULT 'pending',
       created_at    TIMESTAMP DEFAULT NOW()
     );
   `);
+  
+  // Migration for existing tables
+  try {
+    await p.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS status VARCHAR(50) DEFAULT 'pending';`);
+    await p.query(`ALTER TABLE users ALTER COLUMN role SET DEFAULT 'user';`);
+  } catch (err) {
+    console.error('Migration error for users table:', err.message);
+  }
 
   // 5. notifications (depends on users)
   // Wrapped in try/catch: if the FK constraint is broken from a prior

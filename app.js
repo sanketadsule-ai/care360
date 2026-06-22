@@ -12,6 +12,106 @@
 (function () {
   'use strict';
 
+  // ── Auth & Fetch Interceptor ────────────────────────
+  let authToken = localStorage.getItem('auth_token');
+  let authUser = JSON.parse(localStorage.getItem('auth_user') || 'null');
+
+  const originalFetch = window.fetch;
+  window.fetch = async function () {
+    let [resource, config] = arguments;
+    if (resource.startsWith('/api/') && authToken) {
+      if (!config) config = {};
+      if (!config.headers) config.headers = {};
+      config.headers['Authorization'] = 'Bearer ' + authToken;
+    }
+    const response = await originalFetch(resource, config);
+    if (response.status === 401 || response.status === 403) {
+      // If unauthorized, we might need to log out, but let's handle it gracefully
+      const isApi = resource.startsWith('/api/');
+      if (isApi) {
+        // Maybe clear token if invalid, but for now just pass through
+      }
+    }
+    return response;
+  };
+
+  function checkAuthState() {
+    const overlay = document.getElementById('login-overlay');
+    const pendingMsg = document.getElementById('pending-approval-msg');
+    const errorMsg = document.getElementById('login-error-msg');
+    const sidebarUsersTab = document.getElementById('sidebar-users-tab');
+    
+    if (!overlay) return;
+
+    if (!authToken || !authUser) {
+      overlay.style.display = 'flex';
+      pendingMsg.style.display = 'none';
+      if (sidebarUsersTab) sidebarUsersTab.style.display = 'none';
+    } else if (authUser.status === 'pending') {
+      overlay.style.display = 'flex';
+      pendingMsg.style.display = 'block';
+      if (sidebarUsersTab) sidebarUsersTab.style.display = 'none';
+    } else {
+      overlay.style.display = 'none';
+      // Show admin tab if user is admin
+      if (authUser.role === 'admin' && sidebarUsersTab) {
+        sidebarUsersTab.style.display = 'flex';
+        loadAdminUsers();
+      }
+    }
+  }
+
+  // Global callback for Google Identity Services
+  window.handleGoogleLogin = async function (response) {
+    const errorMsg = document.getElementById('login-error-msg');
+    if (errorMsg) errorMsg.style.display = 'none';
+    
+    try {
+      const res = await originalFetch('/api/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ credential: response.credential })
+      });
+      const data = await res.json();
+      
+      if (data.success) {
+        authToken = data.token;
+        authUser = data.user;
+        localStorage.setItem('auth_token', authToken);
+        localStorage.setItem('auth_user', JSON.stringify(authUser));
+        checkAuthState();
+      } else if (res.status === 403 && data.user) {
+        // Pending approval
+        authUser = data.user;
+        localStorage.setItem('auth_user', JSON.stringify(authUser));
+        checkAuthState();
+      } else {
+        throw new Error(data.error || 'Login failed');
+      }
+    } catch (err) {
+      if (errorMsg) {
+        errorMsg.textContent = err.message;
+        errorMsg.style.display = 'block';
+      }
+    }
+  };
+
+  // Logout handler
+  document.addEventListener('click', (e) => {
+    if (e.target && e.target.id === 'btn-logout') {
+      localStorage.removeItem('auth_token');
+      localStorage.removeItem('auth_user');
+      authToken = null;
+      authUser = null;
+      checkAuthState();
+      // Reset dropdown
+      const profileDropdown = document.getElementById('profile-dropdown');
+      if (profileDropdown) profileDropdown.style.display = 'none';
+    }
+  });
+
+  document.addEventListener('DOMContentLoaded', checkAuthState);
+
   // ── Load Google GIS SDK client script ────────────────
   if (!document.getElementById('google-gsi-script')) {
     const gsiScript = document.createElement('script');
@@ -3072,5 +3172,77 @@ Collab Manager`
         }
       });
     }
+
+    // ── Admin User Management ──────────────────────────────
+    window.loadAdminUsers = async function() {
+      const tbody = document.getElementById('admin-users-list');
+      if (!tbody) return;
+      
+      try {
+        const res = await window.fetch('/api/admin-users');
+        const data = await res.json();
+        
+        if (data.success && data.users) {
+          tbody.innerHTML = '';
+          if (data.users.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" style="padding: 16px; text-align: center; color: #6B7280; font-size: 14px;">No pending or standard users found.</td></tr>';
+            return;
+          }
+          
+          data.users.forEach(user => {
+            const tr = document.createElement('tr');
+            tr.style.borderBottom = '1px solid #E5E7EB';
+            
+            const actionHtml = user.status === 'pending' ? `
+              <button onclick="handleUserAction(${user.id}, 'approve')" style="background: #10B981; color: white; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; margin-right: 6px;">Approve</button>
+              <button onclick="handleUserAction(${user.id}, 'reject')" style="background: #EF4444; color: white; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 12px;">Reject</button>
+            ` : `
+              <span style="font-size: 12px; color: #6B7280;">N/A</span>
+            `;
+            
+            const statusColor = user.status === 'pending' ? '#F59E0B' : (user.status === 'approved' ? '#10B981' : '#EF4444');
+            
+            tr.innerHTML = `
+              <td style="padding: 12px 16px; font-size: 14px; color: #111827;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <div style="width: 24px; height: 24px; border-radius: 50%; background: #E5E7EB; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: bold; overflow: hidden;">
+                    ${user.avatar_url ? `<img src="${user.avatar_url}" style="width: 100%; height: 100%; object-fit: cover;">` : user.initials}
+                  </div>
+                  ${user.name}
+                </div>
+              </td>
+              <td style="padding: 12px 16px; font-size: 14px; color: #4B5563;">${user.email}</td>
+              <td style="padding: 12px 16px; font-size: 14px;"><span style="color: ${statusColor}; font-weight: 500; text-transform: capitalize;">${user.status}</span></td>
+              <td style="padding: 12px 16px; font-size: 14px;">${actionHtml}</td>
+            `;
+            tbody.appendChild(tr);
+          });
+        }
+      } catch (err) {
+        console.error('Failed to load admin users:', err);
+        tbody.innerHTML = '<tr><td colspan="4" style="padding: 16px; text-align: center; color: #EF4444; font-size: 14px;">Failed to load users.</td></tr>';
+      }
+    };
+    
+    window.handleUserAction = async function(userId, action) {
+      if (!confirm(`Are you sure you want to ${action} this user?`)) return;
+      
+      try {
+        const res = await window.fetch('/api/admin-users', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId, action })
+        });
+        const data = await res.json();
+        if (data.success) {
+          alert(`User ${action}d successfully`);
+          window.loadAdminUsers();
+        } else {
+          alert(data.error || 'Failed to update user');
+        }
+      } catch (err) {
+        alert('An error occurred');
+      }
+    };
 
   })();
