@@ -2835,7 +2835,7 @@ Collab Manager`
               author: dbMsg.sender_email,
               authorName: dbMsg.sender_name,
               channel: platform,
-              avatarGradient: AVATAR_GRADIENTS[Math.abs(hashCode(dbMsg.sender_email || '')) % AVATAR_GRADIENTS.length],
+              avatarGradient: AVATAR_GRADIENTS[Math.abs(hashCode(dbMsg.sender_email || dbMsg.sender_name || '')) % AVATAR_GRADIENTS.length],
               text: (dbMsg.body_text || '').substring(0, 120),
               createdTime: dbMsg.received_at || dbMsg.created_at,
               type: msgType,
@@ -2846,7 +2846,7 @@ Collab Manager`
               emailAttachments: [],
               messages: [{
                 id: 'msg-db-' + dbMsg.id,
-                sender: (dbMsg.sender_name || '') + ' <' + (dbMsg.sender_email || '') + '>',
+                sender: dbMsg.sender_email ? `${dbMsg.sender_name || ''} <${dbMsg.sender_email}>` : (dbMsg.sender_name || 'Unknown'),
                 text: dbMsg.body_text || '',
                 timestamp: dbMsg.received_at || dbMsg.created_at,
                 isAgent: false

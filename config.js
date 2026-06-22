@@ -39,6 +39,10 @@ window.CARAPAL_CONFIG = {
   // 👇 PASTE YOUR GOOGLE CLIENT ID HERE
   GOOGLE_CLIENT_ID: '941381739417-gj0tc6acd4vserfk9ku4i285cnurs66o.apps.googleusercontent.com',
 
+  // Ensure this EXACTLY matches the "Authorized redirect URIs" in Google Cloud Console
+  // Notice there is NO trailing slash here!
+  GOOGLE_REDIRECT_URI: 'https://sanketadsule-ai-carepal360-ouz4.vercel.app',
+
   // Scopes needed to read and reply to Play Store app reviews
   GOOGLE_SCOPES: 'https://www.googleapis.com/auth/androidpublisher',
 
