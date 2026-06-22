@@ -58,6 +58,8 @@ module.exports = async function handler(req, res) {
         return res.status(400).json({ error: 'id is required to delete a channel' });
       }
 
+      await pool.query('DELETE FROM email_messages WHERE channel_id = $1', [id]);
+      await pool.query('DELETE FROM facebook_messages WHERE channel_id = $1', [id]);
       await pool.query(
         'DELETE FROM connected_channels WHERE id = $1',
         [id]
