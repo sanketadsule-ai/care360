@@ -13,7 +13,28 @@ module.exports = async function handler(req, res) {
     return res.status(200).end();
   }
 
-  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+  if (req.method !== 'POST') {
+    // Temporary: GET returns the live schema for debugging
+    if (req.method === 'GET') {
+      try {
+        await ensureTables();
+        const pool = getPool();
+        const schema = await pool.query(`
+          SELECT column_name, data_type, is_nullable, column_default 
+          FROM information_schema.columns 
+          WHERE table_name = 'users' 
+          ORDER BY ordinal_position
+        `);
+        const count = await pool.query('SELECT COUNT(*) as cnt FROM users');
+        let sample = null;
+        try { const s = await pool.query('SELECT * FROM users LIMIT 1'); sample = s.rows[0]; } catch(e) {}
+        return res.status(200).json({ columns: schema.rows, row_count: count.rows[0].cnt, sample_row: sample });
+      } catch(e) {
+        return res.status(500).json({ error: e.message });
+      }
+    }
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
 
   try {
     await ensureTables();
