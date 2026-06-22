@@ -37,7 +37,7 @@ window.CARAPAL_CONFIG = {
   // 3. Create OAuth Client ID (Web Application)
   // 4. Add your Vercel URL to "Authorized JavaScript origins" and "Authorized redirect URIs"
   // 👇 PASTE YOUR GOOGLE CLIENT ID HERE
-  GOOGLE_CLIENT_ID: '941381739417-gj0tc6acd4vserfk9ku4i285cnurs66o.apps.googleusercontent.com',
+  GOOGLE_CLIENT_ID: '282172866930-91vun3ocj044bnfft49lb2f17f95beun.apps.googleusercontent.com',
 
   // Ensure this EXACTLY matches the "Authorized redirect URIs" in Google Cloud Console
   // Notice there is NO trailing slash here!
