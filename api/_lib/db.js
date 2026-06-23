@@ -18,6 +18,10 @@ function getPool() {
       idleTimeoutMillis: 30000,
       connectionTimeoutMillis: 10000
     });
+
+    pool.on('error', (err, client) => {
+      console.error('Unexpected error on idle client', err);
+    });
   }
   return pool;
 }
