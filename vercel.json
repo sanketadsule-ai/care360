@@ -3,9 +3,15 @@
   "buildCommand": null,
   "outputDirectory": ".",
   "functions": {
-    "api/*.js": {
+    "api/index.js": {
       "memory": 256,
       "maxDuration": 10
     }
-  }
+  },
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "/api/index.js"
+    }
+  ]
 }
