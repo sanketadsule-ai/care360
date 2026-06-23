@@ -72,8 +72,8 @@ module.exports = async function handler(req, res) {
        const nextId = Date.now().toString() + Math.floor(Math.random() * 10000).toString();
 
        const insertRes = await pool.query(
-         `INSERT INTO users (id, email, name, initials, avatar_url, role, status)
-          VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
+         `INSERT INTO users (id, email, name, initials, avatar_url, role, status, updated_at)
+          VALUES ($1, $2, $3, $4, $5, $6, $7, NOW()) RETURNING *`,
          [nextId, email, name || email, initials, picture || '', role, status]
        );
        user = insertRes.rows[0];

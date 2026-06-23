@@ -88,7 +88,8 @@ async function ensureTables() {
       avatar_url    VARCHAR(512),
       role          VARCHAR(50) DEFAULT 'user',
       status        VARCHAR(50) DEFAULT 'pending',
-      created_at    TIMESTAMP DEFAULT NOW()
+      created_at    TIMESTAMP DEFAULT NOW(),
+      updated_at    TIMESTAMP DEFAULT NOW()
     );
   `);
   
@@ -98,6 +99,7 @@ async function ensureTables() {
     await p.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_url VARCHAR(512);`);
     await p.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS status VARCHAR(50) DEFAULT 'pending';`);
     await p.query(`ALTER TABLE users ALTER COLUMN role SET DEFAULT 'user';`);
+    await p.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT NOW();`);
   } catch (err) {
     console.error('Migration error for users table:', err.message);
   }
