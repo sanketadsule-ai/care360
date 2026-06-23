@@ -1,7 +1,7 @@
 // Vercel Serverless Function: /api/connected-channels
 // GET  — list all connected channels
 // POST — save a new connected channel
-const { getPool, ensureTables } = require('./_lib/db');
+const { getPool, ensureTables } = require('./db');
 
 module.exports = async function handler(req, res) {
   // CORS headers

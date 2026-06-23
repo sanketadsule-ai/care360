@@ -1,5 +1,10 @@
 import os
-import glob
+import sys
+
+log_file = open("migrate_log.txt", "w")
+def log(msg):
+    log_file.write(msg + "\n")
+    log_file.flush()
 
 api_dir = r"c:\Users\6451\Documents\care360\care360\api"
 lib_dir = os.path.join(api_dir, "_lib")
@@ -22,22 +27,27 @@ for filename in endpoints:
     dst_path = os.path.join(lib_dir, filename)
     
     if os.path.exists(src_path):
-        with open(src_path, "r", encoding="utf-8") as f:
-            content = f.read()
-        
-        # Update imports: require('./_lib/xxx') becomes require('./xxx')
-        # Also require('../_lib/xxx') becomes require('./xxx') just in case
-        content = content.replace("require('./_lib/", "require('./")
-        content = content.replace("require('../_lib/", "require('../")
-        
-        with open(dst_path, "w", encoding="utf-8") as f:
-            f.write(content)
-            
-        print(f"Migrated {filename}")
-        
-        # Delete original
         try:
-            os.remove(src_path)
-            print(f"Deleted original {filename}")
+            with open(src_path, "r", encoding="utf-8") as f:
+                content = f.read()
+            
+            content = content.replace("require('./_lib/", "require('./")
+            content = content.replace("require('../_lib/", "require('../")
+            
+            with open(dst_path, "w", encoding="utf-8") as f:
+                f.write(content)
+                
+            log(f"Migrated {filename}")
+            
+            try:
+                os.chmod(src_path, 0o777)
+                os.remove(src_path)
+                log(f"Deleted original {filename}")
+            except Exception as e:
+                log(f"Error deleting {filename}: {e}")
         except Exception as e:
-            print(f"Error deleting {filename}: {e}")
+            log(f"Error processing {filename}: {e}")
+    else:
+        log(f"Not found: {filename}")
+
+log_file.close()

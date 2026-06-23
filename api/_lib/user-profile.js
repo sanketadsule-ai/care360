@@ -1,5 +1,5 @@
 // Vercel Serverless Function: /api/user-profile
-const { getPool, ensureTables } = require('./_lib/db');
+const { getPool, ensureTables } = require('./db');
 
 module.exports = async function handler(req, res) {
   // CORS headers
@@ -7,7 +7,7 @@ module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-  const { verifyAuth } = require('./_lib/auth-helper');
+  const { verifyAuth } = require('./auth-helper');
 
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
