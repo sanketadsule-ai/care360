@@ -46,7 +46,7 @@
     const redirectUri = window.location.origin + window.location.pathname;
     
     // Choose scopes based on platform
-    let scope = cfg.FB_SCOPES || 'public_profile,pages_show_list,pages_read_engagement';
+    let scope = cfg.FB_SCOPES || 'public_profile,pages_show_list,pages_read_engagement,pages_messaging';
     if (platform === 'instagram') {
       scope = cfg.IG_SCOPES || 'instagram_basic,pages_show_list';
     }
@@ -205,6 +205,54 @@
       });
     } catch (e) {
       console.warn("Failed to fetch FB Reels:", e);
+    }
+
+    // 3. Fetch Direct Messages (Conversations)
+    try {
+      const convRes = await graphApi('/' + page.id + '/conversations', page.accessToken, {
+        limit: '25',
+        fields: 'id,updated_time,messages.limit(10){id,message,from,created_time}'
+      });
+
+      (convRes.data || []).forEach((conv) => {
+        const messages = (conv.messages && conv.messages.data) || [];
+        messages.forEach((msg) => {
+          // Skip messages sent by the page itself
+          if (msg.from && msg.from.name === page.name) return;
+
+          cases.push({
+            id: msg.id,
+            source: page.name,
+            author: (msg.from && msg.from.name) || 'Facebook User',
+            text: msg.message || '',
+            createdTime: msg.created_time,
+            type: 'Direct Message',
+          });
+        });
+      });
+    } catch (e) {
+      console.warn("Failed to fetch FB Direct Messages:", e);
+    }
+
+    // 4. Fetch Mentions (Tagged)
+    try {
+      const taggedRes = await graphApi('/' + page.id + '/tagged', page.accessToken, {
+        limit: '25',
+        fields: 'id,message,story,created_time,from'
+      });
+
+      (taggedRes.data || []).forEach((post) => {
+        cases.push({
+          id: post.id,
+          source: page.name,
+          author: (post.from && post.from.name) || 'Facebook User',
+          text: post.message || post.story || 'Mentioned your Page',
+          createdTime: post.created_time,
+          type: 'Mention',
+        });
+      });
+    } catch (e) {
+      console.warn("Failed to fetch FB Mentions:", e);
     }
 
     // Sort all combined items by createdTime descending

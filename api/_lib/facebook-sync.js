@@ -103,6 +103,52 @@ module.exports = async function handler(req, res) {
         console.error(`FB Sync Reels Error for page ${pageId}:`, err.message);
       }
 
+      try {
+        // Fetch Direct Messages (Conversations)
+        const convRes = await graphApi('/' + pageId + '/conversations', accessToken, {
+          limit: '10',
+          fields: 'id,updated_time,messages.limit(5){id,message,from,created_time}'
+        });
+
+        (convRes.data || []).forEach(conv => {
+          const messages = (conv.messages && conv.messages.data) || [];
+          messages.forEach(msg => {
+            // Skip messages sent by the page itself
+            if (msg.from && msg.from.name === channel.account_name) return;
+            
+            cases.push({
+              id: msg.id,
+              type: 'Direct Message',
+              author: (msg.from && msg.from.name) || 'Facebook User',
+              text: msg.message || '',
+              createdTime: msg.created_time
+            });
+          });
+        });
+      } catch (err) {
+        console.error(`FB Sync DM Error for page ${pageId}:`, err.message);
+      }
+
+      try {
+        // Fetch Mentions (Tagged)
+        const taggedRes = await graphApi('/' + pageId + '/tagged', accessToken, {
+          limit: '10',
+          fields: 'id,message,story,created_time,from'
+        });
+
+        (taggedRes.data || []).forEach(post => {
+          cases.push({
+            id: post.id,
+            type: 'Mention',
+            author: (post.from && post.from.name) || 'Facebook User',
+            text: post.message || post.story || 'Mentioned your Page',
+            createdTime: post.created_time
+          });
+        });
+      } catch (err) {
+        console.error(`FB Sync Tagged Error for page ${pageId}:`, err.message);
+      }
+
       // Save to database
       for (const msg of cases) {
         try {
