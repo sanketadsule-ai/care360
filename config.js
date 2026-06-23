@@ -25,7 +25,8 @@ window.CARAPAL_CONFIG = {
 
   // Permissions requested at login. pages_read_engagement lets us read
   // a page's posts & comments; pages_show_list lists the pages you manage.
-  FB_SCOPES: 'pages_show_list,pages_read_engagement',
+  // pages_messaging lets us read direct messages.
+  FB_SCOPES: 'public_profile,pages_show_list,pages_read_engagement,pages_messaging',
 
   // ── INSTAGRAM CONFIG ──────────────────────────────
   // Instagram uses the exact same FB_APP_ID, just different scopes.
