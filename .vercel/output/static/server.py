@@ -27,38 +27,6 @@ def load_env():
 
 load_env()
 
-# Session store for mock local auth
-SESSION_USER = {
-    'id': 'mock-admin-id',
-    'email': 'admin@carapal360.com',
-    'name': 'Admin User',
-    'initials': 'AU',
-    'avatar_url': '',
-    'role': 'admin',
-    'status': 'approved'
-}
-
-SESSION_USERS_LIST = [
-    {
-        'id': 101,
-        'email': 'john.doe@example.com',
-        'name': 'John Doe',
-        'initials': 'JD',
-        'avatar_url': '',
-        'role': 'user',
-        'status': 'pending'
-    },
-    {
-        'id': 102,
-        'email': 'jane.smith@example.com',
-        'name': 'Jane Smith',
-        'initials': 'JS',
-        'avatar_url': '',
-        'role': 'user',
-        'status': 'approved'
-    }
-]
-
 PORT = 8080
 
 class Care360RequestHandler(http.server.SimpleHTTPRequestHandler):
@@ -66,7 +34,7 @@ class Care360RequestHandler(http.server.SimpleHTTPRequestHandler):
         self.send_response(200, "ok")
         self.send_header('Access-Control-Allow-Origin', '*')
         self.send_header('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS')
-        self.send_header("Access-Control-Allow-Headers", "X-Requested-With, Content-Type, Authorization")
+        self.send_header("Access-Control-Allow-Headers", "X-Requested-With, Content-Type")
         self.end_headers()
 
     def end_headers(self):
@@ -87,29 +55,13 @@ class Care360RequestHandler(http.server.SimpleHTTPRequestHandler):
             self.send_header('Content-Type', 'application/json')
             self.end_headers()
             self.wfile.write(json.dumps({'success': True, 'data': []}).encode('utf-8'))
-        elif path == '/api/user-profile':
-            self.handle_user_profile()
-        elif path == '/api/admin-users':
-            self.handle_get_admin_users()
-        elif path == '/api/facebook-messages' or path == '/api/platform-messages':
-            self.send_response(200)
-            self.send_header('Content-Type', 'application/json')
-            self.end_headers()
-            self.wfile.write(json.dumps({'success': True, 'data': []}).encode('utf-8'))
-        elif path == '/api/facebook-sync':
-            self.send_response(200)
-            self.send_header('Content-Type', 'application/json')
-            self.end_headers()
-            self.wfile.write(json.dumps({'success': True, 'synced_count': 0}).encode('utf-8'))
         else:
             # Fall through to serve static files
             super().do_GET()
 
     def do_POST(self):
         url_parts = urllib.parse.urlparse(self.path)
-        path = url_parts.path.rstrip('/')
-        
-        print(f"[DEBUG] POST request to path: '{path}' (Original: '{self.path}')")
+        path = url_parts.path
         
         if path == '/api/gmail/test':
             self.handle_gmail_test()
@@ -128,21 +80,11 @@ class Care360RequestHandler(http.server.SimpleHTTPRequestHandler):
             self.send_header('Content-Type', 'application/json')
             self.end_headers()
             self.wfile.write(json.dumps({'success': True, 'data': {}}).encode('utf-8'))
-        elif path == '/api/auth':
-            self.handle_auth()
-        elif path == '/api/admin-users':
-            self.handle_post_admin_users()
-        elif path == '/api/facebook-messages' or path == '/api/platform-messages':
-            self.send_response(200)
-            self.send_header('Content-Type', 'application/json')
-            self.end_headers()
-            self.wfile.write(json.dumps({'success': True}).encode('utf-8'))
         else:
-            print(f"[DEBUG] Returning 404 for POST path: '{path}'")
             self.send_response(404)
             self.send_header('Content-Type', 'application/json')
             self.end_headers()
-            self.wfile.write(json.dumps({'error': f'Endpoint not found: {path}'}).encode('utf-8'))
+            self.wfile.write(json.dumps({'error': 'Endpoint not found'}).encode('utf-8'))
 
     def do_DELETE(self):
         url_parts = urllib.parse.urlparse(self.path)
@@ -158,108 +100,6 @@ class Care360RequestHandler(http.server.SimpleHTTPRequestHandler):
             self.send_header('Content-Type', 'application/json')
             self.end_headers()
             self.wfile.write(json.dumps({'error': 'Endpoint not found'}).encode('utf-8'))
-
-    def handle_auth(self):
-        global SESSION_USER
-        try:
-            content_length = int(self.headers['Content-Length'])
-            post_data = self.rfile.read(content_length)
-            params = json.loads(post_data.decode('utf-8'))
-            credential = params.get('credential')
-            
-            email = 'admin@carapal360.com'
-            name = 'Admin User'
-            picture = ''
-            
-            if credential:
-                parts = credential.split('.')
-                if len(parts) >= 2:
-                    payload_b64 = parts[1]
-                    payload_b64 += '=' * (4 - len(payload_b64) % 4)
-                    try:
-                        payload_json = base64.b64decode(payload_b64).decode('utf-8')
-                        user_info = json.loads(payload_json)
-                        email = user_info.get('email', email)
-                        name = user_info.get('name', name)
-                        picture = user_info.get('picture', picture)
-                    except Exception as parse_err:
-                        print("Failed to parse Google JWT payload:", parse_err)
-            
-            initials = "".join([part[0] for part in name.split()]).upper()[:2] if name else 'AU'
-            
-            SESSION_USER = {
-                'id': 'mock-user-' + email.split('@')[0],
-                'email': email,
-                'name': name,
-                'initials': initials,
-                'avatar_url': picture,
-                'role': 'admin',
-                'status': 'approved'
-            }
-            
-            self.send_response(200)
-            self.send_header('Content-Type', 'application/json')
-            self.end_headers()
-            self.wfile.write(json.dumps({
-                'success': True,
-                'token': 'mock-jwt-token-for-' + email,
-                'user': SESSION_USER
-            }).encode('utf-8'))
-        except Exception as e:
-            self.send_response(500)
-            self.send_header('Content-Type', 'application/json')
-            self.end_headers()
-            self.wfile.write(json.dumps({'error': str(e)}).encode('utf-8'))
-
-    def handle_user_profile(self):
-        global SESSION_USER
-        self.send_response(200)
-        self.send_header('Content-Type', 'application/json')
-        self.end_headers()
-        self.wfile.write(json.dumps({
-            'success': True,
-            'data': SESSION_USER
-        }).encode('utf-8'))
-
-    def handle_get_admin_users(self):
-        global SESSION_USERS_LIST
-        self.send_response(200)
-        self.send_header('Content-Type', 'application/json')
-        self.end_headers()
-        self.wfile.write(json.dumps({
-            'success': True,
-            'users': SESSION_USERS_LIST
-        }).encode('utf-8'))
-
-    def handle_post_admin_users(self):
-        global SESSION_USERS_LIST
-        try:
-            content_length = int(self.headers['Content-Length'])
-            post_data = self.rfile.read(content_length)
-            params = json.loads(post_data.decode('utf-8'))
-            user_id = params.get('userId')
-            action = params.get('action')
-            
-            for user in SESSION_USERS_LIST:
-                if str(user['id']) == str(user_id):
-                    if action == 'approve':
-                        user['status'] = 'approved'
-                    elif action == 'reject':
-                        user['status'] = 'rejected'
-                    break
-            
-            self.send_response(200)
-            self.send_header('Content-Type', 'application/json')
-            self.end_headers()
-            self.wfile.write(json.dumps({
-                'success': True,
-                'message': f"User {action}d successfully"
-            }).encode('utf-8'))
-        except Exception as e:
-            self.send_response(500)
-            self.send_header('Content-Type', 'application/json')
-            self.end_headers()
-            self.wfile.write(json.dumps({'error': str(e)}).encode('utf-8'))
 
     def handle_gmail_test(self):
         try:

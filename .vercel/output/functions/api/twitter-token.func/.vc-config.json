@@ -1,0 +1,13 @@
+{
+  "handler": "api/twitter-token.js",
+  "runtime": "nodejs24.x",
+  "architecture": "x86_64",
+  "memory": 256,
+  "maxDuration": 10,
+  "environment": {},
+  "shouldDisableAutomaticFetchInstrumentation": false,
+  "launcherType": "Nodejs",
+  "shouldAddHelpers": true,
+  "shouldAddSourcemapSupport": false,
+  "awsLambdaHandler": ""
+}

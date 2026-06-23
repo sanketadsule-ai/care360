@@ -35,38 +35,11 @@
     return response;
   };
 
-  function populateProfilePage() {
-    if (!authUser) return;
-    const profInitials = document.getElementById('profile-initials');
-    const profName = document.getElementById('profile-name');
-    const profEmail = document.getElementById('profile-email');
-    const profRoleBadge = document.getElementById('profile-role-badge');
-    const profStatusBadge = document.getElementById('profile-status-badge');
-    
-    const profDetName = document.getElementById('profile-detail-name');
-    const profDetEmail = document.getElementById('profile-detail-email');
-    const profDetRole = document.getElementById('profile-detail-role');
-    const profDetStatus = document.getElementById('profile-detail-status');
-
-    if (profInitials) profInitials.textContent = authUser.initials || '--';
-    if (profName) profName.textContent = authUser.name || '--';
-    if (profEmail) profEmail.textContent = authUser.email || '--';
-    
-    if (profRoleBadge) profRoleBadge.textContent = authUser.role || 'user';
-    if (profStatusBadge) profStatusBadge.textContent = authUser.status || 'pending';
-    
-    if (profDetName) profDetName.textContent = authUser.name || '--';
-    if (profDetEmail) profDetEmail.textContent = authUser.email || '--';
-    if (profDetRole) profDetRole.textContent = authUser.role || 'user';
-    if (profDetStatus) profDetStatus.textContent = authUser.status || 'pending';
-  }
-
   function checkAuthState() {
     const overlay = document.getElementById('login-overlay');
     const pendingMsg = document.getElementById('pending-approval-msg');
     const errorMsg = document.getElementById('login-error-msg');
     const sidebarUsersTab = document.getElementById('sidebar-users-tab');
-    const adminPanel = document.getElementById('admin-panel-in-profile');
     
     if (!overlay) return;
 
@@ -74,24 +47,16 @@
       overlay.style.display = 'flex';
       pendingMsg.style.display = 'none';
       if (sidebarUsersTab) sidebarUsersTab.style.display = 'none';
-      if (adminPanel) adminPanel.style.display = 'none';
     } else if (authUser.status === 'pending') {
       overlay.style.display = 'flex';
       pendingMsg.style.display = 'block';
       if (sidebarUsersTab) sidebarUsersTab.style.display = 'none';
-      if (adminPanel) adminPanel.style.display = 'none';
     } else {
       overlay.style.display = 'none';
-      populateProfilePage();
-      
-      // Show admin tab and panel if user is admin
-      if (authUser.role === 'admin') {
-        if (sidebarUsersTab) sidebarUsersTab.style.display = 'flex';
-        if (adminPanel) adminPanel.style.display = 'block';
+      // Show admin tab if user is admin
+      if (authUser.role === 'admin' && sidebarUsersTab) {
+        sidebarUsersTab.style.display = 'flex';
         loadAdminUsers();
-      } else {
-        if (sidebarUsersTab) sidebarUsersTab.style.display = 'none';
-        if (adminPanel) adminPanel.style.display = 'none';
       }
     }
   }
@@ -107,9 +72,16 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ credential: response.credential })
       });
-      const data = await res.json();
-      
-      if (data.success) {
+      let data;
+      try {
+        const text = await res.text();
+        data = JSON.parse(text);
+      } catch (parseErr) {
+        throw new Error(`Server returned a non-JSON response. This usually means the server crashed. Status: ${res.status}`);
+      }
+
+      if (res.ok) {
+        // Success
         authToken = data.token;
         authUser = data.user;
         localStorage.setItem('auth_token', authToken);
@@ -142,16 +114,6 @@
       // Reset dropdown
       const profileDropdown = document.getElementById('profile-dropdown');
       if (profileDropdown) profileDropdown.style.display = 'none';
-    }
-    
-    // Profile Settings navigation
-    if (e.target && e.target.id === 'btn-profile-settings') {
-      e.preventDefault();
-      const profileDropdown = document.getElementById('profile-dropdown');
-      if (profileDropdown) profileDropdown.style.display = 'none';
-      
-      if (typeof navigateTo === 'function') navigateTo('profile');
-      if (typeof activateSidebarFor === 'function') activateSidebarFor('profile');
     }
   });
 
@@ -3054,65 +3016,6 @@ Collab Manager`
       console.log('Auto-syncing Twitter on page load...');
       setTimeout(() => generateIncomingTwitterMentions(), 1500);
     }
-    
-    // Auto-sync Facebook on page load if connected
-    const hasFacebook = state.connectedAccounts.find(x => x.channel === 'facebook' || x.platform === 'facebook');
-    if (hasFacebook) {
-      console.log('Auto-syncing Facebook on page load...');
-      setTimeout(() => {
-        fetch('/api/facebook-sync')
-          .then(r => r.json())
-          .then(data => {
-            if (data.success && data.synced_count > 0) {
-              // Refresh Facebook cases from DB
-              fetch('/api/facebook-messages')
-                .then(r => r.json())
-                .then(fbData => {
-                  if (fbData.success && fbData.data) {
-                    const existingIds = new Set(state.cases.map(c => c.fbPostId || c.id).filter(Boolean));
-                    let added = 0;
-                    fbData.data.forEach(fbMsg => {
-                      if (fbMsg.fb_post_id && !existingIds.has(fbMsg.fb_post_id)) {
-                        state.cases.push({
-                          id: fbMsg.fb_post_id,
-                          fbPostId: fbMsg.fb_post_id,
-                          source: 'Facebook Page',
-                          author: fbMsg.author_name,
-                          authorName: fbMsg.author_name,
-                          channel: 'facebook',
-                          avatarGradient: AVATAR_GRADIENTS[Math.abs(hashCode(fbMsg.author_name || '')) % AVATAR_GRADIENTS.length],
-                          text: (fbMsg.message_text || '').substring(0, 120),
-                          createdTime: fbMsg.received_at || fbMsg.created_at,
-                          type: fbMsg.post_type || 'Comment',
-                          status: fbMsg.status === 'open' ? 'Open' : 'Closed',
-                          priority: 'Medium',
-                          assignedTo: 'Unassigned',
-                          emailSubject: 'Facebook ' + (fbMsg.post_type || 'Comment'),
-                          emailAttachments: [],
-                          messages: [{
-                            id: 'fb-db-' + fbMsg.id,
-                            sender: fbMsg.author_name || 'Facebook User',
-                            text: fbMsg.message_text || '',
-                            timestamp: fbMsg.received_at || fbMsg.created_at,
-                            isAgent: false
-                          }]
-                        });
-                        added++;
-                      }
-                    });
-                    if (added > 0) {
-                      state.cases.sort((a, b) => new Date(b.createdTime) - new Date(a.createdTime));
-                      saveState();
-                      renderAllCases();
-                      console.log(`Auto-synced ${added} new Facebook messages.`);
-                    }
-                  }
-                });
-            }
-          })
-          .catch(console.error);
-      }, 2000);
-    }
 
     // Expose a way to add Twitter account from the popup
     window.addTwitterAccount = function(account) {
@@ -3298,8 +3201,8 @@ Collab Manager`
             tr.style.borderBottom = '1px solid #E5E7EB';
             
             const actionHtml = user.status === 'pending' ? `
-              <button onclick="handleUserAction('${user.id}', 'approve')" style="background: #10B981; color: white; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; margin-right: 6px;">Approve</button>
-              <button onclick="handleUserAction('${user.id}', 'reject')" style="background: #EF4444; color: white; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 12px;">Reject</button>
+              <button onclick="handleUserAction(${user.id}, 'approve')" style="background: #10B981; color: white; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; margin-right: 6px;">Approve</button>
+              <button onclick="handleUserAction(${user.id}, 'reject')" style="background: #EF4444; color: white; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 12px;">Reject</button>
             ` : `
               <span style="font-size: 12px; color: #6B7280;">N/A</span>
             `;
@@ -3321,18 +3224,6 @@ Collab Manager`
             `;
             tbody.appendChild(tr);
           });
-          
-          // Update pending count badge
-          const pendingCountBadge = document.getElementById('pending-count-badge');
-          if (pendingCountBadge) {
-            const pendingCount = data.users.filter(u => u.status === 'pending').length;
-            if (pendingCount > 0) {
-              pendingCountBadge.textContent = `${pendingCount} pending`;
-              pendingCountBadge.style.display = 'inline-block';
-            } else {
-              pendingCountBadge.style.display = 'none';
-            }
-          }
         }
       } catch (err) {
         console.error('Failed to load admin users:', err);
