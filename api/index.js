@@ -5,6 +5,7 @@ const adminUsers = require('./_lib/admin-users');
 const auth = require('./_lib/auth');
 const connectedChannels = require('./_lib/connected-channels');
 const facebookMessages = require('./_lib/facebook-messages');
+const facebookSync = require('./_lib/facebook-sync');
 const platformMessages = require('./_lib/platform-messages');
 const twitterConnect = require('./_lib/twitter-connect');
 const twitterReply = require('./_lib/twitter-reply');
@@ -26,6 +27,8 @@ module.exports = async function handler(req, res) {
       return connectedChannels(req, res);
     case '/api/facebook-messages':
       return facebookMessages(req, res);
+    case '/api/facebook-sync':
+      return facebookSync(req, res);
     case '/api/platform-messages':
       return platformMessages(req, res);
     case '/api/twitter-connect':

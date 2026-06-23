@@ -3009,6 +3009,65 @@ Collab Manager`
       console.log('Auto-syncing Twitter on page load...');
       setTimeout(() => generateIncomingTwitterMentions(), 1500);
     }
+    
+    // Auto-sync Facebook on page load if connected
+    const hasFacebook = state.connectedAccounts.find(x => x.channel === 'facebook' || x.platform === 'facebook');
+    if (hasFacebook) {
+      console.log('Auto-syncing Facebook on page load...');
+      setTimeout(() => {
+        fetch('/api/facebook-sync')
+          .then(r => r.json())
+          .then(data => {
+            if (data.success && data.synced_count > 0) {
+              // Refresh Facebook cases from DB
+              fetch('/api/facebook-messages')
+                .then(r => r.json())
+                .then(fbData => {
+                  if (fbData.success && fbData.data) {
+                    const existingIds = new Set(state.cases.map(c => c.fbPostId || c.id).filter(Boolean));
+                    let added = 0;
+                    fbData.data.forEach(fbMsg => {
+                      if (fbMsg.fb_post_id && !existingIds.has(fbMsg.fb_post_id)) {
+                        state.cases.push({
+                          id: fbMsg.fb_post_id,
+                          fbPostId: fbMsg.fb_post_id,
+                          source: 'Facebook Page',
+                          author: fbMsg.author_name,
+                          authorName: fbMsg.author_name,
+                          channel: 'facebook',
+                          avatarGradient: AVATAR_GRADIENTS[Math.abs(hashCode(fbMsg.author_name || '')) % AVATAR_GRADIENTS.length],
+                          text: (fbMsg.message_text || '').substring(0, 120),
+                          createdTime: fbMsg.received_at || fbMsg.created_at,
+                          type: fbMsg.post_type || 'Comment',
+                          status: fbMsg.status === 'open' ? 'Open' : 'Closed',
+                          priority: 'Medium',
+                          assignedTo: 'Unassigned',
+                          emailSubject: 'Facebook ' + (fbMsg.post_type || 'Comment'),
+                          emailAttachments: [],
+                          messages: [{
+                            id: 'fb-db-' + fbMsg.id,
+                            sender: fbMsg.author_name || 'Facebook User',
+                            text: fbMsg.message_text || '',
+                            timestamp: fbMsg.received_at || fbMsg.created_at,
+                            isAgent: false
+                          }]
+                        });
+                        added++;
+                      }
+                    });
+                    if (added > 0) {
+                      state.cases.sort((a, b) => new Date(b.createdTime) - new Date(a.createdTime));
+                      saveState();
+                      renderAllCases();
+                      console.log(`Auto-synced ${added} new Facebook messages.`);
+                    }
+                  }
+                });
+            }
+          })
+          .catch(console.error);
+      }, 2000);
+    }
 
     // Expose a way to add Twitter account from the popup
     window.addTwitterAccount = function(account) {

@@ -91,6 +91,16 @@ class Care360RequestHandler(http.server.SimpleHTTPRequestHandler):
             self.handle_user_profile()
         elif path == '/api/admin-users':
             self.handle_get_admin_users()
+        elif path == '/api/facebook-messages' or path == '/api/platform-messages':
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps({'success': True, 'data': []}).encode('utf-8'))
+        elif path == '/api/facebook-sync':
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps({'success': True, 'synced_count': 0}).encode('utf-8'))
         else:
             # Fall through to serve static files
             super().do_GET()
@@ -120,6 +130,11 @@ class Care360RequestHandler(http.server.SimpleHTTPRequestHandler):
             self.handle_auth()
         elif path == '/api/admin-users':
             self.handle_post_admin_users()
+        elif path == '/api/facebook-messages' or path == '/api/platform-messages':
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps({'success': True}).encode('utf-8'))
         else:
             self.send_response(404)
             self.send_header('Content-Type', 'application/json')
