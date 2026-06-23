@@ -1,0 +1,40 @@
+{
+  "name": "carapal_360",
+  "version": "1.0.0",
+  "description": "> **Production-ready, full-stack Next.js application** for social listening, channel management, and customer engagement — a clone of Simplify360/Nextiva SuiteX rebranded as Carapal360.",
+  "main": "app.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sanketadsule-ai/care360.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/sanketadsule-ai/care360/issues"
+  },
+  "homepage": "https://github.com/sanketadsule-ai/care360#readme",
+  "devDependencies": {
+    "@types/node": "^25.9.3",
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "autoprefixer": "^10.5.0",
+    "dotenv": "^17.4.2",
+    "eslint": "^9.39.4",
+    "postcss": "^8.5.15",
+    "prisma": "^7.8.0",
+    "tailwindcss": "^4.3.1",
+    "typescript": "^6.0.3"
+  },
+  "dependencies": {
+    "jsonwebtoken": "^9.0.3",
+    "pg": "^8.22.0"
+  }
+}
