@@ -1820,4 +1820,91 @@
                 <div style="font-size: 12px; color: #9CA3AF; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">Account Status</div>
                 <div id="profile-detail-status" style="font-size: 14px; color: #374151; font-weight: 500; text-transform: capitalize;">--</div>
               </div>
-            </di
+            </div>
+          </div>
+
+          <!-- ── Admin: User Management Section ────────── -->
+          <div id="admin-panel-in-profile" style="display: none;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
+              <h2 style="font-size: 18px; font-weight: 600; color: #111827;">User Requests</h2>
+              <span id="pending-count-badge" style="background: #FEF3C7; color: #B45309; font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 12px;">0 pending</span>
+            </div>
+
+            <div style="background: white; border-radius: 12px; border: 1px solid #E5E7EB; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.06);">
+              <table style="width: 100%; border-collapse: collapse; text-align: left;">
+                <thead>
+                  <tr style="background: #F9FAFB; border-bottom: 1px solid #E5E7EB;">
+                    <th style="padding: 12px 16px; font-size: 12px; color: #6B7280; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">User</th>
+                    <th style="padding: 12px 16px; font-size: 12px; color: #6B7280; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Email</th>
+                    <th style="padding: 12px 16px; font-size: 12px; color: #6B7280; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Status</th>
+                    <th style="padding: 12px 16px; font-size: 12px; color: #6B7280; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Action</th>
+                  </tr>
+                </thead>
+                <tbody id="admin-users-list">
+                  <tr><td colspan="4" style="padding: 24px; text-align: center; color: #6B7280; font-size: 14px;">Loading users...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </div>
+      </div>
+      
+    </main>
+  </div>
+
+
+  <!-- Google Client ID Setup Modal -->
+  <div id="gmail-client-id-modal" class="gmail-modal-overlay" style="display: none;">
+    <div class="gmail-modal-card">
+      <div class="gmail-modal-header">
+        <h3>Configure Google OAuth Client</h3>
+        <button class="gmail-modal-close" id="gmail-modal-close-btn">&times;</button>
+      </div>
+      <div class="gmail-modal-body">
+        <p>To connect your real Gmail inbox directly from localhost, you need a Google OAuth Client ID.</p>
+        <div class="setup-instructions-box">
+          <h4>How to get a Google Client ID:</h4>
+          <ol>
+            <li>Go to the <a href="https://console.cloud.google.com/" target="_blank">Google Cloud Console</a>.</li>
+            <li>Create a new project or select an existing one.</li>
+            <li>Go to **APIs & Services → Library**, search for **Gmail API**, and click **Enable**.</li>
+            <li>Go to **APIs & Services → OAuth consent screen**, configure it for "External" users, and add the scopes
+              `https://www.googleapis.com/auth/gmail.readonly` and `https://www.googleapis.com/auth/gmail.send`.</li>
+            <li>Go to **APIs & Services → Credentials**, click **Create Credentials → OAuth client ID**.</li>
+            <li>Select Application type: **Web application**.</li>
+            <li>Under **Authorized JavaScript origins**, add: `http://localhost:8080` (and `http://localhost` if
+              needed).</li>
+            <li>Click **Create**, copy the **Client ID**, and paste it below.</li>
+          </ol>
+        </div>
+        <div class="gmail-modal-form-group">
+          <label for="gmail-modal-client-id">Google Client ID</label>
+          <input type="text" id="gmail-modal-client-id" placeholder="e.g. 123456-abcdef.apps.googleusercontent.com" />
+        </div>
+      </div>
+      <div class="gmail-modal-footer">
+        <button class="gmail-btn-secondary" id="gmail-modal-cancel-btn">Cancel</button>
+        <button class="gmail-btn-primary" id="gmail-modal-save-btn">Save &amp; Continue</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Help Button (floating) -->
+  <button id="help-fab" class="help-fab" aria-label="Help">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+      stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="10" />
+      <path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3" />
+      <line x1="12" y1="17" x2="12.01" y2="17" />
+    </svg>
+  </button>
+
+  <script src="config.js?v=9"></script>
+  <script src="facebook.js?v=9"></script>
+  <script src="google.js?v=9"></script>
+  <script src="twitter.js?v=9"></script>
+  <script src="app.js?v=9"></script>
+</body>
+
+</html>
