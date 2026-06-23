@@ -21,6 +21,8 @@ module.exports = async function handler(req, res) {
     return res.status(200).end();
   }
 
+  const errors = [];
+
   try {
     await ensureTables();
     const pool = getPool();
@@ -70,6 +72,7 @@ module.exports = async function handler(req, res) {
         });
       } catch (err) {
         console.error(`FB Sync Feed Error for page ${pageId}:`, err.message);
+        errors.push(`Feed Error for page ${pageId}: ${err.message}`);
       }
 
       try {
@@ -127,6 +130,7 @@ module.exports = async function handler(req, res) {
         });
       } catch (err) {
         console.error(`FB Sync DM Error for page ${pageId}:`, err.message);
+        errors.push(`DM Error for page ${pageId}: ${err.message}`);
       }
 
       try {
@@ -147,6 +151,7 @@ module.exports = async function handler(req, res) {
         });
       } catch (err) {
         console.error(`FB Sync Tagged Error for page ${pageId}:`, err.message);
+        errors.push(`Tagged Error for page ${pageId}: ${err.message}`);
       }
 
       // Save to database
@@ -177,10 +182,10 @@ module.exports = async function handler(req, res) {
       }
     }
 
-    return res.status(200).json({ success: true, synced_count: totalSaved });
+    return res.status(200).json({ success: true, synced_count: totalSaved, fb_errors: errors });
 
   } catch (error) {
     console.error('facebook-sync error:', error);
-    return res.status(500).json({ error: 'Internal server error', details: error.message });
+    return res.status(500).json({ error: 'Internal server error', details: error.message, fb_errors: errors });
   }
 };

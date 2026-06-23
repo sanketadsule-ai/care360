@@ -182,10 +182,6 @@
     activeFilter: 'all'
   };
 
-
-  // Clean up any remaining mock arrays
-  const GMAIL_MOCK_CASES = [];
-
   // Initialize cases state
   if (state.cases.length === 0) {
     state.cases = [];
