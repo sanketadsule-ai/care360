@@ -42,7 +42,7 @@ window.CARAPAL_CONFIG = {
 
   // Ensure this EXACTLY matches the "Authorized redirect URIs" in Google Cloud Console
   // Notice there is NO trailing slash here!
-  GOOGLE_REDIRECT_URI: 'https://sanketadsule-ai-carepal360-ouz4.vercel.app',
+  GOOGLE_REDIRECT_URI: window.location.origin,
 
   // Scopes needed to read and reply to Play Store app reviews
   GOOGLE_SCOPES: 'https://www.googleapis.com/auth/androidpublisher',
@@ -56,6 +56,6 @@ window.CARAPAL_CONFIG = {
   // Scopes needed for Twitter API v2
 
   // Update this to match your production domain when deploying
-  TWITTER_REDIRECT_URI: 'https://sanketadsule-ai-carepal360-ouz4.vercel.app/twitter_auth.html',
+  TWITTER_REDIRECT_URI: window.location.origin + '/twitter_auth.html',
   TWITTER_SCOPES: 'tweet.read tweet.write users.read offline.access'
 };
