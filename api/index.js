@@ -7,6 +7,7 @@ const connectedChannels = require('./_lib/connected-channels');
 const facebookMessages = require('./_lib/facebook-messages');
 const facebookSync = require('./_lib/facebook-sync');
 const googleReviews = require('./_lib/google-reviews');
+const googleReviewsReply = require('./_lib/google-reviews-reply');
 const googleReviewsSync = require('./_lib/google-reviews-sync');
 const platformMessages = require('./_lib/platform-messages');
 const twitterConnect = require('./_lib/twitter-connect');
@@ -14,6 +15,7 @@ const twitterReply = require('./_lib/twitter-reply');
 const twitterSync = require('./_lib/twitter-sync');
 const twitterToken = require('./_lib/twitter-token');
 const userProfile = require('./_lib/user-profile');
+const testGbp = require('./_lib/test-gbp');
 
 module.exports = async function handler(req, res) {
   // Extract path without query parameters
@@ -35,8 +37,12 @@ module.exports = async function handler(req, res) {
         return await facebookSync(req, res);
       case '/api/google-reviews':
         return await googleReviews(req, res);
+      case '/api/google-reviews-reply':
+        return await googleReviewsReply(req, res);
       case '/api/google-reviews-sync':
         return await googleReviewsSync(req, res);
+      case '/api/test-gbp':
+        return await testGbp(req, res);
       case '/api/platform-messages':
         return await platformMessages(req, res);
       case '/api/twitter-connect':

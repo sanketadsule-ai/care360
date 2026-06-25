@@ -993,6 +993,11 @@
         gmailPill.style.display = state.connectedAccounts.length > 0 ? 'inline-flex' : 'none';
       }
 
+      const googlePill = document.getElementById('filter-pill-google');
+      if (googlePill) {
+        googlePill.style.display = state.connectedAccounts.some(x => x.platform === 'google_business' && x.status === 'active') ? 'inline-flex' : 'none';
+      }
+
       totalPages = Math.max(1, Math.ceil(filteredCases.length / 25));
       if (paginationInput && !paginationInput.value) paginationInput.value = 1;
       const navSpans = document.querySelectorAll('.pagination-nav span');
@@ -1351,6 +1356,40 @@
             if (!success) return;
           } else {
              showGmailToast('No active connected Twitter account found.', 'error');
+             return;
+          }
+        } else if (c.channel === 'google_business') {
+          const gbAccount = state.connectedAccounts.find(x => x.platform === 'google_business' && x.status === 'active');
+          if (gbAccount) {
+            sendBtn.disabled = true;
+            sendBtn.textContent = 'Sending…';
+            try {
+              const res = await fetch('/api/google-reviews-reply', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  channel_id: gbAccount.id,
+                  review_id: c.gbReviewId,
+                  reply_text: replyVal
+                })
+              });
+              const data = await res.json();
+              if (!data.success) {
+                showGmailToast('Failed to reply: ' + (data.error || 'Unknown error'), 'error');
+                sendBtn.disabled = false;
+                sendBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="12" height="12"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Send`;
+                return;
+              }
+            } catch (err) {
+              showGmailToast('Network Error', 'error');
+              sendBtn.disabled = false;
+              sendBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="12" height="12"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Send`;
+              return;
+            }
+            sendBtn.disabled = false;
+            sendBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="12" height="12"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Send`;
+          } else {
+             showGmailToast('No active connected Google Business account found.', 'error');
              return;
           }
         }
