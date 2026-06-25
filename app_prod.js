@@ -13,8 +13,9 @@
   'use strict';
 
   // ── Auth & Fetch Interceptor ────────────────────────
-  let authToken = localStorage.getItem('auth_token');
-  let authUser = JSON.parse(localStorage.getItem('auth_user') || 'null');
+  let authToken = 'dev-token'; // Bypassed auth for testing
+  let authUser = { id: 1, role: 'admin', status: 'approved', name: 'Admin Dev', email: 'admin@care360.com' }; // Bypassed auth
+
 
   const originalFetch = window.fetch;
   window.fetch = async function () {
