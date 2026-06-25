@@ -30,7 +30,8 @@ function getPool() {
 async function ensureTables() {
   const p = getPool();
 
-  // 1. connected_channels (no foreign keys)
+  // Run independent table creations in parallel where possible, or bundle them
+  // 1. Core tables (no FK)
   await p.query(`
     CREATE TABLE IF NOT EXISTS connected_channels (
       id            SERIAL PRIMARY KEY,
@@ -44,9 +45,21 @@ async function ensureTables() {
       updated_at    TIMESTAMP DEFAULT NOW(),
       UNIQUE(platform, account_email)
     );
+
+    CREATE TABLE IF NOT EXISTS users (
+      id            SERIAL PRIMARY KEY,
+      email         VARCHAR(255) UNIQUE NOT NULL,
+      name          VARCHAR(255) NOT NULL,
+      initials      VARCHAR(10),
+      avatar_url    VARCHAR(512),
+      role          VARCHAR(50) DEFAULT 'user',
+      status        VARCHAR(50) DEFAULT 'pending',
+      created_at    TIMESTAMP DEFAULT NOW(),
+      updated_at    TIMESTAMP DEFAULT NOW()
+    );
   `);
 
-  // 2. email_messages (depends on connected_channels)
+  // 2. Dependent tables
   await p.query(`
     CREATE TABLE IF NOT EXISTS email_messages (
       id                SERIAL PRIMARY KEY,
@@ -64,10 +77,7 @@ async function ensureTables() {
       labels            TEXT,
       created_at        TIMESTAMP DEFAULT NOW()
     );
-  `);
 
-  // 3. facebook_messages (depends on connected_channels)
-  await p.query(`
     CREATE TABLE IF NOT EXISTS facebook_messages (
       id                SERIAL PRIMARY KEY,
       channel_id        INTEGER REFERENCES connected_channels(id),
@@ -80,10 +90,7 @@ async function ensureTables() {
       is_read           BOOLEAN DEFAULT FALSE,
       created_at        TIMESTAMP DEFAULT NOW()
     );
-  `);
 
-  // 4. google_reviews (depends on connected_channels)
-  await p.query(`
     CREATE TABLE IF NOT EXISTS google_reviews (
       id                SERIAL PRIMARY KEY,
       channel_id        INTEGER REFERENCES connected_channels(id),
@@ -99,35 +106,20 @@ async function ensureTables() {
     );
   `);
 
-  // 5. users (no foreign keys — MUST come before notifications)
-  await p.query(`
-    CREATE TABLE IF NOT EXISTS users (
-      id            SERIAL PRIMARY KEY,
-      email         VARCHAR(255) UNIQUE NOT NULL,
-      name          VARCHAR(255) NOT NULL,
-      initials      VARCHAR(10),
-      avatar_url    VARCHAR(512),
-      role          VARCHAR(50) DEFAULT 'user',
-      status        VARCHAR(50) DEFAULT 'pending',
-      created_at    TIMESTAMP DEFAULT NOW(),
-      updated_at    TIMESTAMP DEFAULT NOW()
-    );
-  `);
-  
-  // Migration for existing tables
+  // 3. User Migrations (bundled)
   try {
-    await p.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS initials VARCHAR(10);`);
-    await p.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_url VARCHAR(512);`);
-    await p.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS status VARCHAR(50) DEFAULT 'pending';`);
-    await p.query(`ALTER TABLE users ALTER COLUMN role SET DEFAULT 'user';`);
-    await p.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT NOW();`);
+    await p.query(`
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS initials VARCHAR(10);
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_url VARCHAR(512);
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS status VARCHAR(50) DEFAULT 'pending';
+      ALTER TABLE users ALTER COLUMN role SET DEFAULT 'user';
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT NOW();
+    `);
   } catch (err) {
     console.error('Migration error for users table:', err.message);
   }
 
-  // 5. notifications (depends on users)
-  // Wrapped in try/catch: if the FK constraint is broken from a prior
-  // deployment, drop the table and recreate it so it doesn't block everything.
+  // 4. Notifications (depends on users)
   try {
     await p.query(`
       CREATE TABLE IF NOT EXISTS notifications (
