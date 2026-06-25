@@ -97,11 +97,7 @@
     }
   }
 
-<<<<<<< HEAD
   // Global callback for Google Identity Services removed as login is bypassed
-
-=======
->>>>>>> 74cbea0e9163b7a897f16dda7cd65e855a684235
   // Logout handler
   document.addEventListener('click', (e) => {
     if (e.target && e.target.id === 'btn-logout') {
