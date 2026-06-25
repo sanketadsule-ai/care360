@@ -62,47 +62,7 @@
     }
   }
 
-  // Global callback for Google Identity Services
-  window.handleGoogleLogin = async function (response) {
-    const errorMsg = document.getElementById('login-error-msg');
-    if (errorMsg) errorMsg.style.display = 'none';
-    
-    try {
-      const res = await originalFetch('/api/auth', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ credential: response.credential })
-      });
-      let data;
-      try {
-        const text = await res.text();
-        data = JSON.parse(text);
-      } catch (parseErr) {
-        throw new Error(`Server returned a non-JSON response. This usually means the server crashed. Status: ${res.status}`);
-      }
-
-      if (res.ok) {
-        // Success
-        authToken = data.token;
-        authUser = data.user;
-        localStorage.setItem('auth_token', authToken);
-        localStorage.setItem('auth_user', JSON.stringify(authUser));
-        checkAuthState();
-      } else if (res.status === 403 && data.user) {
-        // Pending approval
-        authUser = data.user;
-        localStorage.setItem('auth_user', JSON.stringify(authUser));
-        checkAuthState();
-      } else {
-        throw new Error(data.details ? `${data.error}: ${data.details}` : (data.error || 'Login failed'));
-      }
-    } catch (err) {
-      if (errorMsg) {
-        errorMsg.textContent = err.message;
-        errorMsg.style.display = 'block';
-      }
-    }
-  };
+  // Global callback for Google Identity Services removed as login is bypassed
 
   // Logout handler
   document.addEventListener('click', (e) => {
