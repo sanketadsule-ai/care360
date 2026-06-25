@@ -2704,16 +2704,5 @@ ul, li {
   gap: 12px;
 }
 
-/* ──────────────────────────────────────────────────────────────
-   HIDE DIRECT SOCIAL CONNECT (OAuth) — data now comes from n8n → DB.
-   Per project owner's request. Reversible: delete this block to
-   bring the connect buttons back.
-   ────────────────────────────────────────────────────────────── */
-#fb-add-channel-btn,
-#ig-add-channel-btn,
-#playstore-add-btn,
-#google-business-add-btn,
-#twitter-connect-btn {
-  display: none !important;
-}
+
 
