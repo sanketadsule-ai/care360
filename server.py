@@ -59,6 +59,9 @@ SESSION_USERS_LIST = [
     }
 ]
 
+MOCK_CONNECTED_CHANNELS = []
+MOCK_GOOGLE_REVIEWS = []
+
 PORT = 8080
 
 class Care360RequestHandler(http.server.SimpleHTTPRequestHandler):
@@ -75,6 +78,8 @@ class Care360RequestHandler(http.server.SimpleHTTPRequestHandler):
         super().end_headers()
 
     def do_GET(self):
+        global MOCK_CONNECTED_CHANNELS
+        global MOCK_GOOGLE_REVIEWS
         url_parts = urllib.parse.urlparse(self.path)
         path = url_parts.path
         
@@ -86,16 +91,59 @@ class Care360RequestHandler(http.server.SimpleHTTPRequestHandler):
             self.send_response(200)
             self.send_header('Content-Type', 'application/json')
             self.end_headers()
-            self.wfile.write(json.dumps({'success': True, 'data': []}).encode('utf-8'))
+            self.wfile.write(json.dumps({'success': True, 'data': MOCK_CONNECTED_CHANNELS}).encode('utf-8'))
         elif path == '/api/user-profile':
             self.handle_user_profile()
         elif path == '/api/admin-users':
             self.handle_get_admin_users()
-        elif path == '/api/facebook-messages' or path == '/api/platform-messages':
+        elif path in ['/api/facebook-messages', '/api/platform-messages']:
             self.send_response(200)
             self.send_header('Content-Type', 'application/json')
             self.end_headers()
             self.wfile.write(json.dumps({'success': True, 'data': []}).encode('utf-8'))
+        elif path == '/api/google-reviews':
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps({'success': True, 'data': MOCK_GOOGLE_REVIEWS}).encode('utf-8'))
+        elif path == '/api/google-reviews-sync':
+            new_reviews = []
+            for ch in MOCK_CONNECTED_CHANNELS:
+                if ch.get('platform') == 'google_business' and ch.get('access_token'):
+                    try:
+                        acc = ch.get('account_email') # accounts/123
+                        loc = ch.get('account_id') # locations/456
+                        if acc and loc:
+                            url = f"https://mybusiness.googleapis.com/v4/{acc}/{loc}/reviews"
+                            headers = {'Authorization': f"Bearer {ch['access_token']}"}
+                            req = urllib.request.Request(url, headers=headers)
+                            res = urllib.request.urlopen(req)
+                            rev_data = json.loads(res.read().decode('utf-8'))
+                            for item in rev_data.get('reviews', []):
+                                new_reviews.append({
+                                    'id': item.get('reviewId'),
+                                    'review_id': item.get('reviewId'),
+                                    'rating': item.get('starRating'),
+                                    'author_name': item.get('reviewer', {}).get('displayName', 'Unknown'),
+                                    'author_avatar': item.get('reviewer', {}).get('profilePhotoUrl', ''),
+                                    'comment': item.get('comment', ''),
+                                    'received_at': item.get('createTime'),
+                                    'platform': 'google_business',
+                                    'status': 'open'
+                                })
+                    except Exception as e:
+                        print(f"[DEBUG] Error fetching Google reviews: {e}")
+            
+            # Simple merge to avoid duplicates in mock store
+            existing_ids = {r['id'] for r in MOCK_GOOGLE_REVIEWS}
+            for r in new_reviews:
+                if r['id'] not in existing_ids:
+                    MOCK_GOOGLE_REVIEWS.append(r)
+            
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps({'success': True, 'synced_count': len(new_reviews)}).encode('utf-8'))
         elif path == '/api/facebook-sync':
             self.send_response(200)
             self.send_header('Content-Type', 'application/json')
@@ -106,6 +154,7 @@ class Care360RequestHandler(http.server.SimpleHTTPRequestHandler):
             super().do_GET()
 
     def do_POST(self):
+        global MOCK_CONNECTED_CHANNELS
         url_parts = urllib.parse.urlparse(self.path)
         path = url_parts.path.rstrip('/')
         
@@ -124,6 +173,39 @@ class Care360RequestHandler(http.server.SimpleHTTPRequestHandler):
         elif path == '/api/twitter/reply':
             self.handle_twitter_reply()
         elif path == '/api/connected-channels':
+            try:
+                content_length = int(self.headers.get('Content-Length', 0))
+                if content_length > 0:
+                    post_data = self.rfile.read(content_length)
+                    payload = json.loads(post_data.decode('utf-8'))
+                    
+                    if payload.get('platform') == 'google_business' and payload.get('access_token'):
+                        try:
+                            access_token = payload['access_token']
+                            headers = {'Authorization': f'Bearer {access_token}'}
+                            # Fetch Account
+                            req = urllib.request.Request('https://mybusinessaccountmanagement.googleapis.com/v1/accounts', headers=headers)
+                            res = urllib.request.urlopen(req)
+                            accounts_data = json.loads(res.read().decode('utf-8'))
+                            
+                            if accounts_data.get('accounts'):
+                                account_name = accounts_data['accounts'][0]['name']
+                                # Fetch Location
+                                loc_req = urllib.request.Request(f'https://mybusinessbusinessinformation.googleapis.com/v1/{account_name}/locations?readMask=name,title', headers=headers)
+                                loc_res = urllib.request.urlopen(loc_req)
+                                locations_data = json.loads(loc_res.read().decode('utf-8'))
+                                
+                                if locations_data.get('locations'):
+                                    loc = locations_data['locations'][0]
+                                    payload['account_id'] = loc['name'] # locations/XYZ
+                                    payload['account_name'] = loc.get('title', 'Google Business Profile')
+                                    payload['account_email'] = account_name # accounts/ABC
+                        except Exception as inner_e:
+                            print(f"[DEBUG] Google Business API error: {inner_e}")
+                            
+                    MOCK_CONNECTED_CHANNELS.append(payload)
+            except Exception as e:
+                print(f"[DEBUG] Error parsing connected-channels POST: {e}")
             self.send_response(200)
             self.send_header('Content-Type', 'application/json')
             self.end_headers()

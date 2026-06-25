@@ -2,8 +2,8 @@
  * Carapal360 — Google Play Store Integration (OAuth 2.0).
  *
  * Flow:
- *   1. User clicks "+ ADD PLAY STORE"
- *   2. Redirected to Google OAuth consent screen
+ *   1. User clicks "+ ADD PLAY STORE" or "+ CONNECT BUSINESS"
+ *   2. Redirected to Google OAuth consent screen with specific scopes
  *   3. Redirects back with ?access_token=... in the URL fragment
  *   4. We send this to the backend
  */
@@ -65,5 +65,54 @@
     return accessToken;
   }
 
-  window.CarapalGoogle = { isConfigured, login, handleCallback };
+  function loginBusiness() {
+    if (!isConfigured()) {
+      alert('No Google Client ID set. Open config.js and follow the instructions to set GOOGLE_CLIENT_ID.');
+      return;
+    }
+
+    const redirectUri = cfg.GOOGLE_REDIRECT_URI || window.location.origin + '/';
+    const scope = 'https://www.googleapis.com/auth/business.manage';
+    const state = 'carapal360_google_business_' + Date.now();
+    sessionStorage.setItem('google_oauth_business_state', state);
+
+    const authUrl =
+      'https://accounts.google.com/o/oauth2/v2/auth' +
+      '?client_id=' + encodeURIComponent(cfg.GOOGLE_CLIENT_ID) +
+      '&redirect_uri=' + encodeURIComponent(redirectUri) +
+      '&response_type=token' +
+      '&scope=' + encodeURIComponent(scope) +
+      '&state=' + encodeURIComponent(state) +
+      '&prompt=consent' +
+      '&include_granted_scopes=true';
+
+    window.location.href = authUrl;
+  }
+
+  function handleBusinessCallback() {
+    const hash = window.location.hash;
+    if (!hash || !hash.includes('access_token')) return null;
+
+    const params = new URLSearchParams(hash.substring(1));
+    const accessToken = params.get('access_token');
+    const state = params.get('state');
+
+    // Make sure this is actually a Google redirect for business
+    if (!state || !state.startsWith('carapal360_google_business_')) return null;
+
+    const savedState = sessionStorage.getItem('google_oauth_business_state');
+    if (state !== savedState) {
+      console.warn('Google Business OAuth state mismatch — possible CSRF.');
+      return null;
+    }
+    sessionStorage.removeItem('google_oauth_business_state');
+
+    if (window.history && window.history.replaceState) {
+      window.history.replaceState(null, '', window.location.pathname + window.location.search);
+    }
+
+    return accessToken;
+  }
+
+  window.CarapalGoogle = { isConfigured, login, handleCallback, loginBusiness, handleBusinessCallback };
 })();

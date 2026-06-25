@@ -356,6 +356,10 @@
         showPlaystorePanel();
         return;
       }
+      if (card.id === 'channel-google-business') {
+        showGoogleBusinessPanel();
+        return;
+      }
       if (card.id === 'channel-gmail') {
         showGmailPanel();
         return;
@@ -363,6 +367,8 @@
       card.classList.toggle('selected');
     });
   });
+
+  const googleBusinessPanel = document.getElementById('google-business-panel');
 
   function showFacebookPanel() {
     if (channelsPanel) channelsPanel.style.display = 'none';
@@ -372,6 +378,7 @@
     if (gp) gp.style.display = 'none';
     const tp = document.getElementById('twitter-config-panel');
     if (tp) tp.style.display = 'none';
+    if (googleBusinessPanel) googleBusinessPanel.style.display = 'none';
     if (fbPanel) fbPanel.style.display = '';
   }
   function hideFacebookPanel() {
@@ -387,6 +394,7 @@
     if (gp) gp.style.display = 'none';
     const tp = document.getElementById('twitter-config-panel');
     if (tp) tp.style.display = 'none';
+    if (googleBusinessPanel) googleBusinessPanel.style.display = 'none';
     if (igPanel) igPanel.style.display = '';
   }
   function hideIgPanel() {
@@ -402,6 +410,7 @@
     if (gp) gp.style.display = 'none';
     const tp = document.getElementById('twitter-config-panel');
     if (tp) tp.style.display = 'none';
+    if (googleBusinessPanel) googleBusinessPanel.style.display = 'none';
     if (playstorePanel) playstorePanel.style.display = '';
   }
   function hidePlaystorePanel() {
@@ -416,6 +425,7 @@
     if (igPanel) igPanel.style.display = 'none';
     const tp = document.getElementById('twitter-config-panel');
     if (tp) tp.style.display = 'none';
+    if (googleBusinessPanel) googleBusinessPanel.style.display = 'none';
     const gp = document.getElementById('gmail-config-panel');
     if (gp) gp.style.display = '';
   }
@@ -432,12 +442,29 @@
     if (igPanel) igPanel.style.display = 'none';
     const gp = document.getElementById('gmail-config-panel');
     if (gp) gp.style.display = 'none';
+    if (googleBusinessPanel) googleBusinessPanel.style.display = 'none';
     const tp = document.getElementById('twitter-config-panel');
     if (tp) tp.style.display = '';
   }
   function hideTwitterPanel() {
     const tp = document.getElementById('twitter-config-panel');
     if (tp) tp.style.display = 'none';
+    if (channelsPanel) channelsPanel.style.display = '';
+  }
+
+  function showGoogleBusinessPanel() {
+    if (channelsPanel) channelsPanel.style.display = 'none';
+    if (fbPanel) fbPanel.style.display = 'none';
+    if (igPanel) igPanel.style.display = 'none';
+    if (playstorePanel) playstorePanel.style.display = 'none';
+    const gp = document.getElementById('gmail-config-panel');
+    if (gp) gp.style.display = 'none';
+    const tp = document.getElementById('twitter-config-panel');
+    if (tp) tp.style.display = 'none';
+    if (googleBusinessPanel) googleBusinessPanel.style.display = '';
+  }
+  function hideGoogleBusinessPanel() {
+    if (googleBusinessPanel) googleBusinessPanel.style.display = 'none';
     if (channelsPanel) channelsPanel.style.display = '';
   }
 
@@ -452,6 +479,21 @@
 
   const twitterBackBtn = document.getElementById('twitter-back-btn');
   if (twitterBackBtn) twitterBackBtn.addEventListener('click', hideTwitterPanel);
+
+  const googleBusinessBackBtn = document.getElementById('google-business-back-btn');
+  if (googleBusinessBackBtn) googleBusinessBackBtn.addEventListener('click', hideGoogleBusinessPanel);
+
+  const googleBusinessAddBtn = document.getElementById('google-business-add-btn');
+  if (googleBusinessAddBtn) {
+    googleBusinessAddBtn.addEventListener('click', () => {
+      const GOOGLE = window.CarapalGoogle;
+      if (GOOGLE && typeof GOOGLE.loginBusiness === 'function') {
+        GOOGLE.loginBusiness();
+      } else {
+        alert('Google integration not loaded.');
+      }
+    });
+  }
 
   const twitterConnectBtn = document.getElementById('twitter-connect-btn');
   if (twitterConnectBtn) {
@@ -645,6 +687,41 @@
           });
         } else {
           setPlaystoreStatus('Package name is required.', 'error');
+        }
+      }
+
+      if (typeof GOOGLE.handleBusinessCallback === 'function') {
+        const businessToken = GOOGLE.handleBusinessCallback();
+        if (businessToken) {
+          navigateTo('channels');
+          activateSidebarFor('settings');
+
+          const gbStatus = document.getElementById('google-business-status');
+          if (gbStatus) gbStatus.innerHTML = '<span style="color:blue;">Connecting Google Business Profile...</span>';
+
+          fetch('/api/connected-channels', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              platform: 'google_business',
+              access_token: businessToken
+            })
+          })
+          .then(r => r.json())
+          .then(data => {
+            if (data.success) {
+              if (gbStatus) gbStatus.innerHTML = '<span style="color:green;">Business Profile Connected! Fetching reviews...</span>';
+              fetch('/api/google-reviews-sync', { method: 'GET' })
+                .then(() => { setTimeout(() => window.location.reload(), 1500); })
+                .catch(() => { setTimeout(() => window.location.reload(), 1500); });
+            } else {
+              if (gbStatus) gbStatus.innerHTML = '<span style="color:red;">Error saving business profile.</span>';
+            }
+          })
+          .catch(err => {
+            console.error(err);
+            if (gbStatus) gbStatus.innerHTML = '<span style="color:red;">Network Error connecting.</span>';
+          });
         }
       }
     }
@@ -2929,6 +3006,23 @@ Collab Manager`
             }
           }
 
+          const gbPages = dbAccounts.filter(x => x.platform === 'google_business');
+          if (gbPages.length > 0) {
+            const gbGrid = document.createElement('div');
+            gbGrid.className = 'fb-pages-grid';
+            gbPages.forEach(pp => {
+              const card = buildPageCard(pp);
+              gbGrid.appendChild(card);
+            });
+            const gbPanel = document.getElementById('google-business-panel');
+            if (gbPanel) gbPanel.appendChild(gbGrid);
+            const gbStatus = document.getElementById('google-business-status');
+            if (gbStatus) {
+              gbStatus.textContent = 'Restored from Database';
+              gbStatus.style.display = '';
+            }
+          }
+
           // Merge Gmail accounts into state (keep access tokens from localStorage if available)
           const gmailAccounts = dbAccounts.filter(x => x.platform === 'gmail');
           gmailAccounts.forEach(dbAcc => {
@@ -2950,9 +3044,10 @@ Collab Manager`
     // Restore All Messages from the database
     Promise.all([
       fetch('/api/platform-messages').then(r => r.json()),
-      fetch('/api/facebook-messages').then(r => r.json())
+      fetch('/api/facebook-messages').then(r => r.json()),
+      fetch('/api/google-reviews').then(r => r.json())
     ])
-    .then(([platformData, fbData]) => {
+    .then(([platformData, fbData, gbData]) => {
       let addedCount = 0;
       const existingIds = new Set(state.cases.map(c => c.gmailMessageId || c.fbPostId || c.id).filter(Boolean));
 
@@ -3025,6 +3120,40 @@ Collab Manager`
               }]
             });
             existingIds.add(fbMsg.fb_post_id);
+            addedCount++;
+          }
+        });
+      }
+
+      // Process Google Reviews
+      if (gbData && gbData.success && gbData.data && gbData.data.length > 0) {
+        gbData.data.forEach(gbMsg => {
+          if (gbMsg.review_id && !existingIds.has(gbMsg.review_id)) {
+            state.cases.push({
+              id: gbMsg.review_id,
+              gbReviewId: gbMsg.review_id,
+              source: 'Google Business',
+              author: gbMsg.author_name,
+              authorName: gbMsg.author_name,
+              channel: 'google_business',
+              avatarGradient: AVATAR_GRADIENTS[Math.abs(hashCode(gbMsg.author_name || '')) % AVATAR_GRADIENTS.length],
+              text: (gbMsg.comment || '').substring(0, 120),
+              createdTime: gbMsg.received_at || gbMsg.created_at,
+              type: 'Review',
+              status: gbMsg.status === 'open' ? 'Open' : 'Closed',
+              priority: 'High',
+              assignedTo: 'Unassigned',
+              emailSubject: 'Google Review: ' + gbMsg.rating + ' Stars',
+              emailAttachments: [],
+              messages: [{
+                id: 'gb-db-' + gbMsg.id,
+                sender: gbMsg.author_name || 'Google User',
+                text: `Rating: ${gbMsg.rating} Stars\n\n${gbMsg.comment || ''}`,
+                timestamp: gbMsg.received_at || gbMsg.created_at,
+                isAgent: false
+              }]
+            });
+            existingIds.add(gbMsg.review_id);
             addedCount++;
           }
         });

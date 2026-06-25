@@ -30,8 +30,39 @@ module.exports = async function handler(req, res) {
     if (req.method === 'POST') {
       const { platform, account_email, account_name, avatar_url, access_token } = req.body;
 
-      if (!platform || !account_email) {
-        return res.status(400).json({ error: 'platform and account_email are required' });
+      if (!platform || !access_token && platform === 'google_business') {
+        return res.status(400).json({ error: 'platform and access_token are required' });
+      }
+
+      let finalEmail = account_email || 'unknown';
+      let finalName = account_name || '';
+      let finalAvatar = avatar_url || '';
+
+      if (platform === 'google_business') {
+        try {
+          // Fetch real GBP account and location
+          const accRes = await fetch('https://mybusinessaccountmanagement.googleapis.com/v1/accounts', {
+            headers: { 'Authorization': `Bearer ${access_token}` }
+          });
+          const accData = await accRes.json();
+          if (accData.accounts && accData.accounts.length > 0) {
+            const accName = accData.accounts[0].name; // accounts/XYZ
+            
+            const locRes = await fetch(`https://mybusinessbusinessinformation.googleapis.com/v1/${accName}/locations?readMask=name,title`, {
+              headers: { 'Authorization': `Bearer ${access_token}` }
+            });
+            const locData = await locRes.json();
+            
+            if (locData.locations && locData.locations.length > 0) {
+              const loc = locData.locations[0];
+              finalEmail = accName; // Store account string here
+              finalName = loc.title || 'Google Business';
+              finalAvatar = loc.name; // Use avatar_url to store location string (locations/ABC)
+            }
+          }
+        } catch (e) {
+          console.error('Failed to fetch GBP details:', e);
+        }
       }
 
       const result = await pool.query(
@@ -45,7 +76,7 @@ module.exports = async function handler(req, res) {
            status = 'active',
            updated_at = NOW()
          RETURNING id, platform, account_email, account_name, status, connected_at`,
-        [platform, account_email, account_name || '', avatar_url || '', access_token || '']
+        [platform, finalEmail, finalName, finalAvatar, access_token || '']
       );
 
       return res.status(200).json({ success: true, data: result.rows[0] });

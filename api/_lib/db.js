@@ -82,7 +82,24 @@ async function ensureTables() {
     );
   `);
 
-  // 4. users (no foreign keys — MUST come before notifications)
+  // 4. google_reviews (depends on connected_channels)
+  await p.query(`
+    CREATE TABLE IF NOT EXISTS google_reviews (
+      id                SERIAL PRIMARY KEY,
+      channel_id        INTEGER REFERENCES connected_channels(id),
+      review_id         VARCHAR(255) UNIQUE,
+      rating            INTEGER,
+      author_name       VARCHAR(255),
+      author_avatar     VARCHAR(512),
+      comment           TEXT,
+      received_at       TIMESTAMP,
+      status            VARCHAR(50) DEFAULT 'open',
+      is_read           BOOLEAN DEFAULT FALSE,
+      created_at        TIMESTAMP DEFAULT NOW()
+    );
+  `);
+
+  // 5. users (no foreign keys — MUST come before notifications)
   await p.query(`
     CREATE TABLE IF NOT EXISTS users (
       id            SERIAL PRIMARY KEY,

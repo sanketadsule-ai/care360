@@ -6,6 +6,8 @@ const auth = require('./_lib/auth');
 const connectedChannels = require('./_lib/connected-channels');
 const facebookMessages = require('./_lib/facebook-messages');
 const facebookSync = require('./_lib/facebook-sync');
+const googleReviews = require('./_lib/google-reviews');
+const googleReviewsSync = require('./_lib/google-reviews-sync');
 const platformMessages = require('./_lib/platform-messages');
 const twitterConnect = require('./_lib/twitter-connect');
 const twitterReply = require('./_lib/twitter-reply');
@@ -31,6 +33,10 @@ module.exports = async function handler(req, res) {
         return await facebookMessages(req, res);
       case '/api/facebook-sync':
         return await facebookSync(req, res);
+      case '/api/google-reviews':
+        return await googleReviews(req, res);
+      case '/api/google-reviews-sync':
+        return await googleReviewsSync(req, res);
       case '/api/platform-messages':
         return await platformMessages(req, res);
       case '/api/twitter-connect':
