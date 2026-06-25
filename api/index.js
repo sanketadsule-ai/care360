@@ -19,6 +19,8 @@ module.exports = async function handler(req, res) {
 
   try {
     switch (urlPath) {
+      case '/api/test-deploy':
+        return res.status(200).json({ message: 'Deployment is updating!' });
       case '/api/admin-users':
         return await adminUsers(req, res);
       case '/api/auth':
