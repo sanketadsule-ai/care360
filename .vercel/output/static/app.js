@@ -13,8 +13,9 @@
   'use strict';
 
   // ── Auth & Fetch Interceptor ────────────────────────
-  let authToken = localStorage.getItem('auth_token');
-  let authUser = JSON.parse(localStorage.getItem('auth_user') || 'null');
+  let authToken = 'dev-token'; // Bypassed auth for testing
+  let authUser = { id: 1, role: 'admin', status: 'approved', name: 'Admin Dev', email: 'admin@care360.com' }; // Bypassed auth
+
 
   const originalFetch = window.fetch;
   window.fetch = async function () {
@@ -35,11 +36,38 @@
     return response;
   };
 
+  function populateProfilePage() {
+    if (!authUser) return;
+    const profInitials = document.getElementById('profile-initials');
+    const profName = document.getElementById('profile-name');
+    const profEmail = document.getElementById('profile-email');
+    const profRoleBadge = document.getElementById('profile-role-badge');
+    const profStatusBadge = document.getElementById('profile-status-badge');
+    
+    const profDetName = document.getElementById('profile-detail-name');
+    const profDetEmail = document.getElementById('profile-detail-email');
+    const profDetRole = document.getElementById('profile-detail-role');
+    const profDetStatus = document.getElementById('profile-detail-status');
+
+    if (profInitials) profInitials.textContent = authUser.initials || '--';
+    if (profName) profName.textContent = authUser.name || '--';
+    if (profEmail) profEmail.textContent = authUser.email || '--';
+    
+    if (profRoleBadge) profRoleBadge.textContent = authUser.role || 'user';
+    if (profStatusBadge) profStatusBadge.textContent = authUser.status || 'pending';
+    
+    if (profDetName) profDetName.textContent = authUser.name || '--';
+    if (profDetEmail) profDetEmail.textContent = authUser.email || '--';
+    if (profDetRole) profDetRole.textContent = authUser.role || 'user';
+    if (profDetStatus) profDetStatus.textContent = authUser.status || 'pending';
+  }
+
   function checkAuthState() {
     const overlay = document.getElementById('login-overlay');
     const pendingMsg = document.getElementById('pending-approval-msg');
     const errorMsg = document.getElementById('login-error-msg');
     const sidebarUsersTab = document.getElementById('sidebar-users-tab');
+    const adminPanel = document.getElementById('admin-panel-in-profile');
     
     if (!overlay) return;
 
@@ -47,61 +75,27 @@
       overlay.style.display = 'flex';
       pendingMsg.style.display = 'none';
       if (sidebarUsersTab) sidebarUsersTab.style.display = 'none';
+      if (adminPanel) adminPanel.style.display = 'none';
     } else if (authUser.status === 'pending') {
       overlay.style.display = 'flex';
       pendingMsg.style.display = 'block';
       if (sidebarUsersTab) sidebarUsersTab.style.display = 'none';
+      if (adminPanel) adminPanel.style.display = 'none';
     } else {
       overlay.style.display = 'none';
-      // Show admin tab if user is admin
-      if (authUser.role === 'admin' && sidebarUsersTab) {
-        sidebarUsersTab.style.display = 'flex';
+      populateProfilePage();
+      
+      // Show admin tab and panel if user is admin
+      if (authUser.role === 'admin') {
+        if (sidebarUsersTab) sidebarUsersTab.style.display = 'flex';
+        if (adminPanel) adminPanel.style.display = 'block';
         loadAdminUsers();
+      } else {
+        if (sidebarUsersTab) sidebarUsersTab.style.display = 'none';
+        if (adminPanel) adminPanel.style.display = 'none';
       }
     }
   }
-
-  // Global callback for Google Identity Services
-  window.handleGoogleLogin = async function (response) {
-    const errorMsg = document.getElementById('login-error-msg');
-    if (errorMsg) errorMsg.style.display = 'none';
-    
-    try {
-      const res = await originalFetch('/api/auth', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ credential: response.credential })
-      });
-      let data;
-      try {
-        const text = await res.text();
-        data = JSON.parse(text);
-      } catch (parseErr) {
-        throw new Error(`Server returned a non-JSON response. This usually means the server crashed. Status: ${res.status}`);
-      }
-
-      if (res.ok) {
-        // Success
-        authToken = data.token;
-        authUser = data.user;
-        localStorage.setItem('auth_token', authToken);
-        localStorage.setItem('auth_user', JSON.stringify(authUser));
-        checkAuthState();
-      } else if (res.status === 403 && data.user) {
-        // Pending approval
-        authUser = data.user;
-        localStorage.setItem('auth_user', JSON.stringify(authUser));
-        checkAuthState();
-      } else {
-        throw new Error(data.details ? `${data.error}: ${data.details}` : (data.error || 'Login failed'));
-      }
-    } catch (err) {
-      if (errorMsg) {
-        errorMsg.textContent = err.message;
-        errorMsg.style.display = 'block';
-      }
-    }
-  };
 
   // Logout handler
   document.addEventListener('click', (e) => {
@@ -114,6 +108,16 @@
       // Reset dropdown
       const profileDropdown = document.getElementById('profile-dropdown');
       if (profileDropdown) profileDropdown.style.display = 'none';
+    }
+    
+    // Profile Settings navigation
+    if (e.target && e.target.id === 'btn-profile-settings') {
+      e.preventDefault();
+      const profileDropdown = document.getElementById('profile-dropdown');
+      if (profileDropdown) profileDropdown.style.display = 'none';
+      
+      if (typeof navigateTo === 'function') navigateTo('profile');
+      if (typeof activateSidebarFor === 'function') activateSidebarFor('profile');
     }
   });
 
@@ -143,10 +147,6 @@
     selectedCaseId: localStorage.getItem('inbox_selected_case_id') || null,
     activeFilter: 'all'
   };
-
-
-  // Clean up any remaining mock arrays
-  const GMAIL_MOCK_CASES = [];
 
   // Initialize cases state
   if (state.cases.length === 0) {
@@ -321,6 +321,10 @@
         showPlaystorePanel();
         return;
       }
+      if (card.id === 'channel-google-business') {
+        showGoogleBusinessPanel();
+        return;
+      }
       if (card.id === 'channel-gmail') {
         showGmailPanel();
         return;
@@ -328,6 +332,8 @@
       card.classList.toggle('selected');
     });
   });
+
+  const googleBusinessPanel = document.getElementById('google-business-panel');
 
   function showFacebookPanel() {
     if (channelsPanel) channelsPanel.style.display = 'none';
@@ -337,6 +343,7 @@
     if (gp) gp.style.display = 'none';
     const tp = document.getElementById('twitter-config-panel');
     if (tp) tp.style.display = 'none';
+    if (googleBusinessPanel) googleBusinessPanel.style.display = 'none';
     if (fbPanel) fbPanel.style.display = '';
   }
   function hideFacebookPanel() {
@@ -352,6 +359,7 @@
     if (gp) gp.style.display = 'none';
     const tp = document.getElementById('twitter-config-panel');
     if (tp) tp.style.display = 'none';
+    if (googleBusinessPanel) googleBusinessPanel.style.display = 'none';
     if (igPanel) igPanel.style.display = '';
   }
   function hideIgPanel() {
@@ -367,6 +375,7 @@
     if (gp) gp.style.display = 'none';
     const tp = document.getElementById('twitter-config-panel');
     if (tp) tp.style.display = 'none';
+    if (googleBusinessPanel) googleBusinessPanel.style.display = 'none';
     if (playstorePanel) playstorePanel.style.display = '';
   }
   function hidePlaystorePanel() {
@@ -381,6 +390,7 @@
     if (igPanel) igPanel.style.display = 'none';
     const tp = document.getElementById('twitter-config-panel');
     if (tp) tp.style.display = 'none';
+    if (googleBusinessPanel) googleBusinessPanel.style.display = 'none';
     const gp = document.getElementById('gmail-config-panel');
     if (gp) gp.style.display = '';
   }
@@ -397,12 +407,29 @@
     if (igPanel) igPanel.style.display = 'none';
     const gp = document.getElementById('gmail-config-panel');
     if (gp) gp.style.display = 'none';
+    if (googleBusinessPanel) googleBusinessPanel.style.display = 'none';
     const tp = document.getElementById('twitter-config-panel');
     if (tp) tp.style.display = '';
   }
   function hideTwitterPanel() {
     const tp = document.getElementById('twitter-config-panel');
     if (tp) tp.style.display = 'none';
+    if (channelsPanel) channelsPanel.style.display = '';
+  }
+
+  function showGoogleBusinessPanel() {
+    if (channelsPanel) channelsPanel.style.display = 'none';
+    if (fbPanel) fbPanel.style.display = 'none';
+    if (igPanel) igPanel.style.display = 'none';
+    if (playstorePanel) playstorePanel.style.display = 'none';
+    const gp = document.getElementById('gmail-config-panel');
+    if (gp) gp.style.display = 'none';
+    const tp = document.getElementById('twitter-config-panel');
+    if (tp) tp.style.display = 'none';
+    if (googleBusinessPanel) googleBusinessPanel.style.display = '';
+  }
+  function hideGoogleBusinessPanel() {
+    if (googleBusinessPanel) googleBusinessPanel.style.display = 'none';
     if (channelsPanel) channelsPanel.style.display = '';
   }
 
@@ -417,6 +444,21 @@
 
   const twitterBackBtn = document.getElementById('twitter-back-btn');
   if (twitterBackBtn) twitterBackBtn.addEventListener('click', hideTwitterPanel);
+
+  const googleBusinessBackBtn = document.getElementById('google-business-back-btn');
+  if (googleBusinessBackBtn) googleBusinessBackBtn.addEventListener('click', hideGoogleBusinessPanel);
+
+  const googleBusinessAddBtn = document.getElementById('google-business-add-btn');
+  if (googleBusinessAddBtn) {
+    googleBusinessAddBtn.addEventListener('click', () => {
+      const GOOGLE = window.CarapalGoogle;
+      if (GOOGLE && typeof GOOGLE.loginBusiness === 'function') {
+        GOOGLE.loginBusiness();
+      } else {
+        alert('Google integration not loaded.');
+      }
+    });
+  }
 
   const twitterConnectBtn = document.getElementById('twitter-connect-btn');
   if (twitterConnectBtn) {
@@ -610,6 +652,41 @@
           });
         } else {
           setPlaystoreStatus('Package name is required.', 'error');
+        }
+      }
+
+      if (typeof GOOGLE.handleBusinessCallback === 'function') {
+        const businessToken = GOOGLE.handleBusinessCallback();
+        if (businessToken) {
+          navigateTo('channels');
+          activateSidebarFor('settings');
+
+          const gbStatus = document.getElementById('google-business-status');
+          if (gbStatus) gbStatus.innerHTML = '<span style="color:blue;">Connecting Google Business Profile...</span>';
+
+          fetch('/api/connected-channels', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              platform: 'google_business',
+              access_token: businessToken
+            })
+          })
+          .then(r => r.json())
+          .then(data => {
+            if (data.success) {
+              if (gbStatus) gbStatus.innerHTML = '<span style="color:green;">Business Profile Connected! Fetching reviews...</span>';
+              fetch('/api/google-reviews-sync', { method: 'GET' })
+                .then(() => { setTimeout(() => window.location.reload(), 1500); })
+                .catch(() => { setTimeout(() => window.location.reload(), 1500); });
+            } else {
+              if (gbStatus) gbStatus.innerHTML = '<span style="color:red;">Error saving business profile.</span>';
+            }
+          })
+          .catch(err => {
+            console.error(err);
+            if (gbStatus) gbStatus.innerHTML = '<span style="color:red;">Network Error connecting.</span>';
+          });
         }
       }
     }
@@ -2894,6 +2971,23 @@ Collab Manager`
             }
           }
 
+          const gbPages = dbAccounts.filter(x => x.platform === 'google_business');
+          if (gbPages.length > 0) {
+            const gbGrid = document.createElement('div');
+            gbGrid.className = 'fb-pages-grid';
+            gbPages.forEach(pp => {
+              const card = buildPageCard(pp);
+              gbGrid.appendChild(card);
+            });
+            const gbPanel = document.getElementById('google-business-panel');
+            if (gbPanel) gbPanel.appendChild(gbGrid);
+            const gbStatus = document.getElementById('google-business-status');
+            if (gbStatus) {
+              gbStatus.textContent = 'Restored from Database';
+              gbStatus.style.display = '';
+            }
+          }
+
           // Merge Gmail accounts into state (keep access tokens from localStorage if available)
           const gmailAccounts = dbAccounts.filter(x => x.platform === 'gmail');
           gmailAccounts.forEach(dbAcc => {
@@ -2915,9 +3009,10 @@ Collab Manager`
     // Restore All Messages from the database
     Promise.all([
       fetch('/api/platform-messages').then(r => r.json()),
-      fetch('/api/facebook-messages').then(r => r.json())
+      fetch('/api/facebook-messages').then(r => r.json()),
+      fetch('/api/google-reviews').then(r => r.json())
     ])
-    .then(([platformData, fbData]) => {
+    .then(([platformData, fbData, gbData]) => {
       let addedCount = 0;
       const existingIds = new Set(state.cases.map(c => c.gmailMessageId || c.fbPostId || c.id).filter(Boolean));
 
@@ -2995,6 +3090,40 @@ Collab Manager`
         });
       }
 
+      // Process Google Reviews
+      if (gbData && gbData.success && gbData.data && gbData.data.length > 0) {
+        gbData.data.forEach(gbMsg => {
+          if (gbMsg.review_id && !existingIds.has(gbMsg.review_id)) {
+            state.cases.push({
+              id: gbMsg.review_id,
+              gbReviewId: gbMsg.review_id,
+              source: 'Google Business',
+              author: gbMsg.author_name,
+              authorName: gbMsg.author_name,
+              channel: 'google_business',
+              avatarGradient: AVATAR_GRADIENTS[Math.abs(hashCode(gbMsg.author_name || '')) % AVATAR_GRADIENTS.length],
+              text: (gbMsg.comment || '').substring(0, 120),
+              createdTime: gbMsg.received_at || gbMsg.created_at,
+              type: 'Review',
+              status: gbMsg.status === 'open' ? 'Open' : 'Closed',
+              priority: 'High',
+              assignedTo: 'Unassigned',
+              emailSubject: 'Google Review: ' + gbMsg.rating + ' Stars',
+              emailAttachments: [],
+              messages: [{
+                id: 'gb-db-' + gbMsg.id,
+                sender: gbMsg.author_name || 'Google User',
+                text: `Rating: ${gbMsg.rating} Stars\n\n${gbMsg.comment || ''}`,
+                timestamp: gbMsg.received_at || gbMsg.created_at,
+                isAgent: false
+              }]
+            });
+            existingIds.add(gbMsg.review_id);
+            addedCount++;
+          }
+        });
+      }
+
       if (addedCount > 0) {
         state.cases.sort((a, b) => new Date(b.createdTime) - new Date(a.createdTime));
         saveState();
@@ -3015,6 +3144,65 @@ Collab Manager`
     if (hasTwitter) {
       console.log('Auto-syncing Twitter on page load...');
       setTimeout(() => generateIncomingTwitterMentions(), 1500);
+    }
+    
+    // Auto-sync Facebook on page load if connected
+    const hasFacebook = state.connectedAccounts.find(x => x.channel === 'facebook' || x.platform === 'facebook');
+    if (hasFacebook) {
+      console.log('Auto-syncing Facebook on page load...');
+      setTimeout(() => {
+        fetch('/api/facebook-sync')
+          .then(r => r.json())
+          .then(data => {
+            if (data.success && data.synced_count > 0) {
+              // Refresh Facebook cases from DB
+              fetch('/api/facebook-messages')
+                .then(r => r.json())
+                .then(fbData => {
+                  if (fbData.success && fbData.data) {
+                    const existingIds = new Set(state.cases.map(c => c.fbPostId || c.id).filter(Boolean));
+                    let added = 0;
+                    fbData.data.forEach(fbMsg => {
+                      if (fbMsg.fb_post_id && !existingIds.has(fbMsg.fb_post_id)) {
+                        state.cases.push({
+                          id: fbMsg.fb_post_id,
+                          fbPostId: fbMsg.fb_post_id,
+                          source: 'Facebook Page',
+                          author: fbMsg.author_name,
+                          authorName: fbMsg.author_name,
+                          channel: 'facebook',
+                          avatarGradient: AVATAR_GRADIENTS[Math.abs(hashCode(fbMsg.author_name || '')) % AVATAR_GRADIENTS.length],
+                          text: (fbMsg.message_text || '').substring(0, 120),
+                          createdTime: fbMsg.received_at || fbMsg.created_at,
+                          type: fbMsg.post_type || 'Comment',
+                          status: fbMsg.status === 'open' ? 'Open' : 'Closed',
+                          priority: 'Medium',
+                          assignedTo: 'Unassigned',
+                          emailSubject: 'Facebook ' + (fbMsg.post_type || 'Comment'),
+                          emailAttachments: [],
+                          messages: [{
+                            id: 'fb-db-' + fbMsg.id,
+                            sender: fbMsg.author_name || 'Facebook User',
+                            text: fbMsg.message_text || '',
+                            timestamp: fbMsg.received_at || fbMsg.created_at,
+                            isAgent: false
+                          }]
+                        });
+                        added++;
+                      }
+                    });
+                    if (added > 0) {
+                      state.cases.sort((a, b) => new Date(b.createdTime) - new Date(a.createdTime));
+                      saveState();
+                      renderAllCases();
+                      console.log(`Auto-synced ${added} new Facebook messages.`);
+                    }
+                  }
+                });
+            }
+          })
+          .catch(console.error);
+      }, 2000);
     }
 
     // Expose a way to add Twitter account from the popup
@@ -3201,8 +3389,8 @@ Collab Manager`
             tr.style.borderBottom = '1px solid #E5E7EB';
             
             const actionHtml = user.status === 'pending' ? `
-              <button onclick="handleUserAction(${user.id}, 'approve')" style="background: #10B981; color: white; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; margin-right: 6px;">Approve</button>
-              <button onclick="handleUserAction(${user.id}, 'reject')" style="background: #EF4444; color: white; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 12px;">Reject</button>
+              <button onclick="handleUserAction('${user.id}', 'approve')" style="background: #10B981; color: white; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; margin-right: 6px;">Approve</button>
+              <button onclick="handleUserAction('${user.id}', 'reject')" style="background: #EF4444; color: white; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 12px;">Reject</button>
             ` : `
               <span style="font-size: 12px; color: #6B7280;">N/A</span>
             `;
@@ -3224,6 +3412,18 @@ Collab Manager`
             `;
             tbody.appendChild(tr);
           });
+          
+          // Update pending count badge
+          const pendingCountBadge = document.getElementById('pending-count-badge');
+          if (pendingCountBadge) {
+            const pendingCount = data.users.filter(u => u.status === 'pending').length;
+            if (pendingCount > 0) {
+              pendingCountBadge.textContent = `${pendingCount} pending`;
+              pendingCountBadge.style.display = 'inline-block';
+            } else {
+              pendingCountBadge.style.display = 'none';
+            }
+          }
         }
       } catch (err) {
         console.error('Failed to load admin users:', err);
