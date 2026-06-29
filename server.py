@@ -422,7 +422,9 @@ class Care360RequestHandler(http.server.SimpleHTTPRequestHandler):
                 parts = credential.split('.')
                 if len(parts) >= 2:
                     payload_b64 = parts[1]
-                    payload_b64 += '=' * (4 - len(payload_b64) % 4)
+                    padding = len(payload_b64) % 4
+                    if padding > 0:
+                        payload_b64 += '=' * (4 - padding)
                     try:
                         payload_json = base64.b64decode(payload_b64).decode('utf-8')
                         user_info = json.loads(payload_json)

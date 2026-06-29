@@ -18,17 +18,16 @@
 
 
   const originalFetch = window.fetch;
-  window.fetch = async function () {
-    let [resource, config] = arguments;
-    if (resource.startsWith('/api/') && authToken) {
-      if (!config) config = {};
-      if (!config.headers) config.headers = {};
+  window.fetch = async function (resource, config) {
+    if (typeof resource === 'string' && resource.startsWith('/api/') && authToken) {
+      config = config || {};
+      config.headers = config.headers || {};
       config.headers['Authorization'] = 'Bearer ' + authToken;
     }
     const response = await originalFetch(resource, config);
     if (response.status === 401 || response.status === 403) {
       // If unauthorized, we might need to log out, but let's handle it gracefully
-      const isApi = resource.startsWith('/api/');
+      const isApi = typeof resource === 'string' && resource.startsWith('/api/');
       if (isApi) {
         // Maybe clear token if invalid, but for now just pass through
       }
@@ -207,12 +206,12 @@
 
     if (!authToken || !authUser) {
       overlay.style.display = 'flex';
-      pendingMsg.style.display = 'none';
+      if (pendingMsg) pendingMsg.style.display = 'none';
       if (sidebarUsersTab) sidebarUsersTab.style.display = 'none';
       if (adminPanel) adminPanel.style.display = 'none';
     } else if (authUser.status === 'pending') {
       overlay.style.display = 'flex';
-      pendingMsg.style.display = 'block';
+      if (pendingMsg) pendingMsg.style.display = 'block';
       if (sidebarUsersTab) sidebarUsersTab.style.display = 'none';
       if (adminPanel) adminPanel.style.display = 'none';
     } else {
