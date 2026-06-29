@@ -13,6 +13,8 @@ import urllib.error
 import base64
 import os
 import sys
+import subprocess
+import csv
 
 # ── Load .env file ──────────────────────────────────────
 def load_env():
@@ -61,6 +63,29 @@ SESSION_USERS_LIST = [
 
 MOCK_CONNECTED_CHANNELS = []
 MOCK_GOOGLE_REVIEWS = []
+MOCK_TRUSTPILOT_REVIEWS = []
+
+# Try to load existing trustpilot reviews from CSV
+try:
+    tp_csv = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'trustpilot_scraper', 'trustpilot_reviews.csv')
+    if os.path.exists(tp_csv):
+        with open(tp_csv, 'r', encoding='utf-8') as f:
+            reader = csv.DictReader(f)
+            for item in reader:
+                rev_id = 'tp_' + str(abs(hash(item.get('Body', '') + item.get('Author', ''))))
+                MOCK_TRUSTPILOT_REVIEWS.append({
+                    'id': rev_id,
+                    'review_id': rev_id,
+                    'rating': item.get('Rating', '5'),
+                    'author_name': item.get('Author', 'Unknown'),
+                    'comment': item.get('Body', ''),
+                    'heading': item.get('Heading', ''),
+                    'received_at': item.get('Date', ''),
+                    'status': 'open'
+                })
+        print(f"[DEBUG] Loaded {len(MOCK_TRUSTPILOT_REVIEWS)} Trustpilot reviews from CSV.")
+except Exception as e:
+    print(f"[DEBUG] Failed to load initial trustpilot reviews: {e}")
 
 PORT = 8080
 
@@ -80,6 +105,7 @@ class Care360RequestHandler(http.server.SimpleHTTPRequestHandler):
     def do_GET(self):
         global MOCK_CONNECTED_CHANNELS
         global MOCK_GOOGLE_REVIEWS
+        global MOCK_TRUSTPILOT_REVIEWS
         url_parts = urllib.parse.urlparse(self.path)
         path = url_parts.path
         
@@ -101,6 +127,11 @@ class Care360RequestHandler(http.server.SimpleHTTPRequestHandler):
             self.send_header('Content-Type', 'application/json')
             self.end_headers()
             self.wfile.write(json.dumps({'success': True, 'data': []}).encode('utf-8'))
+        elif path == '/api/trustpilot-reviews':
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps({'success': True, 'data': MOCK_TRUSTPILOT_REVIEWS}).encode('utf-8'))
         elif path == '/api/google-reviews':
             self.send_response(200)
             self.send_header('Content-Type', 'application/json')
@@ -210,11 +241,84 @@ class Care360RequestHandler(http.server.SimpleHTTPRequestHandler):
             self.send_header('Content-Type', 'application/json')
             self.end_headers()
             self.wfile.write(json.dumps({'success': True, 'data': {}}).encode('utf-8'))
+        elif path == '/api/trustpilot-reviews-sync':
+            global MOCK_TRUSTPILOT_REVIEWS
+            try:
+                # Parse URL from request if needed
+                content_length = int(self.headers['Content-Length'])
+                post_data = json.loads(self.rfile.read(content_length))
+                url = post_data.get('url', 'https://www.trustpilot.com/review/impactguru.com')
+                
+                scraper_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'trustpilot_scraper')
+                csv_path = os.path.join(scraper_dir, 'trustpilot_reviews.csv')
+                
+                # We do not delete existing CSV so we can fallback to it if subprocess fails due to missing selenium etc.
+                if not os.path.exists(csv_path):
+                    print("[DEBUG] No existing CSV found.")
+                    
+                print(f"[DEBUG] Running scraper.py in subprocess for url: {url} ...")
+                cmd = f'"{sys.executable}" trustpilot_scraper/scraper.py "{url}" 2 trustpilot_reviews.csv'
+                process = subprocess.run(cmd, cwd=scraper_dir, capture_output=True, text=True, shell=True)
+                print(f"[DEBUG] scraper.py output: {process.stdout}")
+                if process.stderr:
+                    print(f"[DEBUG] scraper.py stderr: {process.stderr}")
+                
+                if os.path.exists(csv_path):
+                    new_reviews = []
+                    with open(csv_path, 'r', encoding='utf-8') as f:
+                        reader = csv.DictReader(f)
+                        for item in reader:
+                            rev_id = 'tp_' + str(abs(hash(item.get('Body', '') + item.get('Author', ''))))
+                            new_reviews.append({
+                                'id': rev_id,
+                                'review_id': rev_id,
+                                'rating': item.get('Rating', '5'),
+                                'author_name': item.get('Author', 'Unknown'),
+                                'comment': item.get('Body', ''),
+                                'heading': item.get('Heading', ''),
+                                'received_at': item.get('Date', ''),
+                                'platform': 'trustpilot',
+                                'status': 'open'
+                            })
+                    
+                    # Merge
+                    existing_ids = {r['id'] for r in MOCK_TRUSTPILOT_REVIEWS}
+                    added = 0
+                    for r in new_reviews:
+                        if r['id'] not in existing_ids:
+                            MOCK_TRUSTPILOT_REVIEWS.append(r)
+                            added += 1
+                    
+                    self.send_response(200)
+                    self.send_header('Content-Type', 'application/json')
+                    self.end_headers()
+                    self.wfile.write(json.dumps({'success': True, 'synced_count': added}).encode('utf-8'))
+                    return
+                else:
+                    raise Exception("trustpilot_reviews.csv was not generated")
+                    
+            except Exception as e:
+                err_msg = str(e)
+                if 'process' in locals() and process.stderr:
+                    err_msg += f" | Stderr: {process.stderr}"
+                    with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'debug_stderr.txt'), 'w', encoding='utf-8') as debug_f:
+                        debug_f.write(process.stderr)
+                        debug_f.write("\n\nSTDOUT:\n")
+                        debug_f.write(process.stdout)
+                print(f"[DEBUG] Error in /api/trustpilot-reviews-sync: {err_msg}")
+
+            
+            self.send_response(500)
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps({'success': False, 'error': f'Failed to scrape using scrap.py: {err_msg}'}).encode('utf-8'))
+
+
         elif path == '/api/auth':
             self.handle_auth()
         elif path == '/api/admin-users':
             self.handle_post_admin_users()
-        elif path == '/api/facebook-messages' or path == '/api/platform-messages':
+        elif path in ['/api/facebook-messages', '/api/platform-messages', '/api/trustpilot-reviews']:
             self.send_response(200)
             self.send_header('Content-Type', 'application/json')
             self.end_headers()

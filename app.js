@@ -329,6 +329,11 @@
         showGmailPanel();
         return;
       }
+      if (card.id === 'channel-trustpilot') {
+        const trustpilotModal = document.getElementById('trustpilot-modal-overlay');
+        if (trustpilotModal) trustpilotModal.style.display = 'flex';
+        return;
+      }
       card.classList.toggle('selected');
     });
   });
@@ -923,6 +928,7 @@
     const GMAIL_ICON = '<svg width="14" height="14" viewBox="0 0 48 48"><rect x="6" y="10" width="36" height="28" rx="3" fill="#F1F1F1"/><path d="M6 13a3 3 0 013-3h30a3 3 0 013 3l-18 12L6 13z" fill="#EA4335"/><path d="M6 13v22a3 3 0 003 3h3V19L6 13z" fill="#4285F4"/><path d="M36 38h3a3 3 0 003-3V13l-6 6v19z" fill="#34A853"/><path d="M12 19v19h24V19l-12 8-12-8z" fill="white"/></svg>';
     const INSTAGRAM_ICON = '<svg width="14" height="14" viewBox="0 0 24 24" fill="#E1306C"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.012-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>';
     const PLAY_ICON = '<svg width="13" height="13" viewBox="0 0 24 24"><path fill="#00E0FF" d="M3.6 1.8v20.4l11-10.2z"/><path fill="#00D965" d="M3.6 1.8l11 10.2 3.2-3z"/><path fill="#FFCE00" d="M17.8 9l-3.2 3 3.2 3 3.8-2.2c1-.6 1-1.8 0-2.4z"/><path fill="#FF3A44" d="M3.6 22.2l11-10.2 3.2 3z"/></svg>';
+    const TRUSTPILOT_ICON = '<svg width="14" height="14" viewBox="0 0 24 24" fill="#00B67A"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>';
 
     // Bridge Facebook cases into the unified cases list
     function renderCases(cases, sourceName) {
@@ -1057,6 +1063,8 @@
         author.innerHTML = PLAY_ICON;
       } else if (c.channel === 'gmail') {
         author.innerHTML = GMAIL_ICON;
+      } else if (c.channel === 'trustpilot') {
+        author.innerHTML = TRUSTPILOT_ICON;
       }
 
       let titlePrefix = ' ';
@@ -1171,6 +1179,7 @@
       else if (c.channel === 'twitter') name.innerHTML = TWITTER_ICON;
       else if (c.channel === 'google_play') name.innerHTML = PLAY_ICON;
       else if (c.channel === 'gmail') name.innerHTML = GMAIL_ICON;
+      else if (c.channel === 'trustpilot') name.innerHTML = TRUSTPILOT_ICON;
       name.appendChild(document.createTextNode(' ' + c.author));
 
       const source = document.createElement('div');
@@ -2331,6 +2340,76 @@
       requestGoogleAuth(clientId.trim());
     }
 
+    // Trustpilot Setup Modal Logic
+    const trustpilotModal = document.getElementById('trustpilot-modal-overlay');
+    const trustpilotCloseBtn = document.getElementById('trustpilot-modal-close-btn');
+    const trustpilotCancelBtn = document.getElementById('trustpilot-modal-cancel-btn');
+    const trustpilotSyncBtn = document.getElementById('trustpilot-modal-sync-btn');
+    const trustpilotUrlInput = document.getElementById('trustpilot-modal-url');
+
+    function hideTrustpilotModal() {
+      if (trustpilotModal) trustpilotModal.style.display = 'none';
+    }
+
+    if (trustpilotCloseBtn) trustpilotCloseBtn.addEventListener('click', hideTrustpilotModal);
+    if (trustpilotCancelBtn) trustpilotCancelBtn.addEventListener('click', hideTrustpilotModal);
+    if (trustpilotSyncBtn) {
+      trustpilotSyncBtn.addEventListener('click', async () => {
+        const url = trustpilotUrlInput ? trustpilotUrlInput.value.trim() : '';
+        if (!url) {
+          alert('Please enter a Trustpilot URL');
+          return;
+        }
+        hideTrustpilotModal();
+        try {
+          const res = await fetch('/api/trustpilot-reviews-sync', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ url })
+          });
+          const data = await res.json();
+          if (data.success) {
+            // Use the same technique as Facebook: Fetch the scraped reviews and POST them to save to DB
+            const revRes = await fetch('/api/trustpilot-reviews');
+            const revData = await revRes.json();
+            
+            if (revData.success && revData.data) {
+              const chRes = await fetch('/api/connected-channels');
+              const chData = await chRes.json();
+              const ch = (chData.data || []).find(x => x.platform === 'trustpilot');
+              
+              if (ch && revData.data.length > 0) {
+                // Map the data to match the expected DB schema
+                const dbPayload = revData.data.map(r => ({
+                  review_id: r.review_id || r.id,
+                  rating: r.rating,
+                  heading: r.heading,
+                  author_name: r.author_name || r.author,
+                  comment: r.comment || r.text,
+                  received_at: r.received_at || r.createdTime
+                }));
+
+                await fetch('/api/trustpilot-reviews', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ channel_id: ch.id, messages: dbPayload })
+                });
+              }
+            }
+            
+            alert(`Successfully synced Trustpilot reviews.`);
+            // reload feed to show new reviews
+            location.reload();
+          } else {
+            alert('Failed to sync Trustpilot reviews: ' + (data.error || 'Unknown error'));
+          }
+        } catch (err) {
+          console.error(err);
+          alert('Error syncing Trustpilot reviews.');
+        }
+      });
+    }
+
     // Connect Gmail button (top right) — trigger Google OAuth flow
     if (gmailConnectBtn) {
       gmailConnectBtn.addEventListener('click', function () {
@@ -3126,9 +3205,10 @@ Collab Manager`
     Promise.all([
       fetch('/api/platform-messages').then(r => r.json()),
       fetch('/api/facebook-messages').then(r => r.json()),
-      fetch('/api/google-reviews').then(r => r.json())
+      fetch('/api/google-reviews').then(r => r.json()),
+      fetch('/api/trustpilot-reviews').then(r => r.json())
     ])
-    .then(([platformData, fbData, gbData]) => {
+    .then(([platformData, fbData, gbData, tpData]) => {
       let addedCount = 0;
       const existingIds = new Set(state.cases.map(c => c.gmailMessageId || c.fbPostId || c.id).filter(Boolean));
 
@@ -3218,7 +3298,7 @@ Collab Manager`
               authorName: gbMsg.author_name,
               channel: 'google_business',
               avatarGradient: AVATAR_GRADIENTS[Math.abs(hashCode(gbMsg.author_name || '')) % AVATAR_GRADIENTS.length],
-              text: (gbMsg.comment || '').substring(0, 120),
+              text: (gbMsg.rating ? `[${gbMsg.rating} Stars] ` : '') + (gbMsg.comment || '').substring(0, 120),
               createdTime: gbMsg.received_at || gbMsg.created_at,
               type: 'Review',
               status: gbMsg.status === 'open' ? 'Open' : 'Closed',
@@ -3235,6 +3315,46 @@ Collab Manager`
               }]
             });
             existingIds.add(gbMsg.review_id);
+            addedCount++;
+          }
+        });
+      }
+
+      // Process Trustpilot Reviews
+      // First, remove old trustpilot cases from state to ensure clean reload with correct ratings
+      state.cases = state.cases.filter(c => c.channel !== 'trustpilot');
+      // Re-calculate existingIds after filtering
+      const updatedExistingIds = new Set(state.cases.map(c => c.gmailMessageId || c.fbPostId || c.id).filter(Boolean));
+
+      if (tpData && tpData.success && tpData.data && tpData.data.length > 0) {
+        tpData.data.forEach(tpMsg => {
+          if (tpMsg.review_id && !updatedExistingIds.has(tpMsg.review_id)) {
+            state.cases.push({
+              id: tpMsg.review_id,
+              tpReviewId: tpMsg.review_id,
+              source: 'Trustpilot',
+              author: tpMsg.author_name,
+              authorName: tpMsg.author_name,
+              channel: 'trustpilot',
+              rating: tpMsg.rating,
+              avatarGradient: AVATAR_GRADIENTS[Math.abs(hashCode(tpMsg.author_name || '')) % AVATAR_GRADIENTS.length],
+              text: (tpMsg.rating ? `[${tpMsg.rating} Stars] ` : '') + (tpMsg.heading && tpMsg.heading !== "N/A" ? `${tpMsg.heading} - ` : '') + (tpMsg.comment || '').substring(0, 120),
+              createdTime: tpMsg.received_at || new Date().toISOString(),
+              type: 'Review',
+              status: tpMsg.status === 'open' ? 'Open' : 'Closed',
+              priority: 'High',
+              assignedTo: 'Unassigned',
+              emailSubject: (tpMsg.heading || 'Trustpilot Review') + ': ' + tpMsg.rating + ' Stars',
+              emailAttachments: [],
+              messages: [{
+                id: 'tp-db-' + tpMsg.id,
+                sender: tpMsg.author_name || 'Trustpilot User',
+                text: `Heading: ${tpMsg.heading}\nRating: ${tpMsg.rating} Stars\n\n${tpMsg.comment || ''}`,
+                timestamp: tpMsg.received_at || new Date().toISOString(),
+                isAgent: false
+              }]
+            });
+            existingIds.add(tpMsg.review_id);
             addedCount++;
           }
         });

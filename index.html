@@ -493,6 +493,7 @@
               <button class="source-filter-pill" data-filter="instagram">Instagram</button>
               <button class="source-filter-pill" data-filter="twitter">Twitter</button>
               <button class="source-filter-pill" data-filter="google_play">Google Play</button>
+              <button class="source-filter-pill" data-filter="trustpilot">Trustpilot</button>
               <button class="source-filter-pill" data-filter="gmail" id="filter-pill-gmail"
                 style="display: none;">Gmail</button>
             </div>
@@ -1349,6 +1350,17 @@
                   <div class="channel-card-name">Gmail</div>
                 </div>
 
+                <!-- Trustpilot -->
+                <div class="channel-card" id="channel-trustpilot">
+                  <div class="channel-card-logo" style="background-color: #00B67A; border-radius: 8px; display: flex; align-items: center; justify-content: center; width: 40px; height: 40px;">
+                    <svg viewBox="0 0 100 100" width="24" height="24">
+                      <polygon points="50,5 64,35 97,40 73,63 79,96 50,79 21,96 27,63 3,40 36,35" fill="#FFFFFF" />
+                    </svg>
+                  </div>
+                  <div class="channel-card-name">Trustpilot</div>
+                </div>
+
+
               </div>
             </div>
 
@@ -1903,6 +1915,30 @@
     </div>
   </div>
 
+  <!-- Trustpilot Setup Modal -->
+  <div id="trustpilot-modal-overlay" class="gmail-modal-overlay" style="display: none;">
+    <div class="gmail-modal-card">
+      <div class="gmail-modal-header">
+        <h2>Add Trustpilot Channel</h2>
+        <button class="gmail-modal-close" id="trustpilot-modal-close-btn">&times;</button>
+      </div>
+      <div class="gmail-modal-body">
+        <p class="gmail-modal-desc">
+          Enter the Trustpilot review URL you want to scrape.<br>
+          <small>e.g. https://www.trustpilot.com/review/impactguru.com</small>
+        </p>
+        <div class="gmail-modal-form-group">
+          <label for="trustpilot-modal-url">Trustpilot Review URL</label>
+          <input type="text" id="trustpilot-modal-url" placeholder="https://www.trustpilot.com/review/..." />
+        </div>
+      </div>
+      <div class="gmail-modal-footer">
+        <button class="gmail-btn-secondary" id="trustpilot-modal-cancel-btn">Cancel</button>
+        <button class="gmail-btn-primary" id="trustpilot-modal-sync-btn">Sync Reviews</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Help Button (floating) -->
   <button id="help-fab" class="help-fab" aria-label="Help">
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
@@ -1917,7 +1953,7 @@
   <script src="facebook.js?v=11"></script>
   <script src="google.js?v=11"></script>
   <script src="twitter.js?v=11"></script>
-  <script src="app.js?v=12"></script>
+  <script src="app.js?v=13"></script>
 </body>
 
 </html>

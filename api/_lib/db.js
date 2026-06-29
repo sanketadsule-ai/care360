@@ -104,6 +104,21 @@ async function ensureTables() {
       is_read           BOOLEAN DEFAULT FALSE,
       created_at        TIMESTAMP DEFAULT NOW()
     );
+
+    CREATE TABLE IF NOT EXISTS trustpilot_reviews (
+      id                SERIAL PRIMARY KEY,
+      channel_id        INTEGER REFERENCES connected_channels(id),
+      review_id         VARCHAR(255) UNIQUE,
+      rating            INTEGER,
+      heading           VARCHAR(1000),
+      author_name       VARCHAR(255),
+      author_avatar     VARCHAR(512),
+      comment           TEXT,
+      received_at       TIMESTAMP,
+      status            VARCHAR(50) DEFAULT 'open',
+      is_read           BOOLEAN DEFAULT FALSE,
+      created_at        TIMESTAMP DEFAULT NOW()
+    );
   `);
 
   // 3. User Migrations (bundled)

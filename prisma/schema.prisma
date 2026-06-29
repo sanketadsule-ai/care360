@@ -68,3 +68,14 @@ model settings {
 
   @@unique([user_id, key])
 }
+
+model trustpilot_reviews {
+  id          String   @id @default(uuid()) @db.VarChar(36)
+  review_id   String   @unique @db.VarChar(255)
+  author_name String   @db.VarChar(255)
+  rating      String   @db.VarChar(10)
+  heading     String   @db.Text
+  body        String   @db.Text
+  date        String   @db.VarChar(255)
+  created_at  DateTime @default(now())
+}

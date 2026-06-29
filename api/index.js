@@ -17,6 +17,8 @@ const twitterSync = require('./_lib/twitter-sync');
 const twitterToken = require('./_lib/twitter-token');
 const userProfile = require('./_lib/user-profile');
 const testGbp = require('./_lib/test-gbp');
+const trustpilotReviews = require('./_lib/trustpilot-reviews');
+const trustpilotReviewsSync = require('./_lib/trustpilot-reviews-sync');
 
 module.exports = async function handler(req, res) {
   // Extract path without query parameters
@@ -58,6 +60,10 @@ module.exports = async function handler(req, res) {
         return await twitterToken(req, res);
       case '/api/user-profile':
         return await userProfile(req, res);
+      case '/api/trustpilot-reviews':
+        return await trustpilotReviews(req, res);
+      case '/api/trustpilot-reviews-sync':
+        return await trustpilotReviewsSync(req, res);
       default:
         // Handle unknown routes
         res.setHeader('Access-Control-Allow-Origin', '*');
