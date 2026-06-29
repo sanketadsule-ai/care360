@@ -17,6 +17,42 @@
 
 <body>
 
+  <!-- Google Login Overlay -->
+  <div id="login-overlay" style="display: none; position: fixed; inset: 0; background: #f3f4f6; z-index: 9999; display: flex; align-items: center; justify-content: center; flex-direction: column;">
+    <div style="background: white; padding: 40px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); text-align: center; max-width: 400px; width: 100%;">
+      <h2 style="font-size: 24px; font-weight: 700; color: #111827; margin-bottom: 8px;">Welcome to Carepal360</h2>
+      <p style="color: #6B7280; margin-bottom: 24px;">Please sign in with your Google account to continue.</p>
+      
+      <!-- Container for the Google Sign-In button -->
+      <div id="g_id_onload"
+         data-client_id="845218765270-13fclj826ou85t4u1p09ovg79f75sh1q.apps.googleusercontent.com"
+         data-context="signin"
+         data-ux_mode="popup"
+         data-callback="handleGoogleLogin"
+         data-auto_prompt="false">
+      </div>
+      <div class="g_id_signin"
+         data-type="standard"
+         data-shape="rectangular"
+         data-theme="outline"
+         data-text="signin_with"
+         data-size="large"
+         data-logo_alignment="left">
+      </div>
+
+      <div id="login-error-msg" style="display: none; color: #DC2626; margin-top: 16px; font-size: 14px;"></div>
+    </div>
+  </div>
+
+  <!-- Pending Approval Overlay -->
+  <div id="pending-approval-msg" style="display: none; position: fixed; inset: 0; background: #f3f4f6; z-index: 9998; display: flex; align-items: center; justify-content: center; flex-direction: column;">
+    <div style="background: white; padding: 40px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); text-align: center; max-width: 400px; width: 100%;">
+      <h2 style="font-size: 24px; font-weight: 700; color: #111827; margin-bottom: 8px;">Approval Pending</h2>
+      <p style="color: #6B7280; margin-bottom: 24px;">Your account has been created and is waiting for an administrator to approve it. Please check back later.</p>
+      <button id="btn-pending-logout" style="padding: 10px 20px; background: #2D7FF9; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer;">Sign Out</button>
+    </div>
+  </div>
+
 
   <div class="app-layout">
 
@@ -1707,7 +1743,7 @@
   <script src="facebook.js?v=11"></script>
   <script src="google.js?v=11"></script>
   <script src="twitter.js?v=11"></script>
-  <script src="app.js?v=18"></script>
+  <script src="app.js?v=19"></script>
 </body>
 
 </html>

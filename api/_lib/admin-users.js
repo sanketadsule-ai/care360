@@ -32,15 +32,16 @@ module.exports = async function handler(req, res) {
 
     if (req.method === 'POST') {
       const { userId, action } = req.body;
-      if (!userId || !['approve', 'reject'].includes(action)) {
+      if (!userId || !['approve', 'reject', 'remove'].includes(action)) {
         return res.status(400).json({ error: 'Invalid userId or action' });
       }
 
       if (action === 'approve') {
         await pool.query('UPDATE users SET status = $1 WHERE id = $2', ['approved', userId]);
       } else if (action === 'reject') {
-        // We can either set status to rejected or just delete them. We will set status to rejected.
         await pool.query('UPDATE users SET status = $1 WHERE id = $2', ['rejected', userId]);
+      } else if (action === 'remove') {
+        await pool.query('DELETE FROM users WHERE id = $1', [userId]);
       }
 
       return res.status(200).json({ success: true, message: `User ${action}d successfully` });

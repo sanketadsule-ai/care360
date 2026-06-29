@@ -13,8 +13,8 @@
   'use strict';
 
   // ── Auth & Fetch Interceptor ────────────────────────
-  let authToken = 'dev-token'; // Bypassed auth for testing
-  let authUser = { id: 1, role: 'admin', status: 'approved', name: 'Admin Dev', email: 'admin@care360.com' }; // Bypassed auth
+  let authToken = localStorage.getItem('auth_token') || null;
+  let authUser = JSON.parse(localStorage.getItem('auth_user') || 'null');
 
 
   const originalFetch = window.fetch;
@@ -62,6 +62,140 @@
     if (profDetStatus) profDetStatus.textContent = authUser.status || 'pending';
   }
 
+  window.handleGoogleLogin = async function (response) {
+    if (response && response.credential) {
+      try {
+        const res = await fetch('/api/auth', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ credential: response.credential })
+        });
+        
+        const data = await res.json();
+        const errorMsg = document.getElementById('login-error-msg');
+        
+        if (!res.ok && res.status !== 403) {
+          if (errorMsg) {
+            errorMsg.textContent = data.error || 'Login failed';
+            errorMsg.style.display = 'block';
+          }
+          return;
+        }
+
+        if (res.status === 403) {
+          // Pending approval
+          authUser = data.user;
+          localStorage.setItem('auth_user', JSON.stringify(authUser));
+          checkAuthState();
+          return;
+        }
+
+        // Success
+        authToken = data.token;
+        authUser = data.user;
+        localStorage.setItem('auth_token', authToken);
+        localStorage.setItem('auth_user', JSON.stringify(authUser));
+        
+        if (errorMsg) errorMsg.style.display = 'none';
+        checkAuthState();
+
+      } catch (err) {
+        console.error('Google login error', err);
+        const errorMsg = document.getElementById('login-error-msg');
+        if (errorMsg) {
+          errorMsg.textContent = 'Network error during login';
+          errorMsg.style.display = 'block';
+        }
+      }
+    }
+  };
+
+  async function loadAdminUsers() {
+    const listBody = document.getElementById('admin-users-list');
+    const pendingBadge = document.getElementById('pending-count-badge');
+    if (!listBody) return;
+    
+    try {
+      const res = await fetch('/api/admin-users', {
+        headers: { 'Authorization': 'Bearer ' + authToken }
+      });
+      const data = await res.json();
+      if (res.ok && data.users) {
+        listBody.innerHTML = '';
+        let pendingCount = 0;
+        
+        if (data.users.length === 0) {
+          listBody.innerHTML = '<tr><td colspan="4" style="padding: 24px; text-align: center; color: #6B7280; font-size: 14px;">No other users found.</td></tr>';
+        }
+        
+        data.users.forEach(u => {
+          if (u.status === 'pending') pendingCount++;
+          
+          let statusHtml = '';
+          if (u.status === 'approved') statusHtml = '<span style="background: #D1FAE5; color: #065F46; padding: 3px 10px; border-radius: 12px; font-size: 12px; font-weight: 600;">Approved</span>';
+          else if (u.status === 'rejected') statusHtml = '<span style="background: #FEE2E2; color: #B91C1C; padding: 3px 10px; border-radius: 12px; font-size: 12px; font-weight: 600;">Rejected</span>';
+          else statusHtml = '<span style="background: #FEF3C7; color: #B45309; padding: 3px 10px; border-radius: 12px; font-size: 12px; font-weight: 600;">Pending</span>';
+          
+          let actionsHtml = '';
+          if (u.status === 'pending' || u.status === 'rejected') {
+            actionsHtml += \`<button class="admin-action-btn btn-approve" data-id="\${u.id}" style="background: #10B981; color: white; border: none; padding: 4px 10px; border-radius: 4px; font-size: 12px; cursor: pointer; margin-right: 8px;">Approve</button>\`;
+          }
+          if (u.status === 'pending' || u.status === 'approved') {
+            actionsHtml += \`<button class="admin-action-btn btn-reject" data-id="\${u.id}" style="background: #F59E0B; color: white; border: none; padding: 4px 10px; border-radius: 4px; font-size: 12px; cursor: pointer; margin-right: 8px;">Reject</button>\`;
+          }
+          actionsHtml += \`<button class="admin-action-btn btn-remove" data-id="\${u.id}" style="background: #EF4444; color: white; border: none; padding: 4px 10px; border-radius: 4px; font-size: 12px; cursor: pointer;">Remove</button>\`;
+
+          listBody.innerHTML += \`
+            <tr style="border-bottom: 1px solid #E5E7EB;">
+              <td style="padding: 12px 16px; display: flex; align-items: center; gap: 12px;">
+                <div style="width: 32px; height: 32px; border-radius: 50%; background: #E5E7EB; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; color: #4B5563;">\${u.initials || 'U'}</div>
+                <div style="font-size: 14px; font-weight: 500; color: #111827;">\${u.name}</div>
+              </td>
+              <td style="padding: 12px 16px; font-size: 14px; color: #6B7280;">\${u.email}</td>
+              <td style="padding: 12px 16px;">\${statusHtml}</td>
+              <td style="padding: 12px 16px;">\${actionsHtml}</td>
+            </tr>
+          \`;
+        });
+        
+        if (pendingBadge) pendingBadge.textContent = pendingCount + ' pending';
+        
+        // Attach event listeners
+        listBody.querySelectorAll('.admin-action-btn').forEach(btn => {
+          btn.addEventListener('click', async (e) => {
+            const userId = e.target.getAttribute('data-id');
+            let action = '';
+            if (e.target.classList.contains('btn-approve')) action = 'approve';
+            else if (e.target.classList.contains('btn-reject')) action = 'reject';
+            else if (e.target.classList.contains('btn-remove')) action = 'remove';
+            
+            if (action === 'remove' && !confirm('Are you sure you want to permanently remove this user?')) return;
+            
+            try {
+              const res = await fetch('/api/admin-users', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + authToken },
+                body: JSON.stringify({ userId, action })
+              });
+              if (res.ok) {
+                loadAdminUsers();
+              } else {
+                alert('Action failed');
+              }
+            } catch (err) {
+              console.error(err);
+              alert('Network error');
+            }
+          });
+        });
+
+      }
+    } catch (err) {
+      console.error('Failed to load users', err);
+      listBody.innerHTML = '<tr><td colspan="4">Error loading users</td></tr>';
+    }
+  }
+
   function checkAuthState() {
     const overlay = document.getElementById('login-overlay');
     const pendingMsg = document.getElementById('pending-approval-msg');
@@ -99,6 +233,14 @@
 
   // Logout handler
   document.addEventListener('click', (e) => {
+    if (e.target && e.target.id === 'btn-pending-logout') {
+      localStorage.removeItem('auth_token');
+      localStorage.removeItem('auth_user');
+      authToken = null;
+      authUser = null;
+      checkAuthState();
+    }
+
     if (e.target && e.target.id === 'btn-logout') {
       localStorage.removeItem('auth_token');
       localStorage.removeItem('auth_user');
