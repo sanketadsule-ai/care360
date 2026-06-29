@@ -17,7 +17,7 @@
   let authUser = JSON.parse(localStorage.getItem('auth_user') || 'null');
 
 
-  const originalFetch = window.fetch;
+  const originalFetch = window.fetch.bind(window);
   window.fetch = async function (resource, config) {
     if (typeof resource === 'string' && resource.startsWith('/api/') && authToken) {
       config = config || {};
@@ -210,8 +210,8 @@
       if (sidebarUsersTab) sidebarUsersTab.style.display = 'none';
       if (adminPanel) adminPanel.style.display = 'none';
     } else if (authUser.status === 'pending') {
-      overlay.style.display = 'flex';
-      if (pendingMsg) pendingMsg.style.display = 'block';
+      overlay.style.display = 'none';
+      if (pendingMsg) pendingMsg.style.display = 'flex';
       if (sidebarUsersTab) sidebarUsersTab.style.display = 'none';
       if (adminPanel) adminPanel.style.display = 'none';
     } else {
