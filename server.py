@@ -65,6 +65,62 @@ MOCK_CONNECTED_CHANNELS = []
 MOCK_GOOGLE_REVIEWS = []
 MOCK_TRUSTPILOT_REVIEWS = []
 
+MOCK_FACEBOOK_MESSAGES = [
+    {
+        'id': 'fb_1',
+        'review_id': 'fb_1',
+        'rating': 5,
+        'author_name': 'John Doe',
+        'comment': 'Great product, loving the new features!',
+        'received_at': '2026-06-25T10:00:00Z',
+        'platform': 'facebook',
+        'status': 'open'
+    },
+    {
+        'id': 'fb_2',
+        'review_id': 'fb_2',
+        'rating': 4,
+        'author_name': 'Jane Smith',
+        'comment': 'Very helpful customer service on Facebook.',
+        'received_at': '2026-06-26T12:30:00Z',
+        'platform': 'facebook',
+        'status': 'closed'
+    },
+    {
+        'id': 'fb_3',
+        'review_id': 'fb_3',
+        'rating': 3,
+        'author_name': 'Mark Johnson',
+        'comment': 'Average experience, could be better.',
+        'received_at': '2026-06-28T09:15:00Z',
+        'platform': 'facebook',
+        'status': 'open'
+    }
+]
+
+MOCK_PLATFORM_MESSAGES = [
+    {
+        'id': 'gm_1',
+        'review_id': 'gm_1',
+        'rating': 5,
+        'author_name': 'Alice Brown',
+        'comment': 'Email inquiry about enterprise plans.',
+        'received_at': '2026-06-27T14:20:00Z',
+        'platform': 'gmail',
+        'status': 'open'
+    },
+    {
+        'id': 'gm_2',
+        'review_id': 'gm_2',
+        'rating': 2,
+        'author_name': 'Bob White',
+        'comment': 'I need a refund for my recent purchase.',
+        'received_at': '2026-06-29T08:05:00Z',
+        'platform': 'gmail',
+        'status': 'open'
+    }
+]
+
 # Try to load existing trustpilot reviews from CSV
 try:
     tp_csv = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'trustpilot_scraper', 'trustpilot_reviews.csv')
@@ -122,11 +178,16 @@ class Care360RequestHandler(http.server.SimpleHTTPRequestHandler):
             self.handle_user_profile()
         elif path == '/api/admin-users':
             self.handle_get_admin_users()
-        elif path in ['/api/facebook-messages', '/api/platform-messages']:
+        elif path == '/api/facebook-messages':
             self.send_response(200)
             self.send_header('Content-Type', 'application/json')
             self.end_headers()
-            self.wfile.write(json.dumps({'success': True, 'data': []}).encode('utf-8'))
+            self.wfile.write(json.dumps({'success': True, 'data': MOCK_FACEBOOK_MESSAGES}).encode('utf-8'))
+        elif path == '/api/platform-messages':
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps({'success': True, 'data': MOCK_PLATFORM_MESSAGES}).encode('utf-8'))
         elif path == '/api/trustpilot-reviews':
             self.send_response(200)
             self.send_header('Content-Type', 'application/json')

@@ -3688,4 +3688,197 @@ Collab Manager`
       }
     };
 
-  })();
+  // ══════════════════════════════════════════════════════
+  // CENTRAL DASHBOARD / STATS LOGIC
+  // ══════════════════════════════════════════════════════
+  
+  const statsSidebarItem = document.querySelector('.sidebar-item[data-page="stats"]');
+  const statsFilterChannel = document.getElementById('stats-filter-channel');
+  const statsFilterDate = document.getElementById('stats-filter-date');
+
+  window.renderStatsDashboard = async function() {
+    if (!document.getElementById('page-stats').classList.contains('active')) return;
+
+    const channelFilter = statsFilterChannel ? statsFilterChannel.value : 'all';
+    const dateFilter = statsFilterDate ? statsFilterDate.value : 'all';
+
+    let allCases = [];
+    try {
+      const t = Date.now();
+      const [platformData, fbData, gbData, tpData] = await Promise.all([
+        fetch(`/api/platform-messages?t=${t}`).then(r => r.json()).catch(() => ({})),
+        fetch(`/api/facebook-messages?t=${t}`).then(r => r.json()).catch(() => ({})),
+        fetch(`/api/google-reviews?t=${t}`).then(r => r.json()).catch(() => ({})),
+        fetch(`/api/trustpilot-reviews?t=${t}`).then(r => r.json()).catch(() => ({}))
+      ]);
+
+      if (platformData && platformData.success && platformData.data) {
+        platformData.data.forEach(dbMsg => {
+          allCases.push({
+            id: dbMsg.id || dbMsg.review_id || Math.random().toString(),
+            channel: dbMsg.platform || 'gmail',
+            createdTime: dbMsg.received_at || dbMsg.created_at || new Date().toISOString(),
+            status: dbMsg.status === 'open' ? 'Open' : 'Closed'
+          });
+        });
+      }
+      if (fbData && fbData.success && fbData.data) {
+        fbData.data.forEach(fbMsg => {
+          allCases.push({
+            id: fbMsg.id || fbMsg.review_id || Math.random().toString(),
+            channel: fbMsg.platform || 'facebook',
+            createdTime: fbMsg.received_at || fbMsg.created_at || new Date().toISOString(),
+            status: fbMsg.status === 'open' ? 'Open' : 'Closed'
+          });
+        });
+      }
+      if (gbData && gbData.success && gbData.data) {
+        gbData.data.forEach(gbMsg => {
+          allCases.push({
+            id: gbMsg.id || gbMsg.review_id || Math.random().toString(),
+            channel: 'google_business',
+            createdTime: gbMsg.received_at || gbMsg.created_at || new Date().toISOString(),
+            status: gbMsg.status === 'open' ? 'Open' : 'Closed'
+          });
+        });
+      }
+      if (tpData && tpData.success && tpData.data) {
+        tpData.data.forEach(tpMsg => {
+          allCases.push({
+            id: tpMsg.id || tpMsg.review_id || Math.random().toString(),
+            channel: 'trustpilot',
+            createdTime: tpMsg.received_at || tpMsg.created_at || new Date().toISOString(),
+            status: tpMsg.status === 'open' ? 'Open' : 'Closed'
+          });
+        });
+      }
+    } catch (err) {
+      console.error('Failed to fetch dashboard stats from DB:', err);
+    }
+
+    console.log("Dashboard API Fetch Complete. Total raw cases retrieved from DB:", allCases.length);
+    console.log("Fallback state.cases length was:", state.cases ? state.cases.length : 0);
+
+    // MERGE DB cases with state.cases so we do not lose Gmail/Facebook data that only exists in local state
+    const mergedMap = new Map();
+    
+    // First add all state.cases (live inbox data)
+    if (state.cases && state.cases.length > 0) {
+      state.cases.forEach(c => {
+        const key = c.id || Math.random().toString();
+        mergedMap.set(key, c);
+      });
+    }
+
+    // Then add all DB cases (other channels like Trustpilot)
+    allCases.forEach(c => {
+      const key = c.id || Math.random().toString();
+      mergedMap.set(key, c);
+    });
+
+    let filteredCases = Array.from(mergedMap.values());
+
+    // Filter by Channel
+    if (channelFilter !== 'all') {
+      filteredCases = filteredCases.filter(c => c.channel && c.channel.toLowerCase() === channelFilter.toLowerCase());
+    }
+
+    // Filter by Date
+    const now = new Date();
+    if (dateFilter !== 'all') {
+      filteredCases = filteredCases.filter(c => {
+        if (!c.createdTime) return false;
+        const caseDate = new Date(c.createdTime);
+        if (isNaN(caseDate)) return true; // Keep if invalid date to be safe
+
+        const diffTime = Math.abs(now - caseDate);
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+
+        if (dateFilter === 'today') return diffDays <= 1;
+        if (dateFilter === '7days') return diffDays <= 7;
+        if (dateFilter === '30days') return diffDays <= 30;
+        return true;
+      });
+    }
+
+    // Calculate Metrics
+    const totalCases = filteredCases.length;
+    let pendingCases = 0;
+    let resolvedCases = 0;
+    const channelCounts = {};
+
+    filteredCases.forEach(c => {
+      if (c.status === 'Open' || c.status === 'Pending') pendingCases++;
+      if (c.status === 'Resolved' || c.status === 'Closed') resolvedCases++;
+
+      const ch = c.channel ? c.channel.toLowerCase() : 'unknown';
+      channelCounts[ch] = (channelCounts[ch] || 0) + 1;
+    });
+
+    // Update DOM Metrics
+    const elTotal = document.getElementById('stats-val-total');
+    const elOpen = document.getElementById('stats-val-open');
+    const elResolved = document.getElementById('stats-val-resolved');
+    const elChannels = document.getElementById('stats-val-channels');
+
+    if (elTotal) elTotal.textContent = totalCases;
+    if (elOpen) elOpen.textContent = pendingCases;
+    if (elResolved) elResolved.textContent = resolvedCases;
+    if (elChannels) elChannels.textContent = Object.keys(channelCounts).length;
+
+    // Render Channel Breakdown Bars
+    const distContainer = document.getElementById('stats-distribution-container');
+    if (distContainer) {
+      distContainer.innerHTML = '';
+      if (totalCases === 0) {
+        distContainer.innerHTML = '<div style="color:var(--gray-500); font-size:14px;">No data available for the selected filters.</div>';
+      } else {
+        const sortedChannels = Object.entries(channelCounts).sort((a, b) => b[1] - a[1]);
+        
+        sortedChannels.forEach(([chName, count]) => {
+          const percent = Math.round((count / totalCases) * 100);
+          
+          let displayLabel = chName;
+          if (chName === 'facebook') displayLabel = 'Facebook';
+          if (chName === 'instagram') displayLabel = 'Instagram';
+          if (chName === 'twitter') displayLabel = 'Twitter';
+          if (chName === 'google_business') displayLabel = 'Google Business';
+          if (chName === 'google_play') displayLabel = 'Google Play';
+          if (chName === 'trustpilot') displayLabel = 'Trustpilot';
+          if (chName === 'gmail') displayLabel = 'Gmail';
+          
+          const wrapper = document.createElement('div');
+          wrapper.className = 'stats-bar-wrapper';
+          wrapper.innerHTML = `
+            <div class="stats-bar-header">
+              <div class="stats-bar-label">
+                ${displayLabel}
+              </div>
+              <div class="stats-bar-count">${count} (${percent}%)</div>
+            </div>
+            <div class="stats-bar-track">
+              <div class="stats-bar-fill" style="width: 0%"></div>
+            </div>
+          `;
+          distContainer.appendChild(wrapper);
+
+          // Animate the bar fill
+          setTimeout(() => {
+            const fill = wrapper.querySelector('.stats-bar-fill');
+            if (fill) fill.style.width = percent + '%';
+          }, 50);
+        });
+      }
+    }
+  };
+
+  if (statsSidebarItem) {
+    statsSidebarItem.addEventListener('click', () => {
+      setTimeout(window.renderStatsDashboard, 10);
+    });
+  }
+
+  if (statsFilterChannel) statsFilterChannel.addEventListener('change', window.renderStatsDashboard);
+  if (statsFilterDate) statsFilterDate.addEventListener('change', window.renderStatsDashboard);
+
+})();
