@@ -1531,6 +1531,33 @@
              showGmailToast('No active connected Google Business account found.', 'error');
              return;
           }
+        } else if (c.channel === 'facebook' || c.channel === 'instagram') {
+          const fbAccount = state.connectedAccounts.find(x => x.name === c.source && (x.platform === 'facebook' || x.platform === 'instagram'));
+          if (fbAccount && fbAccount.accessToken) {
+            sendBtn.disabled = true;
+            sendBtn.textContent = 'Sending…';
+            if (window.CarapalFB && typeof window.CarapalFB.replyToCase === 'function') {
+              const res = await window.CarapalFB.replyToCase(c.id, replyVal, fbAccount.accessToken, c.type);
+              if (res && res.error) {
+                showGmailToast('Failed to reply: ' + res.error, 'error');
+                sendBtn.disabled = false;
+                sendBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="12" height="12"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Send`;
+                return;
+              } else {
+                showGmailToast('Reply posted successfully!', 'success');
+              }
+            } else {
+              showGmailToast('Facebook SDK not loaded.', 'error');
+              sendBtn.disabled = false;
+              sendBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="12" height="12"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Send`;
+              return;
+            }
+            sendBtn.disabled = false;
+            sendBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="12" height="12"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Send`;
+          } else {
+            showGmailToast('No active connected account found for this page.', 'error');
+            return;
+          }
         }
 
         // Append reply message
