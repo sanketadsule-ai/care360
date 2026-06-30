@@ -1,6 +1,7 @@
 // Central Router for Care360 API
 // This file acts as the single Serverless Function for Vercel Hobby limits.
 
+const { closePool } = require('./_lib/db');
 const adminUsers = require('./_lib/admin-users');
 const auth = require('./_lib/auth');
 const config = require('./_lib/config');
@@ -80,5 +81,9 @@ module.exports = async function handler(req, res) {
     }
   } catch (err) {
     return res.status(500).json({ error: 'Global Catch Error', message: err.message, stack: err.stack });
+  } finally {
+    // Release the DB connection so a frozen serverless instance leaves nothing
+    // open. Runs after the handler has already sent its response.
+    await closePool();
   }
 };

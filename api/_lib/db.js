@@ -42,6 +42,24 @@ function getPool() {
   return pool;
 }
 
+// Close the pool at the end of a request. In serverless, an instance freezes
+// between requests, so an idle connection would otherwise stay open on the DB
+// (the idle timer can't fire while frozen). Closing here guarantees a frozen
+// instance leaves no open connection, preventing slot exhaustion. The next
+// request lazily creates a fresh pool. Schema-init memoization is preserved so
+// we don't re-run migrations on the new pool.
+async function closePool() {
+  if (pool) {
+    const p = pool;
+    pool = null;
+    try {
+      await p.end();
+    } catch (err) {
+      console.error('Error closing pool:', err.message);
+    }
+  }
+}
+
 // Memoize schema initialization so it runs at most once per warm serverless
 // instance instead of on every request. Concurrent callers share the same
 // in-flight promise; a failure clears it so the next request can retry.
@@ -234,4 +252,4 @@ async function ensureAdmin(p) {
   }
 }
 
-module.exports = { getPool, ensureTables, ensureAdmin, hashPassword };
+module.exports = { getPool, ensureTables, ensureAdmin, hashPassword, closePool };
