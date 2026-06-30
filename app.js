@@ -182,21 +182,43 @@
     }
   }
 
+  // Pull public runtime config (Google Client ID) from the backend env var
+  // and merge it into CARAPAL_CONFIG so all Google flows use it. Fetched once.
+  let remoteConfigPromise = null;
+  function loadRemoteConfig() {
+    if (!remoteConfigPromise) {
+      remoteConfigPromise = fetch('/api/config')
+        .then(r => r.ok ? r.json() : null)
+        .then(cfg => {
+          if (cfg && cfg.GOOGLE_CLIENT_ID) {
+            window.CARAPAL_CONFIG = window.CARAPAL_CONFIG || {};
+            window.CARAPAL_CONFIG.GOOGLE_CLIENT_ID = cfg.GOOGLE_CLIENT_ID;
+          }
+        })
+        .catch(() => { /* fall back to static config.js value */ });
+    }
+    return remoteConfigPromise;
+  }
+
   let googleInited = false;
   function initGoogleSignIn() {
-    const cfg = window.CARAPAL_CONFIG || {};
-    const clientId = cfg.GOOGLE_CLIENT_ID;
     const container = document.getElementById('google-signin-btn');
-    if (!container || !clientId) return;
-    if (typeof google === 'undefined' || !google.accounts || !google.accounts.id) {
-      // GIS script not ready yet — retry shortly.
-      setTimeout(initGoogleSignIn, 400);
-      return;
-    }
-    if (googleInited) return;
-    googleInited = true;
-    google.accounts.id.initialize({ client_id: clientId, callback: handleGoogleCredential });
-    google.accounts.id.renderButton(container, { theme: 'outline', size: 'large', width: 316, text: 'continue_with' });
+    if (!container) return;
+    // Make sure the env-sourced client ID has loaded, then init.
+    loadRemoteConfig().then(() => {
+      const cfg = window.CARAPAL_CONFIG || {};
+      const clientId = cfg.GOOGLE_CLIENT_ID;
+      if (!clientId) return; // no client id configured
+      if (typeof google === 'undefined' || !google.accounts || !google.accounts.id) {
+        // GIS script not ready yet — retry shortly.
+        setTimeout(initGoogleSignIn, 400);
+        return;
+      }
+      if (googleInited) return;
+      googleInited = true;
+      google.accounts.id.initialize({ client_id: clientId, callback: handleGoogleCredential });
+      google.accounts.id.renderButton(container, { theme: 'outline', size: 'large', width: 316, text: 'continue_with' });
+    });
   }
 
   function showAuthScreen() {

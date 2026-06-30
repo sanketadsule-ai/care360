@@ -3,6 +3,7 @@
 
 const adminUsers = require('./_lib/admin-users');
 const auth = require('./_lib/auth');
+const config = require('./_lib/config');
 const connectedChannels = require('./_lib/connected-channels');
 const facebookMessages = require('./_lib/facebook-messages');
 const facebookSync = require('./_lib/facebook-sync');
@@ -32,6 +33,8 @@ module.exports = async function handler(req, res) {
         return await adminUsers(req, res);
       case '/api/auth':
         return await auth(req, res);
+      case '/api/config':
+        return await config(req, res);
       case '/api/connected-channels':
         return await connectedChannels(req, res);
       case '/api/facebook-messages':
