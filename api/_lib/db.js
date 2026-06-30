@@ -26,8 +26,12 @@ function getPool() {
     pool = new Pool({
       connectionString: connString,
       ssl: { rejectUnauthorized: false },
-      max: 5,
-      idleTimeoutMillis: 30000,
+      // Serverless functions handle one request at a time, so a single
+      // connection per warm instance is enough. Keeping this at 1 (and idling
+      // out quickly) prevents exhausting the database's connection slots when
+      // many Vercel instances are warm at once.
+      max: 1,
+      idleTimeoutMillis: 5000,
       connectionTimeoutMillis: 10000
     });
 
@@ -38,8 +42,21 @@ function getPool() {
   return pool;
 }
 
-// Initialize tables if they don't exist
+// Memoize schema initialization so it runs at most once per warm serverless
+// instance instead of on every request. Concurrent callers share the same
+// in-flight promise; a failure clears it so the next request can retry.
+let ensureTablesPromise = null;
 async function ensureTables() {
+  if (!ensureTablesPromise) {
+    ensureTablesPromise = _ensureTables().catch((err) => {
+      ensureTablesPromise = null; // allow retry on next request
+      throw err;
+    });
+  }
+  return ensureTablesPromise;
+}
+
+async function _ensureTables() {
   const p = getPool();
 
   // Run independent table creations in parallel where possible, or bundle them
