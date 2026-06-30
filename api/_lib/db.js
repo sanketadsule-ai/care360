@@ -32,7 +32,10 @@ function getPool() {
       // many Vercel instances are warm at once.
       max: 1,
       idleTimeoutMillis: 5000,
-      connectionTimeoutMillis: 10000
+      // Fail fast (well under the function's maxDuration) so a saturated DB
+      // surfaces a clean JSON error instead of a platform-level
+      // FUNCTION_INVOCATION_TIMEOUT.
+      connectionTimeoutMillis: 5000
     });
 
     pool.on('error', (err, client) => {
@@ -53,7 +56,11 @@ async function closePool() {
     const p = pool;
     pool = null;
     try {
-      await p.end();
+      // Don't let a hung connection drain block the invocation from finishing.
+      await Promise.race([
+        p.end(),
+        new Promise((resolve) => setTimeout(resolve, 2000))
+      ]);
     } catch (err) {
       console.error('Error closing pool:', err.message);
     }
