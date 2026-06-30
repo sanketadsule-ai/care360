@@ -21,6 +21,7 @@ const userProfile = require('./_lib/user-profile');
 const testGbp = require('./_lib/test-gbp');
 const trustpilotReviews = require('./_lib/trustpilot-reviews');
 const trustpilotReviewsSync = require('./_lib/trustpilot-reviews-sync');
+const updateCase = require('./_lib/update-case');
 
 module.exports = async function handler(req, res) {
   // Extract path without query parameters
@@ -68,6 +69,8 @@ module.exports = async function handler(req, res) {
         return await trustpilotReviews(req, res);
       case '/api/trustpilot-reviews-sync':
         return await trustpilotReviewsSync(req, res);
+      case '/api/update-case':
+        return await updateCase(req, res);
       default:
         // Handle unknown routes
         res.setHeader('Access-Control-Allow-Origin', '*');

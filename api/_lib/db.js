@@ -209,6 +209,18 @@ async function _ensureTables() {
     console.error('Migration error for trustpilot_reviews table:', err.message);
   }
 
+  // 3c. Add comments columns to all message tables to support audit logs and replies
+  try {
+    await p.query(`
+      ALTER TABLE trustpilot_reviews ADD COLUMN IF NOT EXISTS comments JSONB DEFAULT '[]'::jsonb;
+      ALTER TABLE google_reviews ADD COLUMN IF NOT EXISTS comments JSONB DEFAULT '[]'::jsonb;
+      ALTER TABLE facebook_messages ADD COLUMN IF NOT EXISTS comments JSONB DEFAULT '[]'::jsonb;
+      ALTER TABLE email_messages ADD COLUMN IF NOT EXISTS comments JSONB DEFAULT '[]'::jsonb;
+    `);
+  } catch (err) {
+    console.error('Migration error for comments columns:', err.message);
+  }
+
   // 4. Notifications (depends on users)
   try {
     await p.query(`
