@@ -135,6 +135,23 @@ async function buildGooglePlayThreads(pool) {
   }));
 }
 
+async function buildTrustpilotThreads(pool) {
+  const res = await pool.query(
+    `SELECT review_id, rating, heading, author_name, comment, received_at
+     FROM trustpilot_reviews
+     WHERE comment IS NOT NULL AND btrim(comment) <> ''
+     ORDER BY received_at DESC NULLS LAST`);
+  return res.rows.map(r => ({
+    id: 'tp_' + r.review_id,
+    platform: 'trustpilot',
+    type: (r.rating ? r.rating + '★ ' : '') + 'Review',
+    author: cleanName(r.author_name, 'Trustpilot User'),
+    text: (r.heading && r.heading !== 'N/A' ? r.heading + ' — ' : '') + (r.comment || ''),
+    createdTime: r.received_at,
+    comments: []
+  }));
+}
+
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
@@ -144,13 +161,14 @@ module.exports = async function handler(req, res) {
 
   const pool = getPool();
   const threads = [];
-  const counts = { facebook: 0, instagram: 0, twitter: 0, google_play: 0 };
+  const counts = { facebook: 0, instagram: 0, twitter: 0, google_play: 0, trustpilot: 0 };
 
   // Each platform is isolated so a missing/empty table never breaks the whole feed.
   for (const [key, builder] of [
     ['facebook', buildFacebookThreads],
     ['instagram', buildInstagramThreads],
-    ['google_play', buildGooglePlayThreads]
+    ['google_play', buildGooglePlayThreads],
+    ['trustpilot', buildTrustpilotThreads]
   ]) {
     try {
       const t = await builder(pool);

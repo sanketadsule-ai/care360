@@ -1793,7 +1793,8 @@
     // posts + comments that n8n has stored, and renders them as inbox cases.
     function platformLabel(p) {
       return { facebook: 'Facebook', instagram: 'Instagram',
-               twitter: 'Twitter/X', google_play: 'Google Play' }[p] || p;
+               twitter: 'Twitter/X', google_play: 'Google Play',
+               trustpilot: 'Trustpilot' }[p] || p;
     }
 
     async function loadFeedFromDB() {
