@@ -1,8 +1,10 @@
 // Central Router for Care360 API
 // This file acts as the single Serverless Function for Vercel Hobby limits.
 
+const { closePool } = require('./_lib/db');
 const adminUsers = require('./_lib/admin-users');
 const auth = require('./_lib/auth');
+const config = require('./_lib/config');
 const connectedChannels = require('./_lib/connected-channels');
 const facebookMessages = require('./_lib/facebook-messages');
 const facebookSync = require('./_lib/facebook-sync');
@@ -32,6 +34,8 @@ module.exports = async function handler(req, res) {
         return await adminUsers(req, res);
       case '/api/auth':
         return await auth(req, res);
+      case '/api/config':
+        return await config(req, res);
       case '/api/connected-channels':
         return await connectedChannels(req, res);
       case '/api/facebook-messages':
@@ -77,5 +81,9 @@ module.exports = async function handler(req, res) {
     }
   } catch (err) {
     return res.status(500).json({ error: 'Global Catch Error', message: err.message, stack: err.stack });
+  } finally {
+    // Release the DB connection so a frozen serverless instance leaves nothing
+    // open. Runs after the handler has already sent its response.
+    await closePool();
   }
 };

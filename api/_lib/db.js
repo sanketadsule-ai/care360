@@ -1,5 +1,17 @@
 // Shared database connection for Vercel Serverless Functions
 const { Pool } = require('pg');
+const crypto = require('crypto');
+
+// Initial admin credentials. The account is auto-provisioned once on startup
+// (idempotently) so the system always has at least one administrator.
+const INITIAL_ADMIN_EMAIL = 'admin@carepal360.com';
+const INITIAL_ADMIN_PASSWORD = 'Admin@12345';
+const INITIAL_ADMIN_NAME = 'Administrator';
+
+// Shared password hashing — keep in sync with api/_lib/auth.js
+function hashPassword(password, salt) {
+  return crypto.pbkdf2Sync(password, salt, 10000, 64, 'sha512').toString('hex');
+}
 
 let pool;
 
@@ -14,9 +26,16 @@ function getPool() {
     pool = new Pool({
       connectionString: connString,
       ssl: { rejectUnauthorized: false },
-      max: 5,
-      idleTimeoutMillis: 30000,
-      connectionTimeoutMillis: 10000
+      // Serverless functions handle one request at a time, so a single
+      // connection per warm instance is enough. Keeping this at 1 (and idling
+      // out quickly) prevents exhausting the database's connection slots when
+      // many Vercel instances are warm at once.
+      max: 1,
+      idleTimeoutMillis: 5000,
+      // Fail fast (well under the function's maxDuration) so a saturated DB
+      // surfaces a clean JSON error instead of a platform-level
+      // FUNCTION_INVOCATION_TIMEOUT.
+      connectionTimeoutMillis: 5000
     });
 
     pool.on('error', (err, client) => {
@@ -26,8 +45,43 @@ function getPool() {
   return pool;
 }
 
-// Initialize tables if they don't exist
+// Close the pool at the end of a request. In serverless, an instance freezes
+// between requests, so an idle connection would otherwise stay open on the DB
+// (the idle timer can't fire while frozen). Closing here guarantees a frozen
+// instance leaves no open connection, preventing slot exhaustion. The next
+// request lazily creates a fresh pool. Schema-init memoization is preserved so
+// we don't re-run migrations on the new pool.
+async function closePool() {
+  if (pool) {
+    const p = pool;
+    pool = null;
+    try {
+      // Don't let a hung connection drain block the invocation from finishing.
+      await Promise.race([
+        p.end(),
+        new Promise((resolve) => setTimeout(resolve, 2000))
+      ]);
+    } catch (err) {
+      console.error('Error closing pool:', err.message);
+    }
+  }
+}
+
+// Memoize schema initialization so it runs at most once per warm serverless
+// instance instead of on every request. Concurrent callers share the same
+// in-flight promise; a failure clears it so the next request can retry.
+let ensureTablesPromise = null;
 async function ensureTables() {
+  if (!ensureTablesPromise) {
+    ensureTablesPromise = _ensureTables().catch((err) => {
+      ensureTablesPromise = null; // allow retry on next request
+      throw err;
+    });
+  }
+  return ensureTablesPromise;
+}
+
+async function _ensureTables() {
   const p = getPool();
 
   // Run independent table creations in parallel where possible, or bundle them
@@ -131,10 +185,16 @@ async function ensureTables() {
       ALTER TABLE users ADD COLUMN IF NOT EXISTS status VARCHAR(50) DEFAULT 'pending';
       ALTER TABLE users ALTER COLUMN role SET DEFAULT 'user';
       ALTER TABLE users ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT NOW();
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS provider VARCHAR(50) DEFAULT 'email';
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS google_id VARCHAR(255);
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS last_login TIMESTAMP;
     `);
   } catch (err) {
     console.error('Migration error for users table:', err.message);
   }
+
+  // 3a. Seed the initial admin account (idempotent — runs effectively once).
+  await ensureAdmin(p);
 
   // 3b. Trustpilot migrations — the table may pre-exist without these columns,
   // and CREATE TABLE IF NOT EXISTS won't add them. The INSERTs need them.
@@ -179,4 +239,24 @@ async function ensureTables() {
   }
 }
 
-module.exports = { getPool, ensureTables };
+// Ensure an initial admin exists. Uses ON CONFLICT so concurrent serverless
+// invocations never create duplicate admins and the password is only ever set
+// on first insert. The password is always stored hashed (pbkdf2 + per-row salt).
+async function ensureAdmin(p) {
+  try {
+    const salt = crypto.randomBytes(16).toString('hex');
+    const passwordHash = hashPassword(INITIAL_ADMIN_PASSWORD, salt);
+    const initials = INITIAL_ADMIN_NAME.substring(0, 2).toUpperCase();
+
+    await p.query(
+      `INSERT INTO users (email, name, initials, role, status, provider, password_hash, salt, updated_at)
+         VALUES ($1, $2, $3, 'admin', 'approved', 'email', $4, $5, NOW())
+       ON CONFLICT (email) DO NOTHING`,
+      [INITIAL_ADMIN_EMAIL, INITIAL_ADMIN_NAME, initials, passwordHash, salt]
+    );
+  } catch (err) {
+    console.error('ensureAdmin error:', err.message);
+  }
+}
+
+module.exports = { getPool, ensureTables, ensureAdmin, hashPassword, closePool };
