@@ -96,24 +96,24 @@
           
           let actionsHtml = '';
           if (u.status === 'pending' || u.status === 'rejected') {
-            actionsHtml += \`<button class="admin-action-btn btn-approve" data-id="\${u.id}" style="background: #10B981; color: white; border: none; padding: 4px 10px; border-radius: 4px; font-size: 12px; cursor: pointer; margin-right: 8px;">Approve</button>\`;
+            actionsHtml += `<button class="admin-action-btn btn-approve" data-id="${u.id}" style="background: #10B981; color: white; border: none; padding: 4px 10px; border-radius: 4px; font-size: 12px; cursor: pointer; margin-right: 8px;">Approve</button>`;
           }
           if (u.status === 'pending' || u.status === 'approved') {
-            actionsHtml += \`<button class="admin-action-btn btn-reject" data-id="\${u.id}" style="background: #F59E0B; color: white; border: none; padding: 4px 10px; border-radius: 4px; font-size: 12px; cursor: pointer; margin-right: 8px;">Reject</button>\`;
+            actionsHtml += `<button class="admin-action-btn btn-reject" data-id="${u.id}" style="background: #F59E0B; color: white; border: none; padding: 4px 10px; border-radius: 4px; font-size: 12px; cursor: pointer; margin-right: 8px;">Reject</button>`;
           }
-          actionsHtml += \`<button class="admin-action-btn btn-remove" data-id="\${u.id}" style="background: #EF4444; color: white; border: none; padding: 4px 10px; border-radius: 4px; font-size: 12px; cursor: pointer;">Remove</button>\`;
+          actionsHtml += `<button class="admin-action-btn btn-remove" data-id="${u.id}" style="background: #EF4444; color: white; border: none; padding: 4px 10px; border-radius: 4px; font-size: 12px; cursor: pointer;">Remove</button>`;
 
-          listBody.innerHTML += \`
+          listBody.innerHTML += `
             <tr style="border-bottom: 1px solid #E5E7EB;">
               <td style="padding: 12px 16px; display: flex; align-items: center; gap: 12px;">
-                <div style="width: 32px; height: 32px; border-radius: 50%; background: #E5E7EB; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; color: #4B5563;">\${u.initials || 'U'}</div>
-                <div style="font-size: 14px; font-weight: 500; color: #111827;">\${u.name}</div>
+                <div style="width: 32px; height: 32px; border-radius: 50%; background: #E5E7EB; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; color: #4B5563;">${u.initials || 'U'}</div>
+                <div style="font-size: 14px; font-weight: 500; color: #111827;">${u.name}</div>
               </td>
-              <td style="padding: 12px 16px; font-size: 14px; color: #6B7280;">\${u.email}</td>
-              <td style="padding: 12px 16px;">\${statusHtml}</td>
-              <td style="padding: 12px 16px;">\${actionsHtml}</td>
+              <td style="padding: 12px 16px; font-size: 14px; color: #6B7280;">${u.email}</td>
+              <td style="padding: 12px 16px;">${statusHtml}</td>
+              <td style="padding: 12px 16px;">${actionsHtml}</td>
             </tr>
-          \`;
+          `;
         });
         
         if (pendingBadge) pendingBadge.textContent = pendingCount + ' pending';
@@ -212,6 +212,25 @@
       if (typeof navigateTo === 'function') navigateTo('profile');
       if (typeof activateSidebarFor === 'function') activateSidebarFor('profile');
     }
+
+    // Chat / Mail button navigation
+    if (getClosest('#header-mail-btn')) {
+      e.preventDefault();
+      if (typeof navigateTo === 'function') navigateTo('inbox');
+      if (typeof activateSidebarFor === 'function') activateSidebarFor('inbox');
+    }
+
+    // Notification button (currently no page, just open inbox or do nothing)
+    if (getClosest('#header-notif-btn')) {
+      e.preventDefault();
+      // Optional: alert('No new notifications');
+    }
+
+    // Compose message button
+    if (getClosest('.compose-btn')) {
+      e.preventDefault();
+      alert('Compose message feature coming soon!');
+    }
   });
 
   document.addEventListener('DOMContentLoaded', checkAuthState);
@@ -228,7 +247,7 @@
 
   // ── DOM References ──────────────────────────────────
   const sidebar = document.getElementById('sidebar');
-  const allSidebarItems = sidebar.querySelectorAll('.sidebar-item');
+  const allSidebarItems = sidebar ? sidebar.querySelectorAll('.sidebar-item') : [];
   const pages = document.querySelectorAll('.page');
   const tabGroup = document.getElementById('tab-group');
   const actionCards = document.getElementById('action-cards');
@@ -245,8 +264,8 @@
 
   // ── Local State Persistence ──────────────────────────
   let state = {
-    connectedAccounts: safeJSONParse('gmail_connected_accounts', []),
-    cases: safeJSONParse('inbox_cases', []).filter(c => c && c.id && !c.id.toString().startsWith('case-') && !c.id.toString().startsWith('gmail-') && !c.id.toString().startsWith('tw-mock-')),
+    connectedAccounts: safeJSONParse('gmail_connected_accounts', []) || [],
+    cases: (safeJSONParse('inbox_cases', []) || []).filter(c => c && c.id && !c.id.toString().startsWith('case-') && !c.id.toString().startsWith('gmail-') && !c.id.toString().startsWith('tw-mock-')),
     selectedCaseId: localStorage.getItem('inbox_selected_case_id') || null,
     activeFilter: 'all'
   };
