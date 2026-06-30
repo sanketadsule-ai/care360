@@ -1546,23 +1546,70 @@
 
           <!-- ── Admin: User Management Section ────────── -->
           <div id="admin-panel-in-profile" style="display: none;">
+
+            <!-- Pending Requests -->
             <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
-              <h2 style="font-size: 18px; font-weight: 600; color: #111827;">User Requests</h2>
+              <h2 style="font-size: 18px; font-weight: 600; color: #111827;">Pending Requests</h2>
               <span id="pending-count-badge" style="background: #FEF3C7; color: #B45309; font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 12px;">0 pending</span>
             </div>
-
-            <div style="background: white; border-radius: 12px; border: 1px solid #E5E7EB; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.06);">
+            <div style="background: white; border-radius: 12px; border: 1px solid #E5E7EB; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.06); margin-bottom: 32px;">
               <table style="width: 100%; border-collapse: collapse; text-align: left;">
                 <thead>
                   <tr style="background: #F9FAFB; border-bottom: 1px solid #E5E7EB;">
                     <th style="padding: 12px 16px; font-size: 12px; color: #6B7280; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">User</th>
                     <th style="padding: 12px 16px; font-size: 12px; color: #6B7280; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Email</th>
+                    <th style="padding: 12px 16px; font-size: 12px; color: #6B7280; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Auth</th>
+                    <th style="padding: 12px 16px; font-size: 12px; color: #6B7280; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Action</th>
+                  </tr>
+                </thead>
+                <tbody id="admin-pending-list">
+                  <tr><td colspan="4" style="padding: 24px; text-align: center; color: #6B7280; font-size: 14px;">Loading...</td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- User Management -->
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
+              <h2 style="font-size: 18px; font-weight: 600; color: #111827;">User Management</h2>
+              <button id="btn-create-user" style="background: #2563EB; color: white; border: none; padding: 8px 14px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer;">+ Create User</button>
+            </div>
+
+            <!-- Create user form (hidden by default) -->
+            <div id="create-user-form" style="display: none; background: #F9FAFB; border: 1px solid #E5E7EB; border-radius: 12px; padding: 16px; margin-bottom: 24px;">
+              <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end;">
+                <div style="flex: 1; min-width: 160px;">
+                  <label style="display:block; font-size: 12px; color: #6B7280; margin-bottom: 4px;">Full name</label>
+                  <input id="new-user-name" type="text" placeholder="Jane Doe" style="width: 100%; padding: 8px 10px; border: 1px solid #D1D5DB; border-radius: 6px; font-size: 14px;" />
+                </div>
+                <div style="flex: 1; min-width: 160px;">
+                  <label style="display:block; font-size: 12px; color: #6B7280; margin-bottom: 4px;">Email</label>
+                  <input id="new-user-email" type="email" placeholder="jane@company.com" style="width: 100%; padding: 8px 10px; border: 1px solid #D1D5DB; border-radius: 6px; font-size: 14px;" />
+                </div>
+                <div style="flex: 1; min-width: 160px;">
+                  <label style="display:block; font-size: 12px; color: #6B7280; margin-bottom: 4px;">Password</label>
+                  <input id="new-user-password" type="password" placeholder="••••••••" style="width: 100%; padding: 8px 10px; border: 1px solid #D1D5DB; border-radius: 6px; font-size: 14px;" />
+                </div>
+                <button id="btn-submit-create-user" style="background: #10B981; color: white; border: none; padding: 9px 16px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer;">Create</button>
+                <button id="btn-cancel-create-user" style="background: #E5E7EB; color: #374151; border: none; padding: 9px 16px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer;">Cancel</button>
+              </div>
+              <div id="create-user-msg" style="font-size: 13px; margin-top: 10px;"></div>
+            </div>
+
+            <div style="background: white; border-radius: 12px; border: 1px solid #E5E7EB; overflow-x: auto; box-shadow: 0 1px 3px rgba(0,0,0,0.06);">
+              <table style="width: 100%; border-collapse: collapse; text-align: left; min-width: 760px;">
+                <thead>
+                  <tr style="background: #F9FAFB; border-bottom: 1px solid #E5E7EB;">
+                    <th style="padding: 12px 16px; font-size: 12px; color: #6B7280; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">User</th>
+                    <th style="padding: 12px 16px; font-size: 12px; color: #6B7280; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Email</th>
+                    <th style="padding: 12px 16px; font-size: 12px; color: #6B7280; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Auth</th>
+                    <th style="padding: 12px 16px; font-size: 12px; color: #6B7280; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Role</th>
                     <th style="padding: 12px 16px; font-size: 12px; color: #6B7280; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Status</th>
+                    <th style="padding: 12px 16px; font-size: 12px; color: #6B7280; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Last Login</th>
                     <th style="padding: 12px 16px; font-size: 12px; color: #6B7280; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Action</th>
                   </tr>
                 </thead>
                 <tbody id="admin-users-list">
-                  <tr><td colspan="4" style="padding: 24px; text-align: center; color: #6B7280; font-size: 14px;">Loading users...</td></tr>
+                  <tr><td colspan="7" style="padding: 24px; text-align: center; color: #6B7280; font-size: 14px;">Loading users...</td></tr>
                 </tbody>
               </table>
             </div>
