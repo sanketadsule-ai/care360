@@ -12,34 +12,204 @@
 (function () {
   'use strict';
 
-  // ── Auth & Fetch Interceptor (Mocked) ────────────────────────
-  let authToken = 'mock_token';
-  let authUser = {
-    id: 1,
-    email: 'admin@carepal360.com',
-    name: 'Admin User',
-    initials: 'AD',
-    role: 'admin',
-    status: 'approved'
-  };
+  // ── Auth state & Fetch Interceptor ───────────────────────────
+  // Real session: token + user are persisted in localStorage after login.
+  let authToken = localStorage.getItem('auth_token') || null;
+  let authUser = null;
+  try {
+    const stored = localStorage.getItem('auth_user');
+    if (stored) authUser = JSON.parse(stored);
+  } catch (e) { authUser = null; }
 
   const originalFetch = window.fetch.bind(window);
   window.fetch = async function (resource, config) {
-    if (typeof resource === 'string' && resource.startsWith('/api/') && authToken) {
+    const isApi = typeof resource === 'string' && resource.startsWith('/api/');
+    // Don't attach the bearer to the auth endpoint itself (login/register/google).
+    const isAuthEndpoint = typeof resource === 'string' && resource.indexOf('/api/auth') === 0;
+    if (isApi && authToken) {
       config = config || {};
       config.headers = config.headers || {};
       config.headers['Authorization'] = 'Bearer ' + authToken;
     }
     const response = await originalFetch(resource, config);
-    if (response.status === 401 || response.status === 403) {
-      // If unauthorized, we might need to log out, but let's handle it gracefully
-      const isApi = typeof resource === 'string' && resource.startsWith('/api/');
-      if (isApi) {
-        // Maybe clear token if invalid, but for now just pass through
-      }
+    // An expired/invalid session on a protected API call → force re-login.
+    if (isApi && !isAuthEndpoint && (response.status === 401 || response.status === 403) && authToken) {
+      clearAuth();
+      showAuthScreen();
     }
     return response;
   };
+
+  // ── Persist / clear the session ──────────────────────────────
+  function applyAuth(token, user) {
+    authToken = token;
+    authUser = user;
+    localStorage.setItem('auth_token', token);
+    localStorage.setItem('auth_user', JSON.stringify(user));
+  }
+
+  function clearAuth() {
+    authToken = null;
+    authUser = null;
+    localStorage.removeItem('auth_token');
+    localStorage.removeItem('auth_user');
+  }
+
+  // ── Login / Registration overlay ─────────────────────────────
+  function buildAuthScreen() {
+    if (document.getElementById('auth-screen')) return;
+    const overlay = document.createElement('div');
+    overlay.id = 'auth-screen';
+    overlay.style.cssText = 'position:fixed; inset:0; z-index:9999; display:none; align-items:center; justify-content:center; background:linear-gradient(135deg,#1e3a8a,#2563eb); font-family:inherit;';
+    overlay.innerHTML = `
+      <div style="background:#fff; width:380px; max-width:92vw; border-radius:16px; padding:32px; box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+        <h1 style="font-size:22px; font-weight:700; color:#111827; margin:0 0 4px;">Carapal360</h1>
+        <p id="auth-subtitle" style="font-size:14px; color:#6B7280; margin:0 0 20px;">Sign in to your account</p>
+        <div id="auth-message" style="display:none; font-size:13px; padding:10px 12px; border-radius:8px; margin-bottom:14px;"></div>
+        <div id="auth-name-row" style="display:none; margin-bottom:12px;">
+          <input id="auth-name" type="text" placeholder="Full name" style="width:100%; padding:11px 12px; border:1px solid #D1D5DB; border-radius:8px; font-size:14px; box-sizing:border-box;" />
+        </div>
+        <div style="margin-bottom:12px;">
+          <input id="auth-email" type="email" placeholder="Email" autocomplete="username" style="width:100%; padding:11px 12px; border:1px solid #D1D5DB; border-radius:8px; font-size:14px; box-sizing:border-box;" />
+        </div>
+        <div style="margin-bottom:16px;">
+          <input id="auth-password" type="password" placeholder="Password" autocomplete="current-password" style="width:100%; padding:11px 12px; border:1px solid #D1D5DB; border-radius:8px; font-size:14px; box-sizing:border-box;" />
+        </div>
+        <button id="auth-submit" style="width:100%; background:#2563EB; color:#fff; border:none; padding:12px; border-radius:8px; font-size:15px; font-weight:600; cursor:pointer;">Sign In</button>
+        <div style="display:flex; align-items:center; gap:10px; margin:16px 0;">
+          <div style="flex:1; height:1px; background:#E5E7EB;"></div>
+          <span style="font-size:12px; color:#9CA3AF;">OR</span>
+          <div style="flex:1; height:1px; background:#E5E7EB;"></div>
+        </div>
+        <div id="google-signin-btn" style="display:flex; justify-content:center;"></div>
+        <p style="text-align:center; font-size:13px; color:#6B7280; margin:18px 0 0;">
+          <span id="auth-toggle-text">Don't have an account?</span>
+          <a href="#" id="auth-toggle" style="color:#2563EB; font-weight:600; text-decoration:none;">Sign up</a>
+        </p>
+      </div>`;
+    document.body.appendChild(overlay);
+
+    let mode = 'login'; // 'login' | 'register'
+
+    const $ = (id) => document.getElementById(id);
+    function setMessage(text, kind) {
+      const el = $('auth-message');
+      if (!text) { el.style.display = 'none'; return; }
+      el.textContent = text;
+      el.style.display = 'block';
+      if (kind === 'error') { el.style.background = '#FEE2E2'; el.style.color = '#B91C1C'; }
+      else if (kind === 'success') { el.style.background = '#D1FAE5'; el.style.color = '#065F46'; }
+      else { el.style.background = '#FEF3C7'; el.style.color = '#B45309'; }
+    }
+
+    function setMode(next) {
+      mode = next;
+      $('auth-name-row').style.display = mode === 'register' ? 'block' : 'none';
+      $('auth-subtitle').textContent = mode === 'register' ? 'Create your account' : 'Sign in to your account';
+      $('auth-submit').textContent = mode === 'register' ? 'Sign Up' : 'Sign In';
+      $('auth-toggle-text').textContent = mode === 'register' ? 'Already have an account?' : "Don't have an account?";
+      $('auth-toggle').textContent = mode === 'register' ? 'Sign in' : 'Sign up';
+      setMessage('');
+    }
+
+    $('auth-toggle').addEventListener('click', (e) => {
+      e.preventDefault();
+      setMode(mode === 'login' ? 'register' : 'login');
+    });
+
+    async function submit() {
+      const email = $('auth-email').value.trim();
+      const password = $('auth-password').value;
+      const name = $('auth-name').value.trim();
+      if (!email || !password || (mode === 'register' && !name)) {
+        setMessage('Please fill in all fields.', 'error');
+        return;
+      }
+      const btn = $('auth-submit');
+      btn.disabled = true;
+      const original = btn.textContent;
+      btn.textContent = 'Please wait…';
+      try {
+        const res = await fetch('/api/auth', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: mode, email, password, name })
+        });
+        const data = await res.json();
+        if (res.ok && data.token) {
+          applyAuth(data.token, data.user);
+          hideAuthScreen();
+          checkAuthState();
+        } else if (mode === 'register' && res.ok) {
+          setMode('login');
+          setMessage('Registration submitted. Your account is pending administrator approval.', 'success');
+        } else {
+          setMessage(data.error || 'Authentication failed.', 'error');
+        }
+      } catch (err) {
+        setMessage('Network error. Please try again.', 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = original;
+      }
+    }
+
+    $('auth-submit').addEventListener('click', submit);
+    $('auth-password').addEventListener('keydown', (e) => { if (e.key === 'Enter') submit(); });
+  }
+
+  async function handleGoogleCredential(response) {
+    try {
+      const res = await fetch('/api/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'google', credential: response.credential })
+      });
+      const data = await res.json();
+      const msg = document.getElementById('auth-message');
+      if (res.ok && data.token) {
+        applyAuth(data.token, data.user);
+        hideAuthScreen();
+        checkAuthState();
+      } else if (msg) {
+        msg.textContent = data.message || data.error || 'Google sign-in failed.';
+        msg.style.display = 'block';
+        if (data.status === 'pending' || data.pending) { msg.style.background = '#FEF3C7'; msg.style.color = '#B45309'; }
+        else { msg.style.background = '#FEE2E2'; msg.style.color = '#B91C1C'; }
+      }
+    } catch (err) {
+      console.error('Google sign-in error', err);
+    }
+  }
+
+  let googleInited = false;
+  function initGoogleSignIn() {
+    const cfg = window.CARAPAL_CONFIG || {};
+    const clientId = cfg.GOOGLE_CLIENT_ID;
+    const container = document.getElementById('google-signin-btn');
+    if (!container || !clientId) return;
+    if (typeof google === 'undefined' || !google.accounts || !google.accounts.id) {
+      // GIS script not ready yet — retry shortly.
+      setTimeout(initGoogleSignIn, 400);
+      return;
+    }
+    if (googleInited) return;
+    googleInited = true;
+    google.accounts.id.initialize({ client_id: clientId, callback: handleGoogleCredential });
+    google.accounts.id.renderButton(container, { theme: 'outline', size: 'large', width: 316, text: 'continue_with' });
+  }
+
+  function showAuthScreen() {
+    buildAuthScreen();
+    const overlay = document.getElementById('auth-screen');
+    if (overlay) overlay.style.display = 'flex';
+    initGoogleSignIn();
+  }
+
+  function hideAuthScreen() {
+    const overlay = document.getElementById('auth-screen');
+    if (overlay) overlay.style.display = 'none';
+  }
 
   function populateProfilePage() {
     if (!authUser) return;
@@ -68,104 +238,202 @@
   }
 
 
-  async function loadAdminUsers() {
-    const listBody = document.getElementById('admin-users-list');
-    const pendingBadge = document.getElementById('pending-count-badge');
-    if (!listBody) return;
-    
+  function escapeHtml(str) {
+    return String(str == null ? '' : str).replace(/[&<>"']/g, (c) => (
+      { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
+    ));
+  }
+
+  function statusBadge(status) {
+    const map = {
+      approved: ['#D1FAE5', '#065F46', 'Approved'],
+      rejected: ['#FEE2E2', '#B91C1C', 'Rejected'],
+      disabled: ['#E5E7EB', '#374151', 'Disabled'],
+      pending:  ['#FEF3C7', '#B45309', 'Pending']
+    };
+    const [bg, fg, label] = map[status] || map.pending;
+    return `<span style="background:${bg}; color:${fg}; padding:3px 10px; border-radius:12px; font-size:12px; font-weight:600;">${label}</span>`;
+  }
+
+  function actionBtn(cls, label, color, id) {
+    return `<button class="admin-action-btn ${cls}" data-id="${escapeHtml(id)}" style="background:${color}; color:white; border:none; padding:4px 10px; border-radius:4px; font-size:12px; cursor:pointer; margin-right:6px; margin-bottom:4px;">${label}</button>`;
+  }
+
+  async function performAdminAction(userId, action) {
     try {
       const res = await fetch('/api/admin-users', {
-        headers: { 'Authorization': 'Bearer ' + authToken }
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, action })
       });
-      const data = await res.json();
-      if (res.ok && data.users) {
-        listBody.innerHTML = '';
-        let pendingCount = 0;
-        
-        if (data.users.length === 0) {
-          listBody.innerHTML = '<tr><td colspan="4" style="padding: 24px; text-align: center; color: #6B7280; font-size: 14px;">No other users found.</td></tr>';
-        }
-        
-        data.users.forEach(u => {
-          if (u.status === 'pending') pendingCount++;
-          
-          let statusHtml = '';
-          if (u.status === 'approved') statusHtml = '<span style="background: #D1FAE5; color: #065F46; padding: 3px 10px; border-radius: 12px; font-size: 12px; font-weight: 600;">Approved</span>';
-          else if (u.status === 'rejected') statusHtml = '<span style="background: #FEE2E2; color: #B91C1C; padding: 3px 10px; border-radius: 12px; font-size: 12px; font-weight: 600;">Rejected</span>';
-          else statusHtml = '<span style="background: #FEF3C7; color: #B45309; padding: 3px 10px; border-radius: 12px; font-size: 12px; font-weight: 600;">Pending</span>';
-          
-          let actionsHtml = '';
-          if (u.status === 'pending' || u.status === 'rejected') {
-            actionsHtml += `<button class="admin-action-btn btn-approve" data-id="${u.id}" style="background: #10B981; color: white; border: none; padding: 4px 10px; border-radius: 4px; font-size: 12px; cursor: pointer; margin-right: 8px;">Approve</button>`;
-          }
-          if (u.status === 'pending' || u.status === 'approved') {
-            actionsHtml += `<button class="admin-action-btn btn-reject" data-id="${u.id}" style="background: #F59E0B; color: white; border: none; padding: 4px 10px; border-radius: 4px; font-size: 12px; cursor: pointer; margin-right: 8px;">Reject</button>`;
-          }
-          actionsHtml += `<button class="admin-action-btn btn-remove" data-id="${u.id}" style="background: #EF4444; color: white; border: none; padding: 4px 10px; border-radius: 4px; font-size: 12px; cursor: pointer;">Remove</button>`;
-
-          listBody.innerHTML += `
-            <tr style="border-bottom: 1px solid #E5E7EB;">
-              <td style="padding: 12px 16px; display: flex; align-items: center; gap: 12px;">
-                <div style="width: 32px; height: 32px; border-radius: 50%; background: #E5E7EB; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; color: #4B5563;">${u.initials || 'U'}</div>
-                <div style="font-size: 14px; font-weight: 500; color: #111827;">${u.name}</div>
-              </td>
-              <td style="padding: 12px 16px; font-size: 14px; color: #6B7280;">${u.email}</td>
-              <td style="padding: 12px 16px;">${statusHtml}</td>
-              <td style="padding: 12px 16px;">${actionsHtml}</td>
-            </tr>
-          `;
-        });
-        
-        if (pendingBadge) pendingBadge.textContent = pendingCount + ' pending';
-        
-        // Attach event listeners
-        listBody.querySelectorAll('.admin-action-btn').forEach(btn => {
-          btn.addEventListener('click', async (e) => {
-            const actualBtn = e.target.closest('.admin-action-btn');
-            if (!actualBtn) return;
-            const userId = actualBtn.getAttribute('data-id');
-            let action = '';
-            if (actualBtn.classList.contains('btn-approve')) action = 'approve';
-            else if (actualBtn.classList.contains('btn-reject')) action = 'reject';
-            else if (actualBtn.classList.contains('btn-remove')) action = 'remove';
-            
-            if (action === 'remove' && !confirm('Are you sure you want to permanently remove this user?')) return;
-            
-            try {
-              const res = await fetch('/api/admin-users', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + authToken },
-                body: JSON.stringify({ userId, action })
-              });
-              if (res.ok) {
-                loadAdminUsers();
-              } else {
-                alert('Action failed');
-              }
-            } catch (err) {
-              console.error(err);
-              alert('Network error');
-            }
-          });
-        });
-
+      if (res.ok) {
+        loadAdminUsers();
+      } else {
+        const data = await res.json().catch(() => ({}));
+        alert(data.error || 'Action failed');
       }
     } catch (err) {
-      console.error('Failed to load users', err);
-      listBody.innerHTML = '<tr><td colspan="4">Error loading users</td></tr>';
+      console.error(err);
+      alert('Network error');
     }
   }
 
+  function wireAdminActions(container) {
+    container.querySelectorAll('.admin-action-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const actualBtn = e.target.closest('.admin-action-btn');
+        if (!actualBtn) return;
+        const userId = actualBtn.getAttribute('data-id');
+        let action = '';
+        if (actualBtn.classList.contains('btn-approve')) action = 'approve';
+        else if (actualBtn.classList.contains('btn-reject')) action = 'reject';
+        else if (actualBtn.classList.contains('btn-enable')) action = 'enable';
+        else if (actualBtn.classList.contains('btn-disable')) action = 'disable';
+        else if (actualBtn.classList.contains('btn-remove')) action = 'remove';
+        if (action === 'remove' && !confirm('Permanently delete this user?')) return;
+        performAdminAction(userId, action);
+      });
+    });
+  }
+
+  async function loadAdminUsers() {
+    const listBody = document.getElementById('admin-users-list');
+    const pendingBody = document.getElementById('admin-pending-list');
+    const pendingBadge = document.getElementById('pending-count-badge');
+    if (!listBody) return;
+
+    try {
+      const res = await fetch('/api/admin-users');
+      const data = await res.json();
+      if (!res.ok || !data.users) return;
+
+      const users = data.users;
+      const pending = users.filter(u => u.status === 'pending');
+
+      // ── Pending Requests table ──
+      if (pendingBody) {
+        if (pending.length === 0) {
+          pendingBody.innerHTML = '<tr><td colspan="4" style="padding: 24px; text-align: center; color: #6B7280; font-size: 14px;">No pending requests.</td></tr>';
+        } else {
+          pendingBody.innerHTML = pending.map(u => `
+            <tr style="border-bottom: 1px solid #E5E7EB;">
+              <td style="padding: 12px 16px; display: flex; align-items: center; gap: 12px;">
+                <div style="width: 32px; height: 32px; border-radius: 50%; background: #E5E7EB; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; color: #4B5563;">${escapeHtml(u.initials || 'U')}</div>
+                <div style="font-size: 14px; font-weight: 500; color: #111827;">${escapeHtml(u.name)}</div>
+              </td>
+              <td style="padding: 12px 16px; font-size: 14px; color: #6B7280;">${escapeHtml(u.email)}</td>
+              <td style="padding: 12px 16px; font-size: 13px; color: #6B7280; text-transform: capitalize;">${escapeHtml(u.provider || 'email')}</td>
+              <td style="padding: 12px 16px;">${actionBtn('btn-approve', 'Approve', '#10B981', u.id)}${actionBtn('btn-reject', 'Reject', '#F59E0B', u.id)}</td>
+            </tr>`).join('');
+        }
+        wireAdminActions(pendingBody);
+      }
+      if (pendingBadge) pendingBadge.textContent = pending.length + ' pending';
+
+      // ── Full User Management table ──
+      if (users.length === 0) {
+        listBody.innerHTML = '<tr><td colspan="7" style="padding: 24px; text-align: center; color: #6B7280; font-size: 14px;">No users found.</td></tr>';
+      } else {
+        listBody.innerHTML = users.map(u => {
+          let actions = '';
+          if (u.role !== 'admin') {
+            if (u.status === 'pending' || u.status === 'rejected') actions += actionBtn('btn-approve', 'Approve', '#10B981', u.id);
+            if (u.status === 'pending') actions += actionBtn('btn-reject', 'Reject', '#F59E0B', u.id);
+            if (u.status === 'disabled') actions += actionBtn('btn-enable', 'Enable', '#10B981', u.id);
+            if (u.status === 'approved') actions += actionBtn('btn-disable', 'Disable', '#6B7280', u.id);
+            actions += actionBtn('btn-remove', 'Delete', '#EF4444', u.id);
+          } else {
+            actions = '<span style="font-size:12px; color:#9CA3AF;">—</span>';
+          }
+          const lastLogin = u.last_login ? new Date(u.last_login).toLocaleString() : 'Never';
+          return `
+            <tr style="border-bottom: 1px solid #E5E7EB;">
+              <td style="padding: 12px 16px; display: flex; align-items: center; gap: 12px;">
+                <div style="width: 32px; height: 32px; border-radius: 50%; background: #E5E7EB; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; color: #4B5563;">${escapeHtml(u.initials || 'U')}</div>
+                <div style="font-size: 14px; font-weight: 500; color: #111827;">${escapeHtml(u.name)}</div>
+              </td>
+              <td style="padding: 12px 16px; font-size: 14px; color: #6B7280;">${escapeHtml(u.email)}</td>
+              <td style="padding: 12px 16px; font-size: 13px; color: #6B7280; text-transform: capitalize;">${escapeHtml(u.provider || 'email')}</td>
+              <td style="padding: 12px 16px; font-size: 13px; color: #6B7280; text-transform: capitalize;">${escapeHtml(u.role)}</td>
+              <td style="padding: 12px 16px;">${statusBadge(u.status)}</td>
+              <td style="padding: 12px 16px; font-size: 13px; color: #6B7280;">${escapeHtml(lastLogin)}</td>
+              <td style="padding: 12px 16px; white-space: nowrap;">${actions}</td>
+            </tr>`;
+        }).join('');
+      }
+      wireAdminActions(listBody);
+
+    } catch (err) {
+      console.error('Failed to load users', err);
+      listBody.innerHTML = '<tr><td colspan="7">Error loading users</td></tr>';
+    }
+  }
+
+  // ── Admin: manual user creation ──────────────────────────────
+  function wireCreateUser() {
+    const openBtn = document.getElementById('btn-create-user');
+    const form = document.getElementById('create-user-form');
+    const cancelBtn = document.getElementById('btn-cancel-create-user');
+    const submitBtn = document.getElementById('btn-submit-create-user');
+    const msg = document.getElementById('create-user-msg');
+    if (!openBtn || !form || openBtn.dataset.wired) return;
+    openBtn.dataset.wired = '1';
+
+    openBtn.addEventListener('click', () => {
+      form.style.display = form.style.display === 'none' ? 'block' : 'none';
+    });
+    if (cancelBtn) cancelBtn.addEventListener('click', () => { form.style.display = 'none'; });
+
+    if (submitBtn) submitBtn.addEventListener('click', async () => {
+      const name = document.getElementById('new-user-name').value.trim();
+      const email = document.getElementById('new-user-email').value.trim();
+      const password = document.getElementById('new-user-password').value;
+      msg.style.color = '#B91C1C';
+      if (!name || !email || !password) { msg.textContent = 'All fields are required.'; return; }
+      submitBtn.disabled = true;
+      try {
+        const res = await fetch('/api/admin-users', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'create', name, email, password })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          msg.style.color = '#065F46';
+          msg.textContent = 'User created (Approved).';
+          document.getElementById('new-user-name').value = '';
+          document.getElementById('new-user-email').value = '';
+          document.getElementById('new-user-password').value = '';
+          loadAdminUsers();
+        } else {
+          msg.textContent = data.error || 'Failed to create user.';
+        }
+      } catch (err) {
+        msg.textContent = 'Network error.';
+      } finally {
+        submitBtn.disabled = false;
+      }
+    });
+  }
+
   function checkAuthState() {
+    // No valid session → gate the entire app behind the login screen.
+    if (!authToken || !authUser) {
+      showAuthScreen();
+      return;
+    }
+    hideAuthScreen();
+
     const sidebarUsersTab = document.getElementById('sidebar-users-tab');
     const adminPanel = document.getElementById('admin-panel-in-profile');
 
     populateProfilePage();
-    
+
     // Show admin tab and panel if user is admin
     if (authUser && authUser.role === 'admin') {
       if (sidebarUsersTab) sidebarUsersTab.style.display = 'flex';
       if (adminPanel) adminPanel.style.display = 'block';
+      wireCreateUser();
       loadAdminUsers();
     } else {
       if (sidebarUsersTab) sidebarUsersTab.style.display = 'none';
@@ -185,18 +453,12 @@
     };
 
     if (getClosest('#btn-pending-logout')) {
-      localStorage.removeItem('auth_token');
-      localStorage.removeItem('auth_user');
-      authToken = null;
-      authUser = null;
+      clearAuth();
       checkAuthState();
     }
 
     if (getClosest('#btn-logout')) {
-      localStorage.removeItem('auth_token');
-      localStorage.removeItem('auth_user');
-      authToken = null;
-      authUser = null;
+      clearAuth();
       checkAuthState();
       // Reset dropdown
       const profileDropdown = document.getElementById('profile-dropdown');
