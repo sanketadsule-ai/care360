@@ -1,7 +1,12 @@
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
 const { getPool, ensureTables } = require('./db');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'carapal360-dev-secret';
+
+function hashPassword(password, salt) {
+  return crypto.pbkdf2Sync(password, salt, 10000, 64, 'sha512').toString('hex');
+}
 
 module.exports = async function handler(req, res) {
   // CORS headers
@@ -14,69 +19,71 @@ module.exports = async function handler(req, res) {
   }
 
   if (req.method !== 'POST') {
-    // Temporary: GET returns the live schema for debugging
-    if (req.method === 'GET') {
-      try {
-        await ensureTables();
-        const pool = getPool();
-        const schema = await pool.query(`
-          SELECT column_name, data_type, is_nullable, column_default 
-          FROM information_schema.columns 
-          WHERE table_name = 'users' 
-          ORDER BY ordinal_position
-        `);
-        const count = await pool.query('SELECT COUNT(*) as cnt FROM users');
-        let sample = null;
-        try { const s = await pool.query('SELECT * FROM users LIMIT 1'); sample = s.rows[0]; } catch (e) { }
-        return res.status(200).json({ columns: schema.rows, row_count: count.rows[0].cnt, sample_row: sample });
-      } catch (e) {
-        return res.status(500).json({ error: e.message });
-      }
-    }
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
   try {
     await ensureTables();
-    const { credential } = req.body;
-    if (!credential) return res.status(400).json({ error: 'Missing credential' });
-
-    const googleRes = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${credential}`);
-    const googleData = await googleRes.json();
-
-    if (googleData.error) {
-      return res.status(401).json({ error: 'Invalid Google token' });
+    const { action, email, password, name } = req.body;
+    
+    if (!action || !email || !password) {
+      return res.status(400).json({ error: 'Missing required fields' });
     }
 
-    const { email, name, picture } = googleData;
     const pool = getPool();
-
-    // Check if user exists
     const userRes = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
     let user = userRes.rows[0];
 
-    if (!user) {
-      // Create new user
-      // Hardcoded first admin logic
-      const isFirstAdmin = (email === 'sanket.adsule@impactguru.com');
-      const role = isFirstAdmin ? 'admin' : 'user';
-      const status = isFirstAdmin ? 'approved' : 'pending';
+    if (action === 'register') {
+      if (user) {
+        // If user exists, update password if it's missing (for existing google users)
+        if (!user.password_hash) {
+            const salt = crypto.randomBytes(16).toString('hex');
+            const passwordHash = hashPassword(password, salt);
+            const updateRes = await pool.query('UPDATE users SET password_hash = $1, salt = $2, name = $3 WHERE id = $4 RETURNING *', [passwordHash, salt, name || user.name, user.id]);
+            user = updateRes.rows[0];
+        } else {
+            return res.status(400).json({ error: 'User already exists' });
+        }
+      } else {
+        if (!name) {
+          return res.status(400).json({ error: 'Name is required for registration' });
+        }
 
-      let initials = 'U';
-      if (name) {
-        initials = name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+        // Generate salt and hash
+        const salt = crypto.randomBytes(16).toString('hex');
+        const passwordHash = hashPassword(password, salt);
+
+        const isFirstAdmin = (email === 'sanket.adsule@impactguru.com');
+        const role = isFirstAdmin ? 'admin' : 'user';
+        const status = isFirstAdmin ? 'approved' : 'pending';
+
+        const initials = name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+        const nextId = Date.now().toString() + Math.floor(Math.random() * 10000).toString();
+
+        const insertRes = await pool.query(
+          `INSERT INTO users (id, email, name, initials, avatar_url, role, status, password_hash, salt, updated_at)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW()) RETURNING *`,
+          [nextId, email, name, initials, '', role, status, passwordHash, salt]
+        );
+        user = insertRes.rows[0];
+      }
+    } else if (action === 'login') {
+      if (!user) {
+        return res.status(401).json({ error: 'Invalid email or password' });
+      }
+      
+      // If user exists but has no password (e.g., from old Google login), they can't login via password yet
+      if (!user.salt || !user.password_hash) {
+        return res.status(401).json({ error: 'Account not set up for password login. Please register again with the same email.' });
       }
 
-      // The user's live database has 'id' configured as a TEXT/VARCHAR column.
-      // Generate a unique string ID to avoid type mismatches.
-      const nextId = Date.now().toString() + Math.floor(Math.random() * 10000).toString();
-
-      const insertRes = await pool.query(
-        `INSERT INTO users (id, email, name, initials, avatar_url, role, status, updated_at)
-          VALUES ($1, $2, $3, $4, $5, $6, $7, NOW()) RETURNING *`,
-        [nextId, email, name || email, initials, picture || '', role, status]
-      );
-      user = insertRes.rows[0];
+      const hash = hashPassword(password, user.salt);
+      if (hash !== user.password_hash) {
+        return res.status(401).json({ error: 'Invalid email or password' });
+      }
+    } else {
+      return res.status(400).json({ error: 'Invalid action' });
     }
 
     // Only approved users get a token

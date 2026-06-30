@@ -15,6 +15,7 @@ import os
 import sys
 import subprocess
 import csv
+import hashlib
 
 # ── Load .env file ──────────────────────────────────────
 def load_env():
@@ -406,45 +407,85 @@ class Care360RequestHandler(http.server.SimpleHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(json.dumps({'error': 'Endpoint not found'}).encode('utf-8'))
 
+    def send_error_json(self, msg, code):
+        self.send_response(code)
+        self.send_header('Content-Type', 'application/json')
+        self.end_headers()
+        self.wfile.write(json.dumps({'error': msg}).encode('utf-8'))
+
     def handle_auth(self):
-        global SESSION_USER
+        global SESSION_USER, SESSION_USERS_LIST
+        print("[DEBUG] handle_auth called!")
         try:
             content_length = int(self.headers['Content-Length'])
             post_data = self.rfile.read(content_length)
             params = json.loads(post_data.decode('utf-8'))
-            credential = params.get('credential')
             
-            email = 'admin@carapal360.com'
-            name = 'Admin User'
-            picture = ''
+            action = params.get('action')
+            email = params.get('email')
+            password = params.get('password')
+            name = params.get('name', email)
             
-            if credential:
-                parts = credential.split('.')
-                if len(parts) >= 2:
-                    payload_b64 = parts[1]
-                    padding = len(payload_b64) % 4
-                    if padding > 0:
-                        payload_b64 += '=' * (4 - padding)
-                    try:
-                        payload_json = base64.b64decode(payload_b64).decode('utf-8')
-                        user_info = json.loads(payload_json)
-                        email = user_info.get('email', email)
-                        name = user_info.get('name', name)
-                        picture = user_info.get('picture', picture)
-                    except Exception as parse_err:
-                        print("Failed to parse Google JWT payload:", parse_err)
+            if not action or not email or not password:
+                self.send_error_json('Missing required fields', 400)
+                return
             
-            initials = "".join([part[0] for part in name.split()]).upper()[:2] if name else 'AU'
+            # Find user
+            user = next((u for u in SESSION_USERS_LIST if u['email'] == email), None)
             
-            SESSION_USER = {
-                'id': 'mock-user-' + email.split('@')[0],
-                'email': email,
-                'name': name,
-                'initials': initials,
-                'avatar_url': picture,
-                'role': 'admin',
-                'status': 'approved'
-            }
+            if action == 'register':
+                if user:
+                    if not user.get('password_hash'):
+                        salt = os.urandom(16).hex()
+                        pw_hash = hashlib.pbkdf2_hmac('sha512', password.encode('utf-8'), salt.encode('utf-8'), 10000).hex()
+                        user['password_hash'] = pw_hash
+                        user['salt'] = salt
+                        user['name'] = name
+                    else:
+                        self.send_error_json('User already exists', 400)
+                        return
+                else:
+                    salt = os.urandom(16).hex()
+                    pw_hash = hashlib.pbkdf2_hmac('sha512', password.encode('utf-8'), salt.encode('utf-8'), 10000).hex()
+                    is_admin = (email == 'sanket.adsule@impactguru.com') or (email == 'admin@carapal360.com')
+                    
+                    user = {
+                        'id': len(SESSION_USERS_LIST) + 101,
+                        'email': email,
+                        'name': name,
+                        'initials': "".join([part[0] for part in name.split()]).upper()[:2] if name else 'AU',
+                        'avatar_url': '',
+                        'role': 'admin' if is_admin else 'user',
+                        'status': 'approved' if is_admin else 'pending',
+                        'password_hash': pw_hash,
+                        'salt': salt
+                    }
+                    SESSION_USERS_LIST.append(user)
+                    
+            elif action == 'login':
+                if not user:
+                    self.send_error_json('Invalid email or password', 401)
+                    return
+                if not user.get('password_hash') or not user.get('salt'):
+                    self.send_error_json('Account not set up for password login', 401)
+                    return
+                
+                pw_hash = hashlib.pbkdf2_hmac('sha512', password.encode('utf-8'), user['salt'].encode('utf-8'), 10000).hex()
+                if pw_hash != user['password_hash']:
+                    self.send_error_json('Invalid email or password', 401)
+                    return
+            else:
+                self.send_error_json('Invalid action', 400)
+                return
+                
+            if user['status'] != 'approved':
+                self.send_response(403)
+                self.send_header('Content-Type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': 'Pending admin approval', 'user': user}).encode('utf-8'))
+                return
+                
+            SESSION_USER = user
             
             self.send_response(200)
             self.send_header('Content-Type', 'application/json')
@@ -454,11 +495,10 @@ class Care360RequestHandler(http.server.SimpleHTTPRequestHandler):
                 'token': 'mock-jwt-token-for-' + email,
                 'user': SESSION_USER
             }).encode('utf-8'))
+            
         except Exception as e:
-            self.send_response(500)
-            self.send_header('Content-Type', 'application/json')
-            self.end_headers()
-            self.wfile.write(json.dumps({'error': str(e)}).encode('utf-8'))
+            print(f"[DEBUG] Error in handle_auth: {e}")
+            self.send_error_json(str(e), 500)
 
     def handle_user_profile(self):
         global SESSION_USER

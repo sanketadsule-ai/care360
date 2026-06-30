@@ -57,6 +57,8 @@ async function ensureTables() {
       created_at    TIMESTAMP DEFAULT NOW(),
       updated_at    TIMESTAMP DEFAULT NOW()
     );
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS password_hash VARCHAR(255);
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS salt VARCHAR(255);
   `);
 
   // 2. Dependent tables

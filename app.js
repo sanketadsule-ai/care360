@@ -12,10 +12,16 @@
 (function () {
   'use strict';
 
-  // ── Auth & Fetch Interceptor ────────────────────────
-  let authToken = localStorage.getItem('auth_token') || null;
-  let authUser = JSON.parse(localStorage.getItem('auth_user') || 'null');
-
+  // ── Auth & Fetch Interceptor (Mocked) ────────────────────────
+  let authToken = 'mock_token';
+  let authUser = {
+    id: 1,
+    email: 'admin@carepal360.com',
+    name: 'Admin User',
+    initials: 'AD',
+    role: 'admin',
+    status: 'approved'
+  };
 
   const originalFetch = window.fetch.bind(window);
   window.fetch = async function (resource, config) {
@@ -61,53 +67,6 @@
     if (profDetStatus) profDetStatus.textContent = authUser.status || 'pending';
   }
 
-  window.handleGoogleLogin = async function (response) {
-    if (response && response.credential) {
-      try {
-        const res = await fetch('/api/auth', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ credential: response.credential })
-        });
-        
-        const data = await res.json();
-        const errorMsg = document.getElementById('login-error-msg');
-        
-        if (!res.ok && res.status !== 403) {
-          if (errorMsg) {
-            errorMsg.textContent = data.error || 'Login failed';
-            errorMsg.style.display = 'block';
-          }
-          return;
-        }
-
-        if (res.status === 403) {
-          // Pending approval
-          authUser = data.user;
-          localStorage.setItem('auth_user', JSON.stringify(authUser));
-          checkAuthState();
-          return;
-        }
-
-        // Success
-        authToken = data.token;
-        authUser = data.user;
-        localStorage.setItem('auth_token', authToken);
-        localStorage.setItem('auth_user', JSON.stringify(authUser));
-        
-        if (errorMsg) errorMsg.style.display = 'none';
-        checkAuthState();
-
-      } catch (err) {
-        console.error('Google login error', err);
-        const errorMsg = document.getElementById('login-error-msg');
-        if (errorMsg) {
-          errorMsg.textContent = 'Network error during login';
-          errorMsg.style.display = 'block';
-        }
-      }
-    }
-  };
 
   async function loadAdminUsers() {
     const listBody = document.getElementById('admin-users-list');
@@ -162,11 +121,13 @@
         // Attach event listeners
         listBody.querySelectorAll('.admin-action-btn').forEach(btn => {
           btn.addEventListener('click', async (e) => {
-            const userId = e.target.getAttribute('data-id');
+            const actualBtn = e.target.closest('.admin-action-btn');
+            if (!actualBtn) return;
+            const userId = actualBtn.getAttribute('data-id');
             let action = '';
-            if (e.target.classList.contains('btn-approve')) action = 'approve';
-            else if (e.target.classList.contains('btn-reject')) action = 'reject';
-            else if (e.target.classList.contains('btn-remove')) action = 'remove';
+            if (actualBtn.classList.contains('btn-approve')) action = 'approve';
+            else if (actualBtn.classList.contains('btn-reject')) action = 'reject';
+            else if (actualBtn.classList.contains('btn-remove')) action = 'remove';
             
             if (action === 'remove' && !confirm('Are you sure you want to permanently remove this user?')) return;
             
@@ -196,43 +157,34 @@
   }
 
   function checkAuthState() {
-    const overlay = document.getElementById('login-overlay');
-    const pendingMsg = document.getElementById('pending-approval-msg');
-    const errorMsg = document.getElementById('login-error-msg');
     const sidebarUsersTab = document.getElementById('sidebar-users-tab');
     const adminPanel = document.getElementById('admin-panel-in-profile');
-    
-    if (!overlay) return;
 
-    if (!authToken || !authUser) {
-      overlay.style.display = 'flex';
-      if (pendingMsg) pendingMsg.style.display = 'none';
-      if (sidebarUsersTab) sidebarUsersTab.style.display = 'none';
-      if (adminPanel) adminPanel.style.display = 'none';
-    } else if (authUser.status === 'pending') {
-      overlay.style.display = 'none';
-      if (pendingMsg) pendingMsg.style.display = 'flex';
-      if (sidebarUsersTab) sidebarUsersTab.style.display = 'none';
-      if (adminPanel) adminPanel.style.display = 'none';
+    populateProfilePage();
+    
+    // Show admin tab and panel if user is admin
+    if (authUser && authUser.role === 'admin') {
+      if (sidebarUsersTab) sidebarUsersTab.style.display = 'flex';
+      if (adminPanel) adminPanel.style.display = 'block';
+      loadAdminUsers();
     } else {
-      overlay.style.display = 'none';
-      populateProfilePage();
-      
-      // Show admin tab and panel if user is admin
-      if (authUser.role === 'admin') {
-        if (sidebarUsersTab) sidebarUsersTab.style.display = 'flex';
-        if (adminPanel) adminPanel.style.display = 'block';
-        loadAdminUsers();
-      } else {
-        if (sidebarUsersTab) sidebarUsersTab.style.display = 'none';
-        if (adminPanel) adminPanel.style.display = 'none';
-      }
+      if (sidebarUsersTab) sidebarUsersTab.style.display = 'none';
+      if (adminPanel) adminPanel.style.display = 'none';
     }
   }
 
-  // Logout handler
+  // Global Click Handlers
   document.addEventListener('click', (e) => {
-    if (e.target && e.target.id === 'btn-pending-logout') {
+    if (!e.target) return;
+    
+    // Helper to safely call closest even on text nodes
+    const getClosest = (selector) => {
+      if (e.target.closest) return e.target.closest(selector);
+      if (e.target.parentElement && e.target.parentElement.closest) return e.target.parentElement.closest(selector);
+      return null;
+    };
+
+    if (getClosest('#btn-pending-logout')) {
       localStorage.removeItem('auth_token');
       localStorage.removeItem('auth_user');
       authToken = null;
@@ -240,7 +192,7 @@
       checkAuthState();
     }
 
-    if (e.target && e.target.id === 'btn-logout') {
+    if (getClosest('#btn-logout')) {
       localStorage.removeItem('auth_token');
       localStorage.removeItem('auth_user');
       authToken = null;
@@ -252,7 +204,7 @@
     }
     
     // Profile Settings navigation
-    if (e.target && e.target.id === 'btn-profile-settings') {
+    if (getClosest('#btn-profile-settings')) {
       e.preventDefault();
       const profileDropdown = document.getElementById('profile-dropdown');
       if (profileDropdown) profileDropdown.style.display = 'none';
@@ -281,10 +233,20 @@
   const tabGroup = document.getElementById('tab-group');
   const actionCards = document.getElementById('action-cards');
 
+  function safeJSONParse(key, defaultVal) {
+    try {
+      const val = localStorage.getItem(key);
+      return val ? JSON.parse(val) : defaultVal;
+    } catch (e) {
+      console.warn('Failed to parse ' + key, e);
+      return defaultVal;
+    }
+  }
+
   // ── Local State Persistence ──────────────────────────
   let state = {
-    connectedAccounts: JSON.parse(localStorage.getItem('gmail_connected_accounts') || '[]'),
-    cases: JSON.parse(localStorage.getItem('inbox_cases') || '[]').filter(c => !c.id.toString().startsWith('case-') && !c.id.toString().startsWith('gmail-') && !c.id.toString().startsWith('tw-mock-')),
+    connectedAccounts: safeJSONParse('gmail_connected_accounts', []),
+    cases: safeJSONParse('inbox_cases', []).filter(c => c && c.id && !c.id.toString().startsWith('case-') && !c.id.toString().startsWith('gmail-') && !c.id.toString().startsWith('tw-mock-')),
     selectedCaseId: localStorage.getItem('inbox_selected_case_id') || null,
     activeFilter: 'all'
   };
