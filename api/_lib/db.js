@@ -136,6 +136,19 @@ async function ensureTables() {
     console.error('Migration error for users table:', err.message);
   }
 
+  // 3b. Trustpilot migrations — the table may pre-exist without these columns,
+  // and CREATE TABLE IF NOT EXISTS won't add them. The INSERTs need them.
+  try {
+    await p.query(`
+      ALTER TABLE trustpilot_reviews ADD COLUMN IF NOT EXISTS channel_id INTEGER;
+      ALTER TABLE trustpilot_reviews ADD COLUMN IF NOT EXISTS status VARCHAR(50) DEFAULT 'open';
+      ALTER TABLE trustpilot_reviews ADD COLUMN IF NOT EXISTS heading TEXT;
+      ALTER TABLE trustpilot_reviews ADD COLUMN IF NOT EXISTS is_read BOOLEAN DEFAULT FALSE;
+    `);
+  } catch (err) {
+    console.error('Migration error for trustpilot_reviews table:', err.message);
+  }
+
   // 4. Notifications (depends on users)
   try {
     await p.query(`
