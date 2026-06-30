@@ -16,6 +16,7 @@ import sys
 import subprocess
 import csv
 import hashlib
+import time
 
 # ── Load .env file ──────────────────────────────────────
 def load_env():
@@ -409,6 +410,53 @@ class Care360RequestHandler(http.server.SimpleHTTPRequestHandler):
             self.handle_auth()
         elif path == '/api/admin-users':
             self.handle_post_admin_users()
+        elif path == '/api/update-case':
+            try:
+                content_length = int(self.headers['Content-Length'])
+                post_data = json.loads(self.rfile.read(content_length))
+                case_id = post_data.get('id')
+                status = post_data.get('status')
+                reply_text = post_data.get('reply_text')
+                is_agent = post_data.get('is_agent', True)
+
+                author = post_data.get('author', 'System')
+                is_system = post_data.get('isSystem', False)
+
+                found = False
+                for lst in [MOCK_PLATFORM_MESSAGES, MOCK_TRUSTPILOT_REVIEWS, MOCK_GOOGLE_REVIEWS]:
+                    for item in lst:
+                        item_id = str(item.get('id', ''))
+                        item_rev_id = str(item.get('review_id', ''))
+                        item_gmail_id = str(item.get('gmail_message_id', ''))
+                        item_fb_id = str(item.get('fb_post_id', ''))
+                        if str(case_id) in [item_id, item_rev_id, item_gmail_id, item_fb_id] and str(case_id) != '':
+                            if status:
+                                item['status'] = status.lower()
+                            if reply_text:
+                                if 'comments' not in item:
+                                    item['comments'] = []
+                                item['comments'].append({
+                                    'id': f"reply_{int(time.time())}",
+                                    'author': author,
+                                    'text': reply_text,
+                                    'createdTime': time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+                                    'isAgent': is_agent,
+                                    'isSystem': is_system
+                                })
+                            found = True
+                            break
+                    if found:
+                        break
+
+                self.send_response(200)
+                self.send_header('Content-Type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'success': found}).encode('utf-8'))
+            except Exception as e:
+                self.send_response(500)
+                self.send_header('Content-Type', 'application/json')
+                self.end_headers()
+                self.wfile.write(json.dumps({'error': str(e)}).encode('utf-8'))
         elif path in ['/api/facebook-messages', '/api/platform-messages', '/api/trustpilot-reviews']:
             self.send_response(200)
             self.send_header('Content-Type', 'application/json')

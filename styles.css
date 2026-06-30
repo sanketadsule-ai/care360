@@ -1056,6 +1056,30 @@ ul, li {
   border-color: rgba(45, 127, 249, 0.2);
 }
 
+.thread-message.system {
+  align-self: center;
+  background: var(--gray-50);
+  border: 1px dashed var(--gray-300);
+  max-width: 95%;
+  text-align: center;
+  font-style: italic;
+  padding: 8px 12px;
+}
+.thread-message.system .message-header {
+  border-bottom: none;
+  margin-bottom: 4px;
+  padding-bottom: 0;
+  justify-content: center;
+}
+.thread-message.system .message-sender {
+  color: var(--gray-500);
+  margin-right: 8px;
+}
+.thread-message.system .message-content {
+  color: var(--gray-500);
+  font-size: 11px;
+}
+
 .message-header {
   display: flex;
   justify-content: space-between;

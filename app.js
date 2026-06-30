@@ -1376,7 +1376,7 @@
       // Message stream
       c.messages.forEach((msg) => {
         const msgCard = document.createElement('div');
-        msgCard.className = 'thread-message' + (msg.isAgent ? ' agent' : '');
+        msgCard.className = 'thread-message' + (msg.isSystem ? ' system' : (msg.isAgent ? ' agent' : ''));
 
         const msgHeader = document.createElement('div');
         msgHeader.className = 'message-header';
@@ -1561,9 +1561,10 @@
         }
 
         // Append reply message
+        const authorName = authUser ? authUser.name : 'Support Agent (You)';
         c.messages.push({
           id: 'msg-' + Date.now(),
-          sender: 'Support Agent (You)',
+          sender: authorName,
           text: replyVal,
           timestamp: new Date().toISOString(),
           isAgent: true
@@ -1575,6 +1576,14 @@
 
         if (closeCheck.checked) {
           c.status = 'Closed';
+          c.messages.push({
+            id: 'sys-' + Date.now(),
+            sender: 'System',
+            text: `Status changed to Closed by ${authorName}`,
+            timestamp: new Date().toISOString(),
+            isAgent: false,
+            isSystem: true
+          });
           showGmailToast('✓ Message sent and case CLOSED!', 'success');
         } else {
           showGmailToast('✓ Message sent successfully!', 'success');
@@ -1583,6 +1592,33 @@
         textarea.value = '';
         saveState();
         renderAllCases();
+
+        // Persist reply and status to backend
+        fetch('/api/update-case', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+             id: c.id,
+             status: c.status,
+             reply_text: replyVal,
+             author: authorName,
+             is_agent: true
+          })
+        }).catch(console.error);
+        
+        if (closeCheck.checked) {
+          fetch('/api/update-case', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+               id: c.id,
+               reply_text: `Status changed to Closed by ${authorName}`,
+               author: 'System',
+               is_agent: false,
+               isSystem: true
+            })
+          }).catch(console.error);
+        }
       });
 
       actionsRow.appendChild(checkLabel);
@@ -1672,9 +1708,35 @@
         statusSelect.appendChild(opt);
       });
       statusSelect.addEventListener('change', () => {
+        const oldStatus = c.status;
         c.status = statusSelect.value;
+        const authorName = authUser ? authUser.name : 'System';
+        
+        c.messages.push({
+          id: 'sys-' + Date.now(),
+          sender: 'System',
+          text: `Status changed from ${oldStatus} to ${statusSelect.value} by ${authorName}`,
+          timestamp: new Date().toISOString(),
+          isAgent: false,
+          isSystem: true
+        });
+        
         saveState();
         renderAllCases();
+        
+        // Persist status change to backend
+        fetch('/api/update-case', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+             id: c.id, 
+             status: c.status,
+             reply_text: `Status changed from ${oldStatus} to ${statusSelect.value} by ${authorName}`,
+             author: 'System',
+             is_agent: false,
+             isSystem: true
+          })
+        }).catch(console.error);
       });
       statusField.appendChild(statusSelect);
       grid.appendChild(statusField);
@@ -1807,7 +1869,7 @@
         const data = await res.json();
         if (!data || !data.success) throw new Error((data && data.error) || 'Failed to load feed');
 
-        state.cases = (data.threads || []).map((t, i) => {
+        const newCases = (data.threads || []).map((t, i) => {
           const messages = [{
             id: 'post-' + t.id,
             sender: t.author,
@@ -1821,7 +1883,8 @@
               sender: c.author,
               text: c.text,
               timestamp: c.createdTime,
-              isAgent: false
+              isAgent: c.isAgent !== false,
+              isSystem: c.isSystem === true
             });
           });
           const n = (t.comments || []).length;
@@ -1834,13 +1897,21 @@
             text: t.text,
             createdTime: t.createdTime,
             type: n > 0 ? (n + ' comment' + (n === 1 ? '' : 's')) : t.type,
-            status: 'Open',
+            status: t.status === 'closed' ? 'Closed' : 'Open',
             priority: 'Medium',
             assignedTo: 'Unassigned',
             permalink: t.permalink,
             mediaUrl: t.mediaUrl,
             messages: messages
           };
+        });
+
+        // safely merge into state.cases without overwriting existing
+        const existingIds = new Set(state.cases.map(c => c.id));
+        newCases.forEach(nc => {
+          if (!existingIds.has(nc.id)) {
+            state.cases.push(nc);
+          }
         });
 
         saveState();
@@ -3392,7 +3463,14 @@ Collab Manager`
                 text: dbMsg.body_text || '',
                 timestamp: dbMsg.received_at || dbMsg.created_at,
                 isAgent: false
-              }]
+              }].concat((dbMsg.comments || []).map(comm => ({
+                id: comm.id,
+                sender: comm.author,
+                text: comm.text,
+                timestamp: comm.createdTime,
+                isAgent: comm.isAgent !== false,
+                isSystem: comm.isSystem === true
+              })))
             });
             existingIds.add(dbMsg.gmail_message_id);
             addedCount++;
@@ -3428,7 +3506,14 @@ Collab Manager`
                 text: fbMsg.message_text || '',
                 timestamp: fbMsg.received_at || fbMsg.created_at,
                 isAgent: false
-              }]
+              }].concat((fbMsg.comments || []).map(comm => ({
+                id: comm.id,
+                sender: comm.author,
+                text: comm.text,
+                timestamp: comm.createdTime,
+                isAgent: comm.isAgent !== false,
+                isSystem: comm.isSystem === true
+              })))
             });
             existingIds.add(fbMsg.fb_post_id);
             addedCount++;
@@ -3462,7 +3547,14 @@ Collab Manager`
                 text: `Rating: ${gbMsg.rating} Stars\n\n${gbMsg.comment || ''}`,
                 timestamp: gbMsg.received_at || gbMsg.created_at,
                 isAgent: false
-              }]
+              }].concat((gbMsg.comments || []).map(comm => ({
+                id: comm.id,
+                sender: comm.author,
+                text: comm.text,
+                timestamp: comm.createdTime,
+                isAgent: comm.isAgent !== false,
+                isSystem: comm.isSystem === true
+              })))
             });
             existingIds.add(gbMsg.review_id);
             addedCount++;
@@ -3502,7 +3594,14 @@ Collab Manager`
                 text: `Heading: ${tpMsg.heading}\nRating: ${tpMsg.rating} Stars\n\n${tpMsg.comment || ''}`,
                 timestamp: tpMsg.received_at || new Date().toISOString(),
                 isAgent: false
-              }]
+              }].concat((tpMsg.comments || []).map(comm => ({
+                id: comm.id,
+                sender: comm.author,
+                text: comm.text,
+                timestamp: comm.createdTime,
+                isAgent: comm.isAgent !== false,
+                isSystem: comm.isSystem === true
+              })))
             });
             existingIds.add(tpMsg.review_id);
             addedCount++;
