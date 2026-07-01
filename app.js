@@ -32,8 +32,11 @@
       config.headers['Authorization'] = 'Bearer ' + authToken;
     }
     const response = await originalFetch(resource, config);
-    // An expired/invalid session on a protected API call → force re-login.
-    if (isApi && !isAuthEndpoint && (response.status === 401 || response.status === 403) && authToken) {
+    // An expired/invalid session → force re-login.
+    // Only act on 401 (Unauthorized = token invalid/expired).
+    // 403 (Forbidden) is a normal response for non-admin users hitting
+    // admin-only endpoints and must NOT wipe the session.
+    if (isApi && !isAuthEndpoint && response.status === 401 && authToken) {
       clearAuth();
       showAuthScreen();
     }
@@ -140,9 +143,13 @@
           applyAuth(data.token, data.user);
           hideAuthScreen();
           checkAuthState();
-        } else if (mode === 'register' && res.ok) {
+        } else if (mode === 'register' && (res.ok || data.status === 'pending')) {
+          // Registration succeeded but account needs admin approval
           setMode('login');
-          setMessage('Registration submitted. Your account is pending administrator approval.', 'success');
+          setMessage(data.error || 'Registration submitted. Your account is pending administrator approval.', 'success');
+        } else if (data.status === 'pending') {
+          // Login attempt on a pending account
+          setMessage(data.error || 'Your account is pending administrator approval.', 'warn');
         } else {
           setMessage(data.error || 'Authentication failed.', 'error');
         }
@@ -521,7 +528,15 @@
     }
   });
 
-  document.addEventListener('DOMContentLoaded', checkAuthState);
+  // Run checkAuthState as soon as the DOM is ready.
+  // Since this script is loaded at the end of <body>, the DOM is already
+  // parsed by the time the IIFE executes, so DOMContentLoaded has
+  // already fired. We call checkAuthState directly in that case.
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', checkAuthState);
+  } else {
+    checkAuthState();
+  }
 
   // ── Load Google GIS SDK client script ────────────────
   if (!document.getElementById('google-gsi-script')) {

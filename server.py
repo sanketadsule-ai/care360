@@ -32,17 +32,23 @@ def load_env():
 load_env()
 
 # Session store for mock local auth
+_admin_salt = 'localmocksalt1234'
+_admin_pw_hash = hashlib.pbkdf2_hmac('sha512', b'Admin@12345', _admin_salt.encode('utf-8'), 10000).hex()
+
 SESSION_USER = {
-    'id': 'mock-admin-id',
-    'email': 'admin@carapal360.com',
-    'name': 'Admin User',
-    'initials': 'AU',
+    'id': 1,
+    'email': 'admin@carepal360.com',
+    'name': 'Administrator',
+    'initials': 'AD',
     'avatar_url': '',
     'role': 'admin',
-    'status': 'approved'
+    'status': 'approved',
+    'password_hash': _admin_pw_hash,
+    'salt': _admin_salt
 }
 
 SESSION_USERS_LIST = [
+    SESSION_USER,
     {
         'id': 101,
         'email': 'john.doe@example.com',
@@ -167,7 +173,14 @@ class Care360RequestHandler(http.server.SimpleHTTPRequestHandler):
         url_parts = urllib.parse.urlparse(self.path)
         path = url_parts.path
         
-        if path == '/api/twitter-connect':
+        if path == '/api/config':
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps({
+                'GOOGLE_CLIENT_ID': os.environ.get('GOOGLE_CLIENT_ID', '')
+            }).encode('utf-8'))
+        elif path == '/api/twitter-connect':
             self.handle_twitter_connect()
         elif path == '/api/twitter-sync':
             self.handle_twitter_sync_get()
@@ -608,10 +621,14 @@ class Care360RequestHandler(http.server.SimpleHTTPRequestHandler):
             
             for user in SESSION_USERS_LIST:
                 if str(user['id']) == str(user_id):
-                    if action == 'approve':
+                    if action == 'approve' or action == 'enable':
                         user['status'] = 'approved'
                     elif action == 'reject':
                         user['status'] = 'rejected'
+                    elif action == 'disable':
+                        user['status'] = 'disabled'
+                    elif action in ('remove', 'delete'):
+                        SESSION_USERS_LIST = [u for u in SESSION_USERS_LIST if str(u['id']) != str(user_id)]
                     break
             
             self.send_response(200)
