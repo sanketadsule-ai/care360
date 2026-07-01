@@ -110,22 +110,32 @@ MOCK_PLATFORM_MESSAGES = [
     {
         'id': 'gm_1',
         'review_id': 'gm_1',
+        'gmail_message_id': 'gm_1',
         'rating': 5,
         'author_name': 'Alice Brown',
         'comment': 'Email inquiry about enterprise plans.',
         'received_at': '2026-06-27T14:20:00Z',
         'platform': 'gmail',
-        'status': 'open'
+        'status': 'open',
+        'sender_email': 'alice@example.com',
+        'sender_name': 'Alice Brown',
+        'subject': 'Enterprise Plans Inquiry',
+        'body_text': 'Email inquiry about enterprise plans.'
     },
     {
         'id': 'gm_2',
         'review_id': 'gm_2',
+        'gmail_message_id': 'gm_2',
         'rating': 2,
         'author_name': 'Bob White',
         'comment': 'I need a refund for my recent purchase.',
         'received_at': '2026-06-29T08:05:00Z',
         'platform': 'gmail',
-        'status': 'open'
+        'status': 'open',
+        'sender_email': 'bob@example.com',
+        'sender_name': 'Bob White',
+        'subject': 'Refund Request',
+        'body_text': 'I need a refund for my recent purchase.'
     }
 ]
 
@@ -428,6 +438,12 @@ class Care360RequestHandler(http.server.SimpleHTTPRequestHandler):
                 content_length = int(self.headers['Content-Length'])
                 post_data = json.loads(self.rfile.read(content_length))
                 case_id = post_data.get('id')
+                import re
+                def clean_id(val):
+                    if not val: return ''
+                    return re.sub(r'^(tp_|gp_|fb_|ig_|gmail-msg-|msg-|post-|fb_orphan_)', '', str(val))
+                
+                clean_case_id = clean_id(case_id)
                 status = post_data.get('status')
                 reply_text = post_data.get('reply_text')
                 is_agent = post_data.get('is_agent', True)
@@ -438,11 +454,15 @@ class Care360RequestHandler(http.server.SimpleHTTPRequestHandler):
                 found = False
                 for lst in [MOCK_PLATFORM_MESSAGES, MOCK_TRUSTPILOT_REVIEWS, MOCK_GOOGLE_REVIEWS]:
                     for item in lst:
-                        item_id = str(item.get('id', ''))
-                        item_rev_id = str(item.get('review_id', ''))
-                        item_gmail_id = str(item.get('gmail_message_id', ''))
-                        item_fb_id = str(item.get('fb_post_id', ''))
-                        if str(case_id) in [item_id, item_rev_id, item_gmail_id, item_fb_id] and str(case_id) != '':
+                        item_ids = [
+                            clean_id(item.get('id')),
+                            clean_id(item.get('review_id')),
+                            clean_id(item.get('gmail_message_id')),
+                            clean_id(item.get('fb_post_id'))
+                        ]
+                        # Filter out empty strings
+                        item_ids = [x for x in item_ids if x != '']
+                        if clean_case_id in item_ids and clean_case_id != '':
                             if status:
                                 item['status'] = status.lower()
                             if reply_text:

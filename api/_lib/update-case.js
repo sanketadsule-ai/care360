@@ -32,12 +32,16 @@ module.exports = async function handler(req, res) {
       { name: 'email_messages', idCol: 'gmail_message_id' }
     ];
 
+    const cleanedId = String(id).replace(/^(tp_|gp_|fb_|ig_|gmail-msg-|msg-|post-|fb_orphan_)/, '');
     let found = false;
 
     for (const table of tables) {
-      // Find the record
-      const selectQuery = `SELECT * FROM ${table.name} WHERE ${table.idCol} = $1 OR id::text = $1`;
-      const selectResult = await pool.query(selectQuery, [String(id)]);
+      // Find the record matching either the raw ID or the cleaned ID
+      const selectQuery = `
+        SELECT * FROM ${table.name} 
+        WHERE ${table.idCol} = $1 OR id::text = $1 OR ${table.idCol} = $2 OR id::text = $2
+      `;
+      const selectResult = await pool.query(selectQuery, [String(id), String(cleanedId)]);
 
       if (selectResult.rows.length > 0) {
         const record = selectResult.rows[0];
@@ -60,13 +64,13 @@ module.exports = async function handler(req, res) {
           });
         }
 
-        // Update the record
+        // Update the record using both keys
         const updateQuery = `
           UPDATE ${table.name} 
           SET status = $1, comments = $2::jsonb 
-          WHERE ${table.idCol} = $3 OR id::text = $3
+          WHERE ${table.idCol} = $3 OR id::text = $3 OR ${table.idCol} = $4 OR id::text = $4
         `;
-        await pool.query(updateQuery, [newStatus, JSON.stringify(newComments), String(id)]);
+        await pool.query(updateQuery, [newStatus, JSON.stringify(newComments), String(id), String(cleanedId)]);
         
         break; // Stop searching once we found and updated the record
       }

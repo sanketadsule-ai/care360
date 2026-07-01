@@ -141,15 +141,18 @@ async function buildTrustpilotThreads(pool) {
      FROM trustpilot_reviews
      WHERE comment IS NOT NULL AND btrim(comment) <> ''
      ORDER BY received_at DESC NULLS LAST`);
-  return res.rows.map(r => ({
-    id: 'tp_' + r.review_id,
-    platform: 'trustpilot',
-    type: (r.rating ? r.rating + '★ ' : '') + 'Review',
-    author: cleanName(r.author_name, 'Trustpilot User'),
-    text: (r.heading && r.heading !== 'N/A' ? r.heading + ' — ' : '') + (r.comment || ''),
-    createdTime: r.received_at,
-    comments: []
-  }));
+  return res.rows.map(r => {
+    const threadId = String(r.review_id).startsWith('tp_') ? r.review_id : 'tp_' + r.review_id;
+    return {
+      id: threadId,
+      platform: 'trustpilot',
+      type: (r.rating ? r.rating + '★ ' : '') + 'Review',
+      author: cleanName(r.author_name, 'Trustpilot User'),
+      text: (r.heading && r.heading !== 'N/A' ? r.heading + ' — ' : '') + (r.comment || ''),
+      createdTime: r.received_at,
+      comments: []
+    };
+  });
 }
 
 module.exports = async function handler(req, res) {

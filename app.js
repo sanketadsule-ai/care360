@@ -2210,9 +2210,10 @@
         });
 
         // safely merge into state.cases without overwriting existing
-        const existingIds = new Set(state.cases.map(c => c.id));
+        const cleanId = (x) => String(x || '').replace(/^(tp_|gp_|fb_|ig_|gmail-msg-|msg-|post-|fb_orphan_)/, '');
+        const existingIds = new Set(state.cases.map(c => cleanId(c.id)));
         newCases.forEach(nc => {
-          if (!existingIds.has(nc.id)) {
+          if (!existingIds.has(cleanId(nc.id))) {
             state.cases.push(nc);
           }
         });
@@ -3734,12 +3735,13 @@ Collab Manager`
     ])
     .then(([platformData, fbData, gbData, tpData]) => {
       let addedCount = 0;
-      const existingIds = new Set(state.cases.map(c => c.gmailMessageId || c.fbPostId || c.id).filter(Boolean));
+      const cleanId = (x) => String(x || '').replace(/^(tp_|gp_|fb_|ig_|gmail-msg-|msg-|post-|fb_orphan_)/, '');
+      const existingIds = new Set(state.cases.map(c => cleanId(c.gmailMessageId || c.fbPostId || c.id)).filter(Boolean));
 
       // Process general platform messages
       if (platformData.success && platformData.data && platformData.data.length > 0) {
         platformData.data.forEach(dbMsg => {
-          if (dbMsg.gmail_message_id && !existingIds.has(dbMsg.gmail_message_id)) {
+          if (dbMsg.gmail_message_id && !existingIds.has(cleanId(dbMsg.gmail_message_id))) {
             const platform = dbMsg.platform || 'gmail';
             const sourceLabel = platform === 'gmail' ? 'Gmail Support' : (platform === 'google_play' ? 'Google Play' : platform);
             const msgType = platform === 'gmail' ? 'Email' : (platform === 'google_play' ? 'Review' : 'Message');
@@ -3775,7 +3777,7 @@ Collab Manager`
                 isSystem: comm.isSystem === true
               })))
             });
-            existingIds.add(dbMsg.gmail_message_id);
+            existingIds.add(cleanId(dbMsg.gmail_message_id));
             addedCount++;
           }
         });
@@ -3784,7 +3786,7 @@ Collab Manager`
       // Process dedicated facebook messages
       if (fbData.success && fbData.data && fbData.data.length > 0) {
         fbData.data.forEach(fbMsg => {
-          if (fbMsg.fb_post_id && !existingIds.has(fbMsg.fb_post_id)) {
+          if (fbMsg.fb_post_id && !existingIds.has(cleanId(fbMsg.fb_post_id))) {
             const platform = fbMsg.platform || 'facebook';
             
             state.cases.push({
@@ -3818,7 +3820,7 @@ Collab Manager`
                 isSystem: comm.isSystem === true
               })))
             });
-            existingIds.add(fbMsg.fb_post_id);
+            existingIds.add(cleanId(fbMsg.fb_post_id));
             addedCount++;
           }
         });
@@ -3827,7 +3829,7 @@ Collab Manager`
       // Process Google Reviews
       if (gbData && gbData.success && gbData.data && gbData.data.length > 0) {
         gbData.data.forEach(gbMsg => {
-          if (gbMsg.review_id && !existingIds.has(gbMsg.review_id)) {
+          if (gbMsg.review_id && !existingIds.has(cleanId(gbMsg.review_id))) {
             state.cases.push({
               id: gbMsg.review_id,
               gbReviewId: gbMsg.review_id,
@@ -3859,7 +3861,7 @@ Collab Manager`
                 isSystem: comm.isSystem === true
               })))
             });
-            existingIds.add(gbMsg.review_id);
+            existingIds.add(cleanId(gbMsg.review_id));
             addedCount++;
           }
         });
@@ -3869,11 +3871,11 @@ Collab Manager`
       // First, remove old trustpilot cases from state to ensure clean reload with correct ratings
       state.cases = state.cases.filter(c => c.channel !== 'trustpilot');
       // Re-calculate existingIds after filtering
-      const updatedExistingIds = new Set(state.cases.map(c => c.gmailMessageId || c.fbPostId || c.id).filter(Boolean));
+      const updatedExistingIds = new Set(state.cases.map(c => cleanId(c.gmailMessageId || c.fbPostId || c.id)).filter(Boolean));
 
       if (tpData && tpData.success && tpData.data && tpData.data.length > 0) {
         tpData.data.forEach(tpMsg => {
-          if (tpMsg.review_id && !updatedExistingIds.has(tpMsg.review_id)) {
+          if (tpMsg.review_id && !updatedExistingIds.has(cleanId(tpMsg.review_id))) {
             state.cases.push({
               id: tpMsg.review_id,
               tpReviewId: tpMsg.review_id,
@@ -3906,7 +3908,7 @@ Collab Manager`
                 isSystem: comm.isSystem === true
               })))
             });
-            existingIds.add(tpMsg.review_id);
+            existingIds.add(cleanId(tpMsg.review_id));
             addedCount++;
           }
         });
