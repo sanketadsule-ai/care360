@@ -39,9 +39,10 @@ def load_env():
 def ensure_deps():
     try:
         import psycopg2  # noqa
+        import requests  # noqa
     except ImportError:
         import subprocess
-        subprocess.check_call([sys.executable, "-m", "pip", "install", "psycopg2-binary"])
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "psycopg2-binary", "requests"])
 
 
 def make_driver():
@@ -61,6 +62,73 @@ def make_driver():
     opts.add_experimental_option("excludeSwitches", ["enable-automation"])
     driver = webdriver.Chrome(options=opts)
     return driver
+
+
+def analyze_review(comment):
+    api_key = os.environ.get("AZURE_OPENAI_API_KEY")
+    endpoint = os.environ.get("AZURE_OPENAI_ENDPOINT")
+    deployment_name = os.environ.get("AZURE_OPENAI_DEPLOYMENT_NAME")
+    api_version = os.environ.get("AZURE_OPENAI_API_VERSION") or "2024-02-15-preview"
+    
+    default_res = {
+        "priority": "P3",
+        "next_action": "Assess review and route to appropriate department.",
+        "department": "Support",
+        "user_type": "Inquirer"
+    }
+    
+    if not api_key or not endpoint or not deployment_name:
+        return default_res
+        
+    system_prompt = (
+        "You are an AI assistant that analyzes Instagram captions. Analyze the provided caption and extract the following information. "
+        "You must respond strictly in valid JSON format with these exact keys: "
+        "priority (Choose one: \"P0\", \"P1\", \"P2\", \"P3\", \"P4\", \"P5\") "
+        "next_action (A brief description of what action needs to be taken next) "
+        "department (The department that should handle this, e.g., Support, Sales, Marketing, HR) "
+        "user_type (Categorize the user, e.g., \"Campaigner\", \"Donor\", \"Inquirer\") "
+        "Do not include any conversational text, code blocks, or markdown formatting in your response. Return only the raw JSON object."
+    )
+    user_content = f"caption: {comment or ''}"
+    
+    try:
+        import requests
+        url = f"{endpoint.rstrip('/')}/openai/deployments/{deployment_name}/chat/completions?api-version={api_version}"
+        headers = {
+            "api-key": api_key,
+            "Content-Type": "application/json"
+        }
+        payload = {
+            "messages": [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_content}
+            ],
+            "temperature": 0
+        }
+        res = requests.post(url, headers=headers, json=payload, timeout=10)
+        if res.status_code != 200:
+            return default_res
+            
+        data = res.json()
+        content = data["choices"][0]["message"]["content"].strip()
+        
+        # Clean potential markdown wrappers
+        if "```" in content:
+            import re
+            match = re.search(r'```(?:json)?([\s\S]*?)```', content)
+            if match:
+                content = match.group(1).strip()
+                
+        parsed = json.loads(content)
+        return {
+            "priority": parsed.get("priority") or default_res["priority"],
+            "next_action": parsed.get("next_action") or default_res["next_action"],
+            "department": parsed.get("department") or default_res["department"],
+            "user_type": parsed.get("user_type") or default_res["user_type"]
+        }
+    except Exception as e:
+        print(f"[DEBUG] LLM analysis error: {e}")
+        return default_res
 
 
 def extract_reviews(page_source):
@@ -108,10 +176,15 @@ def main():
             id SERIAL PRIMARY KEY, channel_id INTEGER, review_id VARCHAR(255) UNIQUE,
             rating INTEGER, heading TEXT, author_name VARCHAR(255), comment TEXT,
             received_at TIMESTAMP, status VARCHAR(50) DEFAULT 'open',
+            priority VARCHAR(50), next_action TEXT, department VARCHAR(100), user_type VARCHAR(100),
             created_at TIMESTAMP DEFAULT NOW());
     """)
     cur.execute("ALTER TABLE trustpilot_reviews ADD COLUMN IF NOT EXISTS channel_id INTEGER;")
     cur.execute("ALTER TABLE trustpilot_reviews ADD COLUMN IF NOT EXISTS status VARCHAR(50) DEFAULT 'open';")
+    cur.execute("ALTER TABLE trustpilot_reviews ADD COLUMN IF NOT EXISTS priority VARCHAR(50);")
+    cur.execute("ALTER TABLE trustpilot_reviews ADD COLUMN IF NOT EXISTS next_action TEXT;")
+    cur.execute("ALTER TABLE trustpilot_reviews ADD COLUMN IF NOT EXISTS department VARCHAR(100);")
+    cur.execute("ALTER TABLE trustpilot_reviews ADD COLUMN IF NOT EXISTS user_type VARCHAR(100);")
 
     cur.execute("SELECT id FROM connected_channels WHERE platform='trustpilot' LIMIT 1")
     row = cur.fetchone()
@@ -143,16 +216,24 @@ def main():
                 if not rec["review_id"]:
                     continue
                 total_seen += 1
+
+                # Analyze via LLM
+                escalation = analyze_review(rec["comment"])
+
                 cur.execute("""
                     INSERT INTO trustpilot_reviews
-                        (channel_id, review_id, rating, heading, author_name, comment, received_at, status, created_at)
-                    VALUES (%s,%s,%s,%s,%s,%s,%s,'open',NOW())
+                        (channel_id, review_id, rating, heading, author_name, comment, received_at, status, priority, next_action, department, user_type, created_at)
+                    VALUES (%s,%s,%s,%s,%s,%s,%s,'open',%s,%s,%s,%s,NOW())
                     ON CONFLICT (review_id) DO UPDATE SET
                         rating=EXCLUDED.rating, heading=EXCLUDED.heading,
                         author_name=EXCLUDED.author_name, comment=EXCLUDED.comment,
-                        received_at=EXCLUDED.received_at
+                        received_at=EXCLUDED.received_at,
+                        priority=EXCLUDED.priority, next_action=EXCLUDED.next_action,
+                        department=EXCLUDED.department, user_type=EXCLUDED.user_type
                 """, (channel_id, rec["review_id"], rec["rating"], rec["heading"],
-                      rec["author_name"], rec["comment"], rec["received_at"]))
+                      rec["author_name"], rec["comment"], rec["received_at"],
+                      escalation["priority"], escalation["next_action"],
+                      escalation["department"], escalation["user_type"]))
                 if cur.rowcount > 0:
                     total_saved += 1
             print(f"[page {page}] {len(reviews)} reviews processed.")

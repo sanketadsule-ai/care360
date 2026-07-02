@@ -173,6 +173,10 @@ async function _ensureTables() {
       received_at       TIMESTAMP,
       status            VARCHAR(50) DEFAULT 'open',
       is_read           BOOLEAN DEFAULT FALSE,
+      priority          VARCHAR(50),
+      next_action       TEXT,
+      department        VARCHAR(100),
+      user_type         VARCHAR(100),
       created_at        TIMESTAMP DEFAULT NOW()
     );
   `);
@@ -196,14 +200,16 @@ async function _ensureTables() {
   // 3a. Seed the initial admin account (idempotent — runs effectively once).
   await ensureAdmin(p);
 
-  // 3b. Trustpilot migrations — the table may pre-exist without these columns,
-  // and CREATE TABLE IF NOT EXISTS won't add them. The INSERTs need them.
   try {
     await p.query(`
       ALTER TABLE trustpilot_reviews ADD COLUMN IF NOT EXISTS channel_id INTEGER;
       ALTER TABLE trustpilot_reviews ADD COLUMN IF NOT EXISTS status VARCHAR(50) DEFAULT 'open';
       ALTER TABLE trustpilot_reviews ADD COLUMN IF NOT EXISTS heading TEXT;
       ALTER TABLE trustpilot_reviews ADD COLUMN IF NOT EXISTS is_read BOOLEAN DEFAULT FALSE;
+      ALTER TABLE trustpilot_reviews ADD COLUMN IF NOT EXISTS priority VARCHAR(50);
+      ALTER TABLE trustpilot_reviews ADD COLUMN IF NOT EXISTS next_action TEXT;
+      ALTER TABLE trustpilot_reviews ADD COLUMN IF NOT EXISTS department VARCHAR(100);
+      ALTER TABLE trustpilot_reviews ADD COLUMN IF NOT EXISTS user_type VARCHAR(100);
     `);
   } catch (err) {
     console.error('Migration error for trustpilot_reviews table:', err.message);

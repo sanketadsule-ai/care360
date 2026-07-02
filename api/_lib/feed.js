@@ -137,7 +137,7 @@ async function buildGooglePlayThreads(pool) {
 
 async function buildTrustpilotThreads(pool) {
   const res = await pool.query(
-    `SELECT review_id, rating, heading, author_name, comment, received_at
+    `SELECT review_id, rating, heading, author_name, comment, received_at, priority, next_action, department, user_type
      FROM trustpilot_reviews
      WHERE comment IS NOT NULL AND btrim(comment) <> ''
      ORDER BY received_at DESC NULLS LAST`);
@@ -150,6 +150,10 @@ async function buildTrustpilotThreads(pool) {
       author: cleanName(r.author_name, 'Trustpilot User'),
       text: (r.heading && r.heading !== 'N/A' ? r.heading + ' — ' : '') + (r.comment || ''),
       createdTime: r.received_at,
+      priority: r.priority || null,
+      next_action: r.next_action || null,
+      department: r.department || null,
+      user_type: r.user_type || null,
       comments: []
     };
   });

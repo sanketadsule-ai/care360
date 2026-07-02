@@ -31,6 +31,73 @@ def load_env():
 
 load_env()
 
+# ── Azure OpenAI Review Analyzer ──────────────────────────────────────
+def analyze_review(comment):
+    api_key = os.environ.get("AZURE_OPENAI_API_KEY")
+    endpoint = os.environ.get("AZURE_OPENAI_ENDPOINT")
+    deployment_name = os.environ.get("AZURE_OPENAI_DEPLOYMENT_NAME")
+    api_version = os.environ.get("AZURE_OPENAI_API_VERSION") or "2024-02-15-preview"
+    
+    default_res = {
+        "priority": "P3",
+        "next_action": "Assess review and route to appropriate department.",
+        "department": "Support",
+        "user_type": "Inquirer"
+    }
+    
+    if not api_key or not endpoint or not deployment_name:
+        return default_res
+        
+    system_prompt = (
+        "You are an AI assistant that analyzes Instagram captions. Analyze the provided caption and extract the following information. "
+        "You must respond strictly in valid JSON format with these exact keys: "
+        "priority (Choose one: \"P0\", \"P1\", \"P2\", \"P3\", \"P4\", \"P5\") "
+        "next_action (A brief description of what action needs to be taken next) "
+        "department (The department that should handle this, e.g., Support, Sales, Marketing, HR) "
+        "user_type (Categorize the user, e.g., \"Campaigner\", \"Donor\", \"Inquirer\") "
+        "Do not include any conversational text, code blocks, or markdown formatting in your response. Return only the raw JSON object."
+    )
+    user_content = f"caption: {comment or ''}"
+    
+    try:
+        url = f"{endpoint.rstrip('/')}/openai/deployments/{deployment_name}/chat/completions?api-version={api_version}"
+        headers = {
+            "api-key": api_key,
+            "Content-Type": "application/json"
+        }
+        payload = {
+            "messages": [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_content}
+            ],
+            "temperature": 0
+        }
+        
+        req_data = json.dumps(payload).encode('utf-8')
+        req = urllib.request.Request(url, data=req_data, headers=headers, method='POST')
+        with urllib.request.urlopen(req, timeout=10) as res:
+            res_data = json.loads(res.read().decode('utf-8'))
+            
+        content = res_data["choices"][0]["message"]["content"].strip()
+        
+        # Clean potential markdown wrappers
+        if "```" in content:
+            import re
+            match = re.search(r'```(?:json)?([\s\S]*?)```', content)
+            if match:
+                content = match.group(1).strip()
+                
+        parsed = json.loads(content)
+        return {
+            "priority": parsed.get("priority") or default_res["priority"],
+            "next_action": parsed.get("next_action") or default_res["next_action"],
+            "department": parsed.get("department") or default_res["department"],
+            "user_type": parsed.get("user_type") or default_res["user_type"]
+        }
+    except Exception as e:
+        print(f"[DEBUG] LLM analysis error: {e}")
+        return default_res
+
 # Session store for mock local auth
 _admin_salt = 'localmocksalt1234'
 _admin_pw_hash = hashlib.pbkdf2_hmac('sha512', b'Admin@12345', _admin_salt.encode('utf-8'), 10000).hex()
@@ -155,6 +222,10 @@ try:
                     'comment': item.get('Body', ''),
                     'heading': item.get('Heading', ''),
                     'received_at': item.get('Date', ''),
+                    'priority': item.get('Priority', 'Medium'),
+                    'department': item.get('Department', 'Support'),
+                    'user_type': item.get('UserType', 'Inquirer'),
+                    'next_action': item.get('NextAction', 'Assess review and route to appropriate department.'),
                     'status': 'open'
                 })
         print(f"[DEBUG] Loaded {len(MOCK_TRUSTPILOT_REVIEWS)} Trustpilot reviews from CSV.")
@@ -381,6 +452,8 @@ class Care360RequestHandler(http.server.SimpleHTTPRequestHandler):
                         reader = csv.DictReader(f)
                         for item in reader:
                             rev_id = 'tp_' + str(abs(hash(item.get('Body', '') + item.get('Author', ''))))
+                            # Run the Azure OpenAI analysis locally
+                            escalation = analyze_review(item.get('Body', ''))
                             new_reviews.append({
                                 'id': rev_id,
                                 'review_id': rev_id,
@@ -390,6 +463,10 @@ class Care360RequestHandler(http.server.SimpleHTTPRequestHandler):
                                 'heading': item.get('Heading', ''),
                                 'received_at': item.get('Date', ''),
                                 'platform': 'trustpilot',
+                                'priority': escalation['priority'],
+                                'next_action': escalation['next_action'],
+                                'department': escalation['department'],
+                                'user_type': escalation['user_type'],
                                 'status': 'open'
                             })
                     

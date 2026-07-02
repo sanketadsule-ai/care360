@@ -1,4 +1,5 @@
 const { getPool, ensureTables } = require('./db');
+const { analyzeReview } = require('./llm');
 
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -52,16 +53,23 @@ module.exports = async function handler(req, res) {
           ratingInt = parseInt(mockRev.rating);
         }
 
+        // Run the Azure OpenAI analysis on the review comment
+        const escalation = await analyzeReview(mockRev.comment || '');
+
         try {
           await pool.query(
-            `INSERT INTO trustpilot_reviews (channel_id, review_id, rating, heading, author_name, comment, received_at, status, created_at)
-             VALUES ($1, $2, $3, $4, $5, $6, $7, 'open', NOW())
+            `INSERT INTO trustpilot_reviews (channel_id, review_id, rating, heading, author_name, comment, received_at, status, priority, next_action, department, user_type, created_at)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, 'open', $8, $9, $10, $11, NOW())
              ON CONFLICT (review_id)
              DO UPDATE SET
                rating = EXCLUDED.rating,
                heading = EXCLUDED.heading,
                author_name = EXCLUDED.author_name,
-               comment = EXCLUDED.comment
+               comment = EXCLUDED.comment,
+               priority = EXCLUDED.priority,
+               next_action = EXCLUDED.next_action,
+               department = EXCLUDED.department,
+               user_type = EXCLUDED.user_type
             `,
             [
               channelId,
@@ -70,7 +78,11 @@ module.exports = async function handler(req, res) {
               (mockRev.heading || '').substring(0, 1000),
               (mockRev.author_name || 'Anonymous User').substring(0, 255),
               mockRev.comment || '',
-              mockRev.received_at ? new Date(mockRev.received_at) : new Date()
+              mockRev.received_at ? new Date(mockRev.received_at) : new Date(),
+              escalation.priority,
+              escalation.next_action,
+              escalation.department,
+              escalation.user_type
             ]
           );
           totalSaved++;

@@ -1,4 +1,5 @@
 const { getPool, ensureTables } = require('./db');
+const { analyzeReview } = require('./llm');
 
 module.exports = async function handler(req, res) {
   // CORS headers
@@ -54,15 +55,20 @@ module.exports = async function handler(req, res) {
 
       for (const msg of messages) {
         try {
+          const escalation = await analyzeReview(msg.comment || '');
           await pool.query(
-            `INSERT INTO trustpilot_reviews (channel_id, review_id, rating, heading, author_name, comment, received_at, status, created_at)
-             VALUES ($1, $2, $3, $4, $5, $6, $7, 'open', NOW())
+            `INSERT INTO trustpilot_reviews (channel_id, review_id, rating, heading, author_name, comment, received_at, status, priority, next_action, department, user_type, created_at)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, 'open', $8, $9, $10, $11, NOW())
              ON CONFLICT (review_id)
              DO UPDATE SET
                rating = EXCLUDED.rating,
                heading = EXCLUDED.heading,
                author_name = EXCLUDED.author_name,
-               comment = EXCLUDED.comment
+               comment = EXCLUDED.comment,
+               priority = EXCLUDED.priority,
+               next_action = EXCLUDED.next_action,
+               department = EXCLUDED.department,
+               user_type = EXCLUDED.user_type
             `,
             [
               channel_id,
@@ -71,7 +77,11 @@ module.exports = async function handler(req, res) {
               msg.heading || '',
               msg.author_name || 'Anonymous User',
               msg.comment || '',
-              msg.received_at ? new Date(msg.received_at) : new Date()
+              msg.received_at ? new Date(msg.received_at) : new Date(),
+              escalation.priority,
+              escalation.next_action,
+              escalation.department,
+              escalation.user_type
             ]
           );
           savedCount++;

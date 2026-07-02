@@ -2050,7 +2050,9 @@
       prioField.innerHTML = `<label>Priority</label>`;
       const prioSelect = document.createElement('select');
       prioSelect.className = 'metadata-select';
-      ['Low', 'Medium', 'High'].forEach((pr) => {
+      const isAIPrio = c.priority && c.priority.startsWith('P');
+      const prioList = isAIPrio ? ['P0', 'P1', 'P2', 'P3', 'P4', 'P5'] : ['Low', 'Medium', 'High'];
+      prioList.forEach((pr) => {
         const opt = document.createElement('option');
         opt.value = pr;
         opt.textContent = pr;
@@ -2118,7 +2120,7 @@
       mainTag.textContent = c.channel.toUpperCase();
       tags.appendChild(mainTag);
 
-      if (c.priority === 'High') {
+      if (c.priority === 'High' || c.priority === 'P0' || c.priority === 'P1') {
         const priorityTag = document.createElement('span');
         priorityTag.className = 'metadata-tag urgent';
         priorityTag.textContent = 'URGENT';
@@ -2134,6 +2136,34 @@
 
       s4.appendChild(tags);
       body.appendChild(s4);
+
+      // Section 5: AI Escalation Details (for Trustpilot or cases classified with AI priority)
+      if (c.channel === 'trustpilot' || (c.priority && c.priority.startsWith('P'))) {
+        const s5 = document.createElement('div');
+        s5.className = 'metadata-section';
+        s5.innerHTML = `<div class="metadata-section-title">AI Escalation Summary</div>`;
+        
+        const escDetails = document.createElement('div');
+        escDetails.style.display = 'flex';
+        escDetails.style.flexDirection = 'column';
+        escDetails.style.gap = '8px';
+        escDetails.style.fontSize = '12px';
+        escDetails.style.background = '#F9FAFB';
+        escDetails.style.padding = '10px';
+        escDetails.style.borderRadius = '6px';
+        escDetails.style.border = '1px solid #E5E7EB';
+        
+        escDetails.innerHTML = `
+          <div><strong>Priority:</strong> <span class="metadata-tag urgent" style="display:inline-block; margin-left:4px;">${c.priority || 'P3'}</span></div>
+          <div style="margin-top:2px;"><strong>User Type:</strong> <span class="metadata-tag" style="background:#EBF5FF; color:#1E3A8A; border-color:#BFDBFE; display:inline-block; margin-left:4px; font-weight:500;">${c.user_type || 'Inquirer'}</span></div>
+          <div style="margin-top:2px;"><strong>Department:</strong> <span class="metadata-tag" style="background:#F0FDF4; color:#166534; border-color:#BBF7D0; display:inline-block; margin-left:4px; font-weight:500;">${c.department || 'Support'}</span></div>
+          <div style="margin-top:6px; border-top:1px solid #E5E7EB; padding-top:6px;"><strong>Suggested Action:</strong></div>
+          <div style="color:#4B5563; font-style:italic; line-height:1.4; margin-top:2px;">"${c.next_action || 'No action specified.'}"</div>
+        `;
+        
+        s5.appendChild(escDetails);
+        body.appendChild(s5);
+      }
 
       detail.appendChild(body);
       right.appendChild(detail);
@@ -2201,7 +2231,10 @@
             createdTime: t.createdTime,
             type: n > 0 ? (n + ' comment' + (n === 1 ? '' : 's')) : t.type,
             status: t.status === 'closed' ? 'Closed' : 'Open',
-            priority: 'Medium',
+            priority: t.priority || 'Medium',
+            department: t.department || 'Support',
+            user_type: t.user_type || 'Inquirer',
+            next_action: t.next_action || 'No action specified.',
             assignedTo: 'Unassigned',
             permalink: t.permalink,
             mediaUrl: t.mediaUrl,
@@ -3889,7 +3922,10 @@ Collab Manager`
               createdTime: tpMsg.received_at || new Date().toISOString(),
               type: 'Review',
               status: tpMsg.status === 'open' ? 'Open' : 'Closed',
-              priority: 'High',
+              priority: tpMsg.priority || 'Medium',
+              department: tpMsg.department || 'Support',
+              user_type: tpMsg.user_type || 'Inquirer',
+              next_action: tpMsg.next_action || 'No action specified.',
               assignedTo: 'Unassigned',
               emailSubject: (tpMsg.heading || 'Trustpilot Review') + ': ' + tpMsg.rating + ' Stars',
               emailAttachments: [],
