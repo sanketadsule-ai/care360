@@ -16,14 +16,26 @@ module.exports = async function handler(req, res) {
     await ensureTables();
     const pool = getPool();
 
-    // Ensure a Trustpilot channel exists in connected_channels
+    // In a multi-tenant environment, req.orgId would be passed or derived from auth.
+    // For now, we query the seed organization.
+    const orgRes = await pool.query("SELECT id FROM organizations WHERE slug = 'carepal360'");
+    if (orgRes.rows.length === 0) {
+        return res.status(200).json({ success: true, synced_count: 0, errors: errors });
+    }
+    const orgId = orgRes.rows[0].id;
+    
+    // Set RLS bypass
+    await pool.query("SET LOCAL app.current_org_id = ''");
+
+    // Ensure a Trustpilot channel exists in channels table
     let channelId;
-    const channelRes = await pool.query("SELECT id FROM connected_channels WHERE platform='trustpilot' LIMIT 1");
+    const channelRes = await pool.query("SELECT id FROM channels WHERE platform='trustpilot' LIMIT 1");
     if (channelRes.rows.length > 0) {
       channelId = channelRes.rows[0].id;
     } else {
       const insertChannel = await pool.query(
-        "INSERT INTO connected_channels (platform, account_name) VALUES ('trustpilot', 'Trustpilot') RETURNING id"
+        "INSERT INTO channels (organization_id, platform, external_id, display_name) VALUES ($1, 'trustpilot', 'trustpilot_legacy', 'Trustpilot') RETURNING id",
+        [orgId]
       );
       channelId = insertChannel.rows[0].id;
     }
@@ -56,38 +68,57 @@ module.exports = async function handler(req, res) {
         // Run the Azure OpenAI analysis on the review comment
         const escalation = await analyzeReview(mockRev.comment || '');
 
+        const client = await pool.connect();
         try {
-          await pool.query(
-            `INSERT INTO trustpilot_reviews (channel_id, review_id, rating, heading, author_name, comment, received_at, status, priority, next_action, department, user_type, created_at)
-             VALUES ($1, $2, $3, $4, $5, $6, $7, 'open', $8, $9, $10, $11, NOW())
-             ON CONFLICT (review_id)
-             DO UPDATE SET
-               rating = EXCLUDED.rating,
-               heading = EXCLUDED.heading,
-               author_name = EXCLUDED.author_name,
-               comment = EXCLUDED.comment,
-               priority = EXCLUDED.priority,
-               next_action = EXCLUDED.next_action,
-               department = EXCLUDED.department,
-               user_type = EXCLUDED.user_type
-            `,
-            [
-              channelId,
-              mockRev.review_id,
-              ratingInt,
-              (mockRev.heading || '').substring(0, 1000),
-              (mockRev.author_name || 'Anonymous User').substring(0, 255),
-              mockRev.comment || '',
-              mockRev.received_at ? new Date(mockRev.received_at) : new Date(),
-              escalation.priority,
-              escalation.next_action,
-              escalation.department,
-              escalation.user_type
-            ]
-          );
+          await client.query('BEGIN');
+          
+          const uniqueId = mockRev.review_id;
+          const authorName = mockRev.author_name || 'Anonymous User';
+          const heading = mockRev.heading || '';
+          const comment = mockRev.comment || '';
+          const receivedAt = mockRev.received_at ? new Date(mockRev.received_at) : new Date();
+          const platformUserId = authorName.toLowerCase().replace(/ /g, '_') + '_' + uniqueId;
+
+          // Insert Contact
+          const contactRes = await client.query(`
+            INSERT INTO contacts (channel_id, platform_user_id, name)
+            VALUES ($1, $2, $3)
+            ON CONFLICT (channel_id, platform_user_id) DO UPDATE SET updated_at = NOW()
+            RETURNING id
+          `, [channelId, platformUserId, authorName]);
+          const contactId = contactRes.rows[0].id;
+
+          // Insert Conversation
+          const convRes = await client.query(`
+            INSERT INTO conversations (organization_id, channel_id, platform_thread_id, title, platform, type, status, priority, next_action, department, user_type, platform_created_at, created_at)
+            VALUES ($1, $2, $3, $4, 'trustpilot', 'Review', 'open', $5, $6, $7, $8, $9, NOW())
+            ON CONFLICT (channel_id, platform_thread_id) DO UPDATE SET
+              title = EXCLUDED.title,
+              priority = EXCLUDED.priority,
+              next_action = EXCLUDED.next_action,
+              department = EXCLUDED.department,
+              user_type = EXCLUDED.user_type,
+              updated_at = NOW()
+            RETURNING id
+          `, [orgId, channelId, uniqueId, heading, escalation.priority, escalation.next_action, escalation.department, escalation.user_type, receivedAt]);
+          const convId = convRes.rows[0].id;
+
+          // Insert Message
+          await client.query(`
+            INSERT INTO messages (conversation_id, contact_id, sender_type, visibility, content, platform_message_id, rating, status, platform_created_at, created_at)
+            VALUES ($1, $2, 'customer', 'public', $3, $4, $5, 'received', $6, NOW())
+            ON CONFLICT (conversation_id, platform_message_id) DO UPDATE SET
+              content = EXCLUDED.content,
+              rating = EXCLUDED.rating
+          `, [convId, contactId, comment, uniqueId, ratingInt, receivedAt]);
+
+          await client.query('COMMIT');
           totalSaved++;
         } catch (insertErr) {
-          // Ignore unique conflicts if ON CONFLICT fails for some reason
+          await client.query('ROLLBACK');
+          errors.push({ review_id: mockRev.review_id, error: insertErr.message });
+        } finally {
+          client.release();
         }
       }
     } catch (err) {

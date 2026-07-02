@@ -27,10 +27,28 @@ module.exports = async function handler(req, res) {
     await ensureTables();
     const pool = getPool();
 
+    // In a multi-tenant environment, req.orgId would be passed or derived from auth.
+    // For now, we query the seed organization.
+    const orgRes = await pool.query("SELECT id FROM organizations WHERE slug = 'carepal360'");
+    if (orgRes.rows.length === 0) {
+        return res.status(200).json({ success: true, synced_count: 0, fb_errors: errors });
+    }
+    const orgId = orgRes.rows[0].id;
+    
+    // Set RLS bypass
+    await pool.query("SET LOCAL app.current_org_id = ''");
+
     // 1. Get all active Facebook channels from DB with their access tokens
-    const channelsRes = await pool.query(
-      "SELECT id, account_email, access_token, account_name FROM connected_channels WHERE platform = 'facebook' AND status = 'active'"
-    );
+    const channelsRes = await pool.query(`
+      SELECT 
+        c.id, 
+        c.external_id AS account_email, 
+        cc.encrypted_value AS access_token, 
+        c.display_name AS account_name 
+      FROM channels c 
+      LEFT JOIN channel_credentials cc ON cc.channel_id = c.id 
+      WHERE c.organization_id = $1 AND c.platform = 'facebook' AND c.status = 'active' AND c.deleted_at IS NULL
+    `, [orgId]);
 
     let totalSaved = 0;
 
@@ -156,28 +174,51 @@ module.exports = async function handler(req, res) {
 
       // Save to database
       for (const msg of cases) {
+        const client = await pool.connect();
         try {
-          await pool.query(
-            `INSERT INTO facebook_messages (channel_id, fb_post_id, post_type, author_name, message_text, received_at, status, created_at)
-             VALUES ($1, $2, $3, $4, $5, $6, 'open', NOW())
-             ON CONFLICT (fb_post_id)
-             DO UPDATE SET
-               post_type = EXCLUDED.post_type,
-               author_name = EXCLUDED.author_name,
-               message_text = EXCLUDED.message_text
-            `,
-            [
-              channel.id,
-              msg.id,
-              msg.type,
-              msg.author || '',
-              msg.text || '',
-              msg.createdTime ? new Date(msg.createdTime) : new Date()
-            ]
-          );
+          await client.query('BEGIN');
+
+          const uniqueId = msg.id;
+          const authorName = msg.author || '';
+          const messageText = msg.text || '';
+          const receivedAt = msg.createdTime ? new Date(msg.createdTime) : new Date();
+          const platformUserId = authorName.toLowerCase().replace(/ /g, '_') + '_' + uniqueId;
+
+          // Insert Contact
+          const contactRes = await client.query(`
+            INSERT INTO contacts (channel_id, platform_user_id, name)
+            VALUES ($1, $2, $3)
+            ON CONFLICT (channel_id, platform_user_id) DO UPDATE SET updated_at = NOW()
+            RETURNING id
+          `, [channel.id, platformUserId, authorName]);
+          const contactId = contactRes.rows[0].id;
+
+          // Insert Conversation
+          const convRes = await client.query(`
+            INSERT INTO conversations (organization_id, channel_id, platform_thread_id, title, platform, type, status, platform_created_at, created_at)
+            VALUES ($1, $2, $3, $4, 'facebook', $5, 'open', $6, NOW())
+            ON CONFLICT (channel_id, platform_thread_id) DO UPDATE SET
+              type = EXCLUDED.type,
+              updated_at = NOW()
+            RETURNING id
+          `, [orgId, channel.id, uniqueId, messageText.substring(0, 1000), msg.type, receivedAt]);
+          const convId = convRes.rows[0].id;
+
+          // Insert Message
+          await client.query(`
+            INSERT INTO messages (conversation_id, contact_id, sender_type, visibility, content, platform_message_id, status, platform_created_at, created_at)
+            VALUES ($1, $2, 'customer', 'public', $3, $4, 'received', $5, NOW())
+            ON CONFLICT (conversation_id, platform_message_id) DO UPDATE SET
+              content = EXCLUDED.content
+          `, [convId, contactId, messageText, uniqueId, receivedAt]);
+
+          await client.query('COMMIT');
           totalSaved++;
         } catch (insertErr) {
-          // Ignore unique conflict or DB errors on individual inserts
+          await client.query('ROLLBACK');
+          errors.push({ msg_id: msg.id, error: insertErr.message });
+        } finally {
+          client.release();
         }
       }
     }

@@ -17,39 +17,48 @@ module.exports = async function handler(req, res) {
   const authUser = verifyAuth(req, res);
   if (!authUser) return; // response already sent
 
+  let client;
   try {
     await ensureTables();
     const pool = getPool();
 
     if (req.method === 'GET') {
+      client = await pool.connect();
+      await client.query("BEGIN");
+      
+      // Set RLS bypass since we are in script/internal middleware context
+      await client.query("SET LOCAL app.current_org_id = ''");
+
       // 2. Fetch the user profile from token ID
-      const userRes = await pool.query('SELECT * FROM users WHERE id = $1', [authUser.id]);
+      const userRes = await client.query('SELECT * FROM users WHERE id = $1', [authUser.id]);
       if (userRes.rows.length === 0) {
+        await client.query("COMMIT");
         return res.status(404).json({ error: 'User not found' });
       }
       const user = userRes.rows[0];
 
       // 3. Calculate unread counts
       // Count direct notifications
-      const notifRes = await pool.query('SELECT COUNT(*) as count FROM notifications WHERE user_id = $1 AND is_read = false', [user.id]);
+      const notifRes = await client.query('SELECT COUNT(*) as count FROM notifications WHERE recipient_user_id = $1 AND read_at IS NULL', [user.id]);
       const unreadNotifs = parseInt(notifRes.rows[0].count, 10) || 0;
 
-      // Count open facebook messages
+      // Count open facebook messages/conversations
       let fbUnread = 0;
       try {
-        const fbRes = await pool.query('SELECT COUNT(*) as count FROM facebook_messages WHERE status = $1', ['open']);
+        const fbRes = await client.query("SELECT COUNT(*) as count FROM conversations WHERE platform = 'facebook' AND status = 'open' AND organization_id = $1 AND deleted_at IS NULL", [user.organization_id]);
         fbUnread = parseInt(fbRes.rows[0].count, 10) || 0;
       } catch(e) { /* ignore if table missing or error */ }
 
-      // Count open email messages
+      // Count open email messages/conversations
       let emailUnread = 0;
       try {
-        const emailRes = await pool.query('SELECT COUNT(*) as count FROM email_messages WHERE status = $1', ['open']);
+        const emailRes = await client.query("SELECT COUNT(*) as count FROM conversations WHERE platform = 'gmail' AND status = 'open' AND organization_id = $1 AND deleted_at IS NULL", [user.organization_id]);
         emailUnread = parseInt(emailRes.rows[0].count, 10) || 0;
       } catch(e) { /* ignore if table missing or error */ }
 
       const totalUnread = unreadNotifs + fbUnread + emailUnread;
 
+      await client.query("COMMIT");
       return res.status(200).json({
         success: true,
         data: {
@@ -66,7 +75,12 @@ module.exports = async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
 
   } catch (error) {
+    if (client) {
+      try { await client.query("ROLLBACK"); } catch(e){}
+    }
     console.error('user-profile error:', error);
     return res.status(500).json({ error: 'Internal server error', details: error.message });
+  } finally {
+    if (client) client.release();
   }
 };

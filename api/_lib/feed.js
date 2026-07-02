@@ -1,167 +1,6 @@
 // Vercel Serverless Function: /api/feed
-// Read-only. Returns social "threads" (a post + its comments) sourced from the
-// tables that the n8n automation populates. The app no longer connects to social
-// platforms directly — it only reads what n8n has stored in the database.
-//
-// Output shape:
-//   { success: true,
-//     threads: [ { id, platform, type, author, text, permalink, mediaUrl,
-//                  createdTime, comments: [ { id, author, text, createdTime } ] } ],
-//     counts: { facebook, instagram, twitter, google_play } }
-const { getPool } = require('./db');
-
-// Facebook author names from n8n can be noisy ("\n\n", "Hidden", a raw id, or null).
-function cleanName(name, fallback) {
-  if (!name) return fallback;
-  const t = String(name).replace(/\s+/g, ' ').trim();
-  if (!t || t.toLowerCase() === 'hidden') return fallback;
-  return t;
-}
-
-async function buildFacebookThreads(pool) {
-  // posts.id   = "{pageId}_{postId}"     -> post key is the part AFTER the underscore
-  // comments.id = "{postId}_{commentId}" -> post key is the part BEFORE the underscore
-  const [postsRes, commentsRes] = await Promise.all([
-    pool.query(`SELECT id, message, created_time FROM facebook_posts`),
-    pool.query(`SELECT id, message, created_time, from_name
-                FROM facebook_comments
-                WHERE message IS NOT NULL AND btrim(message) <> ''`)
-  ]);
-
-  // Group comments by the post id encoded in their own id.
-  const commentsByPost = {};
-  for (const c of commentsRes.rows) {
-    const postKey = String(c.id).split('_')[0];
-    (commentsByPost[postKey] = commentsByPost[postKey] || []).push({
-      id: c.id,
-      author: cleanName(c.from_name, 'Facebook User'),
-      text: c.message,
-      createdTime: c.created_time
-    });
-  }
-
-  const threads = [];
-  const usedKeys = new Set();
-  for (const p of postsRes.rows) {
-    const parts = String(p.id).split('_');
-    const postKey = parts.length > 1 ? parts[1] : parts[0];
-    const comments = commentsByPost[postKey] || [];
-    usedKeys.add(postKey);
-    threads.push({
-      id: 'fb_' + p.id,
-      platform: 'facebook',
-      type: 'Post',
-      author: 'Facebook Page',
-      text: p.message || '(no text)',
-      createdTime: p.created_time,
-      comments: comments.sort((a, b) => new Date(a.createdTime) - new Date(b.createdTime))
-    });
-  }
-
-  // Comments whose post is not in facebook_posts -> surface them so nothing is lost.
-  for (const [postKey, comments] of Object.entries(commentsByPost)) {
-    if (usedKeys.has(postKey)) continue;
-    threads.push({
-      id: 'fb_orphan_' + postKey,
-      platform: 'facebook',
-      type: 'Comments',
-      author: 'Facebook Page',
-      text: '(original post not synced)',
-      createdTime: comments[0] && comments[0].createdTime,
-      comments: comments.sort((a, b) => new Date(a.createdTime) - new Date(b.createdTime))
-    });
-  }
-
-  return threads;
-}
-
-async function buildInstagramThreads(pool) {
-  const [postsRes, commentsRes] = await Promise.all([
-    pool.query(`SELECT id, media_type, media_url, permalink, timestamp, like_count
-                FROM instagram_posts`),
-    pool.query(`SELECT id, text, timestamp FROM instagram_comments
-                WHERE text IS NOT NULL AND btrim(text) <> ''`)
-  ]);
-
-  const comments = commentsRes.rows
-    .map(c => ({ id: c.id, author: 'Instagram User', text: c.text, createdTime: c.timestamp }))
-    .sort((a, b) => new Date(a.createdTime) - new Date(b.createdTime));
-
-  const posts = postsRes.rows.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-
-  // NOTE: instagram_comments has no post/media id, so comments cannot be reliably
-  // linked to a specific post. Best effort: attach all comments to the most recent
-  // post. To fix properly, add a `media_id` column to instagram_comments in n8n.
-  const threads = posts.map((p, idx) => ({
-    id: 'ig_' + p.id,
-    platform: 'instagram',
-    type: 'Post',
-    author: 'Instagram',
-    text: p.permalink ? ('📷 Photo — ' + p.permalink) : '📷 Instagram photo',
-    permalink: p.permalink,
-    mediaUrl: p.media_url,
-    createdTime: p.timestamp,
-    comments: idx === 0 ? comments : []
-  }));
-
-  // If there are comments but no posts, still show the comments.
-  if (posts.length === 0 && comments.length > 0) {
-    threads.push({
-      id: 'ig_comments',
-      platform: 'instagram',
-      type: 'Comments',
-      author: 'Instagram',
-      text: '(post not synced)',
-      createdTime: comments[0].createdTime,
-      comments
-    });
-  }
-
-  return threads;
-}
-
-async function buildGooglePlayThreads(pool) {
-  const res = await pool.query(
-    `SELECT review_id, rating, author_name, comment, received_at, priority, next_action, department, user_type
-     FROM google_play_reviews WHERE comment IS NOT NULL`);
-  return res.rows.map(r => ({
-    id: 'gp_' + r.review_id,
-    platform: 'google_play',
-    type: 'Review',
-    author: cleanName(r.author_name, 'Play Store User'),
-    text: (r.rating ? '★'.repeat(r.rating) + ' ' : '') + (r.comment || ''),
-    createdTime: r.received_at,
-    priority: r.priority || null,
-    next_action: r.next_action || null,
-    department: r.department || null,
-    user_type: r.user_type || null,
-    comments: []
-  }));
-}
-
-async function buildTrustpilotThreads(pool) {
-  const res = await pool.query(
-    `SELECT review_id, rating, heading, author_name, comment, received_at, priority, next_action, department, user_type
-     FROM trustpilot_reviews
-     WHERE comment IS NOT NULL AND btrim(comment) <> ''
-     ORDER BY received_at DESC NULLS LAST`);
-  return res.rows.map(r => {
-    const threadId = String(r.review_id).startsWith('tp_') ? r.review_id : 'tp_' + r.review_id;
-    return {
-      id: threadId,
-      platform: 'trustpilot',
-      type: (r.rating ? r.rating + '★ ' : '') + 'Review',
-      author: cleanName(r.author_name, 'Trustpilot User'),
-      text: (r.heading && r.heading !== 'N/A' ? r.heading + ' — ' : '') + (r.comment || ''),
-      createdTime: r.received_at,
-      priority: r.priority || null,
-      next_action: r.next_action || null,
-      department: r.department || null,
-      user_type: r.user_type || null,
-      comments: []
-    };
-  });
-}
+// Reads unified conversations and messages from the new omnichannel schema.
+const { getPool, ensureTables } = require('./db');
 
 module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -170,28 +9,128 @@ module.exports = async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
 
-  const pool = getPool();
-  const threads = [];
-  const counts = { facebook: 0, instagram: 0, twitter: 0, google_play: 0, trustpilot: 0 };
-
-  // Each platform is isolated so a missing/empty table never breaks the whole feed.
-  for (const [key, builder] of [
-    ['facebook', buildFacebookThreads],
-    ['instagram', buildInstagramThreads],
-    ['google_play', buildGooglePlayThreads],
-    ['trustpilot', buildTrustpilotThreads]
-  ]) {
-    try {
-      const t = await builder(pool);
-      counts[key] = t.length;
-      threads.push(...t);
-    } catch (err) {
-      console.error('feed: ' + key + ' failed:', err.message);
+  let client;
+  try {
+    await ensureTables();
+    const pool = getPool();
+    
+    // In a multi-tenant environment, req.orgId would be passed or derived from auth.
+    // For now, we query the seed organization.
+    const orgRes = await pool.query("SELECT id FROM organizations WHERE slug = 'carepal360'");
+    if (orgRes.rows.length === 0) {
+        return res.status(200).json({ success: true, threads: [], counts: {} });
     }
+    const orgId = orgRes.rows[0].id;
+    
+    client = await pool.connect();
+    await client.query("BEGIN");
+    // Set RLS bypass for the query since we haven't implemented full tenant auth yet
+    await client.query("SET LOCAL app.current_org_id = $1", [orgId]);
+
+    const limit = parseInt(req.query.limit, 10) || 50;
+    const offset = parseInt(req.query.offset, 10) || 0;
+
+    // Fetch unified feed
+    const query = `
+      SELECT
+          c.id as conv_id,
+          c.platform,
+          c.type,
+          c.title,
+          c.status,
+          c.priority,
+          c.department,
+          c.user_type,
+          c.next_action,
+          c.updated_at                    AS created_time,
+          co.name                         AS author,
+          co.avatar_url,
+          first_msg.content               AS text,
+          first_msg.rating,
+          first_msg.platform_created_at
+      FROM conversations c
+      LEFT JOIN LATERAL (
+          SELECT content, rating, contact_id, platform_created_at
+          FROM   messages
+          WHERE  conversation_id = c.id
+            AND  sender_type     = 'customer'
+            AND  deleted_at      IS NULL
+          ORDER BY created_at ASC
+          LIMIT 1
+      ) first_msg ON TRUE
+      LEFT JOIN contacts co  ON co.id = first_msg.contact_id
+      WHERE  c.organization_id = $1
+        AND  c.deleted_at       IS NULL
+      ORDER BY c.updated_at DESC
+      LIMIT $2 OFFSET $3;
+    `;
+    const result = await client.query(query, [orgId, limit, offset]);
+
+    // Fetch all comments (messages where sender_type = 'agent')
+    // and attach them to the threads.
+    // To do this efficiently, we grab all agent replies for the returned conversations.
+    let threads = result.rows.map(r => ({
+      id: r.conv_id,
+      platform: r.platform,
+      type: r.type,
+      author: r.author || 'Unknown User',
+      text: (r.rating ? '★'.repeat(r.rating) + ' ' : '') + (r.text || ''),
+      createdTime: r.created_time,
+      priority: r.priority,
+      next_action: r.next_action,
+      department: r.department,
+      user_type: r.user_type,
+      comments: []
+    }));
+
+    if (threads.length > 0) {
+      const convIds = threads.map(t => t.id);
+      const commentsQuery = `
+        SELECT m.conversation_id, m.id, u.name as author, m.content as text, m.created_at
+        FROM messages m
+        LEFT JOIN users u ON u.id = m.author_id
+        WHERE m.conversation_id = ANY($1)
+          AND m.sender_type = 'agent'
+          AND m.deleted_at IS NULL
+        ORDER BY m.created_at ASC
+      `;
+      const commentsRes = await client.query(commentsQuery, [convIds]);
+      
+      for (const row of commentsRes.rows) {
+        const thread = threads.find(t => t.id === row.conversation_id);
+        if (thread) {
+          thread.comments.push({
+            id: row.id,
+            author: row.author || 'Agent',
+            text: row.text,
+            createdTime: row.created_at
+          });
+        }
+      }
+    }
+
+    // Counts by platform
+    const countsQuery = `
+      SELECT platform, COUNT(*) as count
+      FROM conversations
+      WHERE organization_id = $1 AND deleted_at IS NULL
+      GROUP BY platform
+    `;
+    const countsRes = await client.query(countsQuery, [orgId]);
+    const counts = {};
+    for (const row of countsRes.rows) {
+      counts[row.platform] = parseInt(row.count, 10);
+    }
+
+    await client.query("COMMIT");
+    return res.status(200).json({ success: true, threads, counts });
+  } catch (error) {
+    if (client) {
+      try { await client.query("ROLLBACK"); } catch(e){}
+    }
+    console.error('feed error:', error);
+    return res.status(500).json({ error: 'Internal server error', details: error.message });
+  } finally {
+    if (client) client.release();
   }
-
-  // Newest first across all platforms.
-  threads.sort((a, b) => new Date(b.createdTime || 0) - new Date(a.createdTime || 0));
-
-  return res.status(200).json({ success: true, threads, counts });
 };

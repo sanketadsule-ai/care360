@@ -173,28 +173,31 @@ def main():
     conn.autocommit = True
     cur = conn.cursor()
 
-    # make sure the table can accept our rows (self-healing, matches api/_lib/db.js)
-    cur.execute("""
-        CREATE TABLE IF NOT EXISTS trustpilot_reviews (
-            id SERIAL PRIMARY KEY, channel_id INTEGER, review_id VARCHAR(255) UNIQUE,
-            rating INTEGER, heading TEXT, author_name VARCHAR(255), comment TEXT,
-            received_at TIMESTAMP, status VARCHAR(50) DEFAULT 'open',
-            priority VARCHAR(50), next_action TEXT, department VARCHAR(100), user_type VARCHAR(100),
-            created_at TIMESTAMP DEFAULT NOW());
-    """)
-    cur.execute("ALTER TABLE trustpilot_reviews ADD COLUMN IF NOT EXISTS channel_id INTEGER;")
-    cur.execute("ALTER TABLE trustpilot_reviews ADD COLUMN IF NOT EXISTS status VARCHAR(50) DEFAULT 'open';")
-    cur.execute("ALTER TABLE trustpilot_reviews ADD COLUMN IF NOT EXISTS priority VARCHAR(50);")
-    cur.execute("ALTER TABLE trustpilot_reviews ADD COLUMN IF NOT EXISTS next_action TEXT;")
-    cur.execute("ALTER TABLE trustpilot_reviews ADD COLUMN IF NOT EXISTS department VARCHAR(100);")
-    cur.execute("ALTER TABLE trustpilot_reviews ADD COLUMN IF NOT EXISTS user_type VARCHAR(100);")
+    # Set RLS bypass for migration/script
+    cur.execute("SET LOCAL app.current_org_id = ''")
 
-    cur.execute("SELECT id FROM connected_channels WHERE platform='trustpilot' LIMIT 1")
+    # 1. Get or create Carepal360 org
+    cur.execute("SELECT id FROM organizations WHERE slug = 'carepal360'")
+    org_row = cur.fetchone()
+    if not org_row:
+        cur.execute("INSERT INTO organizations (name, slug) VALUES ('Carepal360', 'carepal360') RETURNING id")
+        org_id = cur.fetchone()[0]
+    else:
+        org_id = org_row[0]
+
+    # 2. Get or create Channel
+    cur.execute(
+        "SELECT id FROM channels WHERE organization_id = %s AND platform = 'trustpilot' LIMIT 1",
+        (org_id,)
+    )
     row = cur.fetchone()
     if row:
         channel_id = row[0]
     else:
-        cur.execute("INSERT INTO connected_channels (platform, account_name) VALUES ('trustpilot','Trustpilot') RETURNING id")
+        cur.execute(
+            "INSERT INTO channels (organization_id, platform, external_id, display_name, status) VALUES (%s, 'trustpilot', 'trustpilot_legacy', 'Trustpilot', 'active') RETURNING id",
+            (org_id,)
+        )
         channel_id = cur.fetchone()[0]
 
     driver = make_driver()
@@ -223,31 +226,52 @@ def main():
                 # Analyze via LLM
                 escalation = analyze_review(rec["comment"])
 
+                platform_user_id = (rec["author_name"].lower().replace(" ", "_") + "_" + rec["review_id"])
+
+                # Insert Contact
                 cur.execute("""
-                    INSERT INTO trustpilot_reviews
-                        (channel_id, review_id, rating, heading, author_name, comment, received_at, status, priority, next_action, department, user_type, created_at)
-                    VALUES (%s,%s,%s,%s,%s,%s,%s,'open',%s,%s,%s,%s,NOW())
-                    ON CONFLICT (review_id) DO UPDATE SET
-                        rating=EXCLUDED.rating, heading=EXCLUDED.heading,
-                        author_name=EXCLUDED.author_name, comment=EXCLUDED.comment,
-                        received_at=EXCLUDED.received_at,
-                        priority=EXCLUDED.priority, next_action=EXCLUDED.next_action,
-                        department=EXCLUDED.department, user_type=EXCLUDED.user_type
-                """, (channel_id, rec["review_id"], rec["rating"], rec["heading"],
-                      rec["author_name"], rec["comment"], rec["received_at"],
-                      escalation["priority"], escalation["next_action"],
-                      escalation["department"], escalation["user_type"]))
-                if cur.rowcount > 0:
+                    INSERT INTO contacts (channel_id, platform_user_id, name)
+                    VALUES (%s, %s, %s)
+                    ON CONFLICT (channel_id, platform_user_id) DO UPDATE SET updated_at = NOW()
+                    RETURNING id
+                """, (channel_id, platform_user_id, rec["author_name"]))
+                contact_id = cur.fetchone()[0]
+
+                # Insert Conversation
+                cur.execute("""
+                    INSERT INTO conversations (organization_id, channel_id, platform_thread_id, title, platform, type, status, priority, next_action, department, user_type, platform_created_at, created_at)
+                    VALUES (%s, %s, %s, %s, 'trustpilot', 'Review', 'open', %s, %s, %s, %s, %s, NOW())
+                    ON CONFLICT (channel_id, platform_thread_id) DO UPDATE SET
+                        priority = EXCLUDED.priority,
+                        next_action = EXCLUDED.next_action,
+                        department = EXCLUDED.department,
+                        user_type = EXCLUDED.user_type,
+                        updated_at = NOW()
+                    RETURNING id
+                """, (org_id, channel_id, rec["review_id"], rec["heading"], escalation["priority"], escalation["next_action"], escalation["department"], escalation["user_type"], rec["received_at"]))
+                conv_id = cur.fetchone()[0]
+
+                # Insert Message
+                cur.execute("""
+                    INSERT INTO messages (conversation_id, contact_id, sender_type, visibility, content, platform_message_id, rating, status, platform_created_at, created_at)
+                    VALUES (%s, %s, 'customer', 'public', %s, %s, %s, 'received', %s, NOW())
+                    ON CONFLICT (conversation_id, platform_message_id) DO UPDATE SET
+                        content = EXCLUDED.content,
+                        rating = EXCLUDED.rating
+                """, (conv_id, contact_id, rec["comment"], rec["review_id"], rec["rating"], rec["received_at"]))
+                
+                saved_count = cur.rowcount
+                if saved_count > 0:
                     total_saved += 1
+
             print(f"[page {page}] {len(reviews)} reviews processed.")
     finally:
         driver.quit()
 
-    cur.execute("SELECT COUNT(*) FROM trustpilot_reviews")
+    cur.execute("SELECT COUNT(*) FROM conversations WHERE platform='trustpilot'")
     print(f"\nDone. Scraped {total_seen} reviews; upserted {total_saved}. "
-          f"trustpilot_reviews now has {cur.fetchone()[0]} rows.")
+          f"trustpilot conversations now has {cur.fetchone()[0]} rows.")
     conn.close()
-
 
 if __name__ == "__main__":
     main()

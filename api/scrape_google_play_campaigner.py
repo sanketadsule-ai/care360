@@ -155,22 +155,34 @@ def main():
         conn.autocommit = True
         cur = conn.cursor()
 
-        # Ensure channel exists (use account_email to store the package name, consistent with connected_channels schema)
+        # Set RLS bypass for migration/script
+        cur.execute("SET LOCAL app.current_org_id = ''")
+
+        # 1. Get or create Carepal360 org
+        cur.execute("SELECT id FROM organizations WHERE slug = 'carepal360'")
+        org_row = cur.fetchone()
+        if not org_row:
+            cur.execute("INSERT INTO organizations (name, slug) VALUES ('Carepal360', 'carepal360') RETURNING id")
+            org_id = cur.fetchone()[0]
+        else:
+            org_id = org_row[0]
+
+        # 2. Get or create Channel
         cur.execute(
-            "SELECT id FROM connected_channels WHERE platform='google_play' AND account_email=%s LIMIT 1",
-            (PACKAGE_NAME,)
+            "SELECT id FROM channels WHERE organization_id = %s AND platform = 'google_play' AND external_id = %s LIMIT 1",
+            (org_id, PACKAGE_NAME)
         )
         row = cur.fetchone()
         if row:
             channel_id = row[0]
         else:
             cur.execute(
-                "INSERT INTO connected_channels (platform, account_name, account_email, status) VALUES ('google_play', %s, %s, 'active') RETURNING id",
-                (APP_NAME, PACKAGE_NAME)
+                "INSERT INTO channels (organization_id, platform, external_id, display_name, status) VALUES (%s, 'google_play', %s, %s, 'active') RETURNING id",
+                (org_id, PACKAGE_NAME, APP_NAME)
             )
             channel_id = cur.fetchone()[0]
 
-        # Upsert reviews
+        # 3. Upsert reviews
         saved_count = 0
         for r, esc in analyzed_reviews:
             review_id = r['reviewId']
@@ -179,21 +191,41 @@ def main():
             comment = r['content'] or ''
             received_at = r['at']
 
+            platform_user_id = (author_name.lower().replace(" ", "_") + "_" + review_id)
+
+            # Insert Contact
             cur.execute("""
-                INSERT INTO google_play_reviews (channel_id, review_id, rating, author_name, comment, received_at, status, priority, next_action, department, user_type, created_at)
-                VALUES (%s, %s, %s, %s, %s, %s, 'open', %s, %s, %s, %s, NOW())
-                ON CONFLICT (review_id)
-                DO UPDATE SET
-                    rating = EXCLUDED.rating,
-                    author_name = EXCLUDED.author_name,
-                    comment = EXCLUDED.comment,
+                INSERT INTO contacts (channel_id, platform_user_id, name)
+                VALUES (%s, %s, %s)
+                ON CONFLICT (channel_id, platform_user_id) DO UPDATE SET updated_at = NOW()
+                RETURNING id
+            """, (channel_id, platform_user_id, author_name))
+            contact_id = cur.fetchone()[0]
+
+            # Insert Conversation
+            cur.execute("""
+                INSERT INTO conversations (organization_id, channel_id, platform_thread_id, title, platform, type, status, priority, next_action, department, user_type, platform_created_at, created_at)
+                VALUES (%s, %s, %s, %s, 'google_play', 'Review', 'open', %s, %s, %s, %s, %s, NOW())
+                ON CONFLICT (channel_id, platform_thread_id) DO UPDATE SET
                     priority = EXCLUDED.priority,
                     next_action = EXCLUDED.next_action,
                     department = EXCLUDED.department,
-                    user_type = EXCLUDED.user_type
-            """, (channel_id, review_id, rating, author_name, comment, received_at, esc['priority'], esc['next_action'], esc['department'], esc['user_type']))
-            if cur.rowcount > 0:
-                saved_count += 1
+                    user_type = EXCLUDED.user_type,
+                    updated_at = NOW()
+                RETURNING id
+            """, (org_id, channel_id, review_id, author_name, esc['priority'], esc['next_action'], esc['department'], esc['user_type'], received_at))
+            conv_id = cur.fetchone()[0]
+
+            # Insert Message
+            cur.execute("""
+                INSERT INTO messages (conversation_id, contact_id, sender_type, visibility, content, platform_message_id, rating, status, platform_created_at, created_at)
+                VALUES (%s, %s, 'customer', 'public', %s, %s, %s, 'received', %s, NOW())
+                ON CONFLICT (conversation_id, platform_message_id) DO UPDATE SET
+                    content = EXCLUDED.content,
+                    rating = EXCLUDED.rating
+            """, (conv_id, contact_id, comment, review_id, rating, received_at))
+            
+            saved_count += 1
 
         print(f"Successfully upserted {saved_count} Google Play reviews into the database.")
         cur.close()

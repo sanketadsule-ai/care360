@@ -14,29 +14,54 @@ module.exports = async function handler(req, res) {
     await ensureTables();
     const pool = getPool();
 
+    // In a multi-tenant environment, req.orgId would be passed or derived from auth.
+    // For now, we query the seed organization.
+    const orgRes = await pool.query("SELECT id FROM organizations WHERE slug = 'carepal360'");
+    if (orgRes.rows.length === 0) {
+        return res.status(200).json({ success: true, data: [] });
+    }
+    const orgId = orgRes.rows[0].id;
+    
+    // Set RLS bypass
+    await pool.query("SET LOCAL app.current_org_id = ''");
+
     // ─── GET: Return all stored facebook messages ───
     if (req.method === 'GET') {
       const channelId = req.query.channel_id;
       let query = `
-        SELECT fm.*, cc.account_email, cc.account_name, cc.platform
-        FROM facebook_messages fm
-        LEFT JOIN connected_channels cc ON fm.channel_id = cc.id
-        ORDER BY fm.received_at DESC
-        LIMIT 100
+        SELECT 
+          c.id,
+          c.channel_id,
+          c.platform_thread_id AS fb_post_id,
+          c.type AS post_type,
+          co.name AS author_name,
+          m.content AS message_text,
+          c.platform_created_at AS received_at,
+          c.status,
+          c.created_at,
+          ch.external_id AS account_email,
+          ch.display_name AS account_name,
+          ch.platform
+        FROM conversations c
+        LEFT JOIN channels ch ON c.channel_id = ch.id
+        LEFT JOIN LATERAL (
+          SELECT content, contact_id
+          FROM messages
+          WHERE conversation_id = c.id AND sender_type = 'customer' AND deleted_at IS NULL
+          ORDER BY created_at ASC
+          LIMIT 1
+        ) m ON TRUE
+        LEFT JOIN contacts co ON co.id = m.contact_id
+        WHERE c.organization_id = $1 AND c.platform = 'facebook' AND c.deleted_at IS NULL
       `;
-      let params = [];
+      let params = [orgId];
 
       if (channelId) {
-        query = `
-          SELECT fm.*, cc.account_email, cc.account_name, cc.platform
-          FROM facebook_messages fm
-          LEFT JOIN connected_channels cc ON fm.channel_id = cc.id
-          WHERE fm.channel_id = $1
-          ORDER BY fm.received_at DESC
-          LIMIT 100
-        `;
-        params = [channelId];
+        query += ` AND c.channel_id = $2`;
+        params.push(channelId);
       }
+
+      query += ` ORDER BY c.platform_created_at DESC LIMIT 100`;
 
       const result = await pool.query(query, params);
       return res.status(200).json({ success: true, data: result.rows });
@@ -53,28 +78,52 @@ module.exports = async function handler(req, res) {
       let savedCount = 0;
 
       for (const msg of messages) {
+        const client = await pool.connect();
         try {
-          await pool.query(
-            `INSERT INTO facebook_messages (channel_id, fb_post_id, post_type, author_name, message_text, received_at, status, created_at)
-             VALUES ($1, $2, $3, $4, $5, $6, 'open', NOW())
-             ON CONFLICT (fb_post_id)
-             DO UPDATE SET
-               post_type = EXCLUDED.post_type,
-               author_name = EXCLUDED.author_name,
-               message_text = EXCLUDED.message_text
-            `,
-            [
-              channel_id,
-              msg.fb_post_id,
-              msg.post_type || 'Comment',
-              msg.author_name || '',
-              msg.message_text || '',
-              msg.received_at ? new Date(msg.received_at) : new Date()
-            ]
-          );
+          await client.query('BEGIN');
+
+          const uniqueId = msg.fb_post_id;
+          const postType = msg.post_type || 'Comment';
+          const authorName = msg.author_name || '';
+          const messageText = msg.message_text || '';
+          const receivedAt = msg.received_at ? new Date(msg.received_at) : new Date();
+          const platformUserId = authorName.toLowerCase().replace(/ /g, '_') + '_' + uniqueId;
+
+          // Insert Contact
+          const contactRes = await client.query(`
+            INSERT INTO contacts (channel_id, platform_user_id, name)
+            VALUES ($1, $2, $3)
+            ON CONFLICT (channel_id, platform_user_id) DO UPDATE SET updated_at = NOW()
+            RETURNING id
+          `, [channel_id, platformUserId, authorName]);
+          const contactId = contactRes.rows[0].id;
+
+          // Insert Conversation
+          const convRes = await client.query(`
+            INSERT INTO conversations (organization_id, channel_id, platform_thread_id, title, platform, type, status, platform_created_at, created_at)
+            VALUES ($1, $2, $3, $4, 'facebook', $5, 'open', $6, NOW())
+            ON CONFLICT (channel_id, platform_thread_id) DO UPDATE SET
+              type = EXCLUDED.type,
+              updated_at = NOW()
+            RETURNING id
+          `, [orgId, channel_id, uniqueId, messageText.substring(0, 1000), postType, receivedAt]);
+          const convId = convRes.rows[0].id;
+
+          // Insert Message
+          await client.query(`
+            INSERT INTO messages (conversation_id, contact_id, sender_type, visibility, content, platform_message_id, status, platform_created_at, created_at)
+            VALUES ($1, $2, 'customer', 'public', $3, $4, 'received', $5, NOW())
+            ON CONFLICT (conversation_id, platform_message_id) DO UPDATE SET
+              content = EXCLUDED.content
+          `, [convId, contactId, messageText, uniqueId, receivedAt]);
+
+          await client.query('COMMIT');
           savedCount++;
         } catch (insertErr) {
+          await client.query('ROLLBACK');
           console.error('Failed to insert facebook message:', msg.fb_post_id, insertErr.message);
+        } finally {
+          client.release();
         }
       }
 

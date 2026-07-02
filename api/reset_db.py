@@ -1,74 +1,58 @@
-// Shared database connection for Vercel Serverless Functions
-const { Pool } = require('pg');
-const crypto = require('crypto');
+import os
+import sys
+import hashlib
+import psycopg2
 
-// Initial admin credentials. The account is auto-provisioned once on startup
-// (idempotently) so the system always has at least one administrator.
-const INITIAL_ADMIN_EMAIL = 'admin@carepal360.com';
-const INITIAL_ADMIN_PASSWORD = 'Admin@12345';
-const INITIAL_ADMIN_NAME = 'Administrator';
+def load_env():
+    env_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '.env')
+    if os.path.exists(env_path):
+        with open(env_path, 'r', encoding='utf-8') as f:
+            for line in f:
+                line = line.strip()
+                if line and not line.startswith("#") and "=" in line:
+                    k, v = line.split("=", 1)
+                    os.environ.setdefault(k.strip(), v.strip().strip("'").strip('"'))
 
-// Shared password hashing — keep in sync with api/_lib/auth.js
-function hashPassword(password, salt) {
-  return crypto.pbkdf2Sync(password, salt, 10000, 64, 'sha512').toString('hex');
-}
-
-let pool;
-
-function getPool() {
-  if (!pool) {
-    let connString = process.env.DATABASE_URL || '';
-    // Strip ?sslmode=... so it doesn't override our explicit ssl config below
-    if (connString.includes('?')) {
-      connString = connString.split('?')[0];
-    }
+def main():
+    load_env()
     
-    pool = new Pool({
-      connectionString: connString,
-      ssl: { rejectUnauthorized: false },
-      max: 1,
-      idleTimeoutMillis: 5000,
-      connectionTimeoutMillis: 5000
-    });
+    db_url = os.environ.get("DATABASE_URL")
+    if not db_url:
+        db_url = "postgres://default:A6jPoxKqIe8c@ep-holy-snow-a1bshx41-pooler.ap-southeast-1.aws.neon.tech:5432/verceldb?sslmode=require"
+        print(f"DATABASE_URL not set in .env. Using fallback: {db_url}")
+        
+    # Clean query parameters from URL
+    db_url_clean = db_url.split("?")[0]
+    
+    print("Connecting to Neon database...")
+    try:
+        conn = psycopg2.connect(db_url_clean, sslmode="require")
+        conn.autocommit = True
+        cur = conn.cursor()
+    except Exception as e:
+        print(f"Failed to connect to database: {e}")
+        sys.exit(1)
 
-    pool.on('error', (err, client) => {
-      console.error('Unexpected error on idle client', err);
-    });
-  }
-  return pool;
-}
+    print("Dropping ALL existing tables in public schema...")
+    try:
+        cur.execute("""
+            DO $$ DECLARE
+                r RECORD;
+            BEGIN
+                FOR r IN (SELECT tablename FROM pg_tables WHERE schemaname = current_schema()) LOOP
+                    EXECUTE 'DROP TABLE IF EXISTS ' || quote_ident(r.tablename) || ' CASCADE';
+                END LOOP;
+            END $$;
+        """)
+        print("All tables dropped successfully.")
+    except Exception as e:
+        print(f"Failed to drop tables: {e}")
+        conn.close()
+        sys.exit(1)
 
-async function closePool() {
-  if (pool) {
-    const p = pool;
-    pool = null;
-    try {
-      await Promise.race([
-        p.end(),
-        new Promise((resolve) => setTimeout(resolve, 2000))
-      ]);
-    } catch (err) {
-      console.error('Error closing pool:', err.message);
-    }
-  }
-}
-
-let ensureTablesPromise = null;
-async function ensureTables() {
-  if (!ensureTablesPromise) {
-    ensureTablesPromise = _ensureTables().catch((err) => {
-      ensureTablesPromise = null; // allow retry on next request
-      throw err;
-    });
-  }
-  return ensureTablesPromise;
-}
-
-async function _ensureTables() {
-  const p = getPool();
-
-  // Define new tables in order of dependencies
-  await p.query(`
+    print("Reinitializing database with the new unified omnichannel schema...")
+    
+    ddl = """
     -- Extensions
     CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
     CREATE EXTENSION IF NOT EXISTS "pgcrypto";
@@ -82,11 +66,6 @@ async function _ensureTables() {
         created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
         updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
-
-    -- Seed an organization if it doesn't exist
-    INSERT INTO organizations (name, slug) 
-    VALUES ('Carepal360', 'carepal360')
-    ON CONFLICT (slug) DO NOTHING;
 
     -- 2. USERS
     CREATE TABLE IF NOT EXISTS users (
@@ -151,7 +130,7 @@ async function _ensureTables() {
         PRIMARY KEY (team_id, user_id)
     );
 
-    -- 5. CHANNELS + CREDENTIALS
+    -- 5. CHANNELS
     CREATE TABLE IF NOT EXISTS channels (
         id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         organization_id UUID NOT NULL REFERENCES organizations(id),
@@ -444,10 +423,9 @@ async function _ensureTables() {
         error       TEXT,
         created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
-  `);
-
-  // Indexes
-  await p.query(`
+    """
+    
+    indexes = """
     CREATE INDEX IF NOT EXISTS idx_conv_org_updated   ON conversations (organization_id, updated_at DESC) WHERE deleted_at IS NULL;
     CREATE INDEX IF NOT EXISTS idx_conv_channel       ON conversations (channel_id);
     CREATE INDEX IF NOT EXISTS idx_conv_assigned_user ON conversations (assigned_to)         WHERE assigned_to IS NOT NULL;
@@ -469,85 +447,105 @@ async function _ensureTables() {
     CREATE INDEX IF NOT EXISTS idx_activities_conv    ON activities (conversation_id, created_at DESC);
     CREATE INDEX IF NOT EXISTS idx_ai_runs_conv       ON ai_runs (conversation_id);
     CREATE INDEX IF NOT EXISTS idx_job_runs_name      ON job_runs (job_name, started_at DESC);
-  `);
+    """
+    
+    rls = """
+    ALTER TABLE conversations ENABLE ROW LEVEL SECURITY;
+    ALTER TABLE messages ENABLE ROW LEVEL SECURITY;
+    ALTER TABLE contacts ENABLE ROW LEVEL SECURITY;
+    ALTER TABLE customers ENABLE ROW LEVEL SECURITY;
+    ALTER TABLE channels ENABLE ROW LEVEL SECURITY;
+    
+    DROP POLICY IF EXISTS org_isolation_conversations ON conversations;
+    DROP POLICY IF EXISTS org_isolation_messages ON messages;
+    DROP POLICY IF EXISTS org_isolation_contacts ON contacts;
+    DROP POLICY IF EXISTS org_isolation_customers ON customers;
+    DROP POLICY IF EXISTS org_isolation_channels ON channels;
 
-  // Row Level Security Configuration
-  try {
-    await p.query(`
-      ALTER TABLE conversations ENABLE ROW LEVEL SECURITY;
-      ALTER TABLE messages ENABLE ROW LEVEL SECURITY;
-      ALTER TABLE contacts ENABLE ROW LEVEL SECURITY;
-      ALTER TABLE customers ENABLE ROW LEVEL SECURITY;
-      ALTER TABLE channels ENABLE ROW LEVEL SECURITY;
-      
-      -- Drop policies if they exist to recreate them safely
-      DROP POLICY IF EXISTS org_isolation_conversations ON conversations;
-      DROP POLICY IF EXISTS org_isolation_messages ON messages;
-      DROP POLICY IF EXISTS org_isolation_contacts ON contacts;
-      DROP POLICY IF EXISTS org_isolation_customers ON customers;
-      DROP POLICY IF EXISTS org_isolation_channels ON channels;
+    CREATE POLICY org_isolation_conversations ON conversations
+        USING (
+           current_setting('app.current_org_id', TRUE) IS NULL 
+           OR current_setting('app.current_org_id', TRUE) = '' 
+           OR organization_id = current_setting('app.current_org_id', TRUE)::uuid
+        );
+    
+    CREATE POLICY org_isolation_messages ON messages
+        USING (
+           current_setting('app.current_org_id', TRUE) IS NULL 
+           OR current_setting('app.current_org_id', TRUE) = '' 
+           OR (SELECT organization_id FROM conversations WHERE conversations.id = messages.conversation_id) = current_setting('app.current_org_id', TRUE)::uuid
+        );
 
-      -- We bypass RLS if current_org_id is not set (for internal admin scripts/migrations)
-      -- But enforce it when it is set by API endpoints
-      CREATE POLICY org_isolation_conversations ON conversations
-          USING (
-             current_setting('app.current_org_id', TRUE) IS NULL 
-             OR current_setting('app.current_org_id', TRUE) = '' 
-             OR organization_id = current_setting('app.current_org_id', TRUE)::uuid
-          );
-      
-      CREATE POLICY org_isolation_messages ON messages
-          USING (
-             current_setting('app.current_org_id', TRUE) IS NULL 
-             OR current_setting('app.current_org_id', TRUE) = '' 
-             OR (SELECT organization_id FROM conversations WHERE conversations.id = messages.conversation_id) = current_setting('app.current_org_id', TRUE)::uuid
-          );
+    CREATE POLICY org_isolation_contacts ON contacts
+        USING (
+           current_setting('app.current_org_id', TRUE) IS NULL 
+           OR current_setting('app.current_org_id', TRUE) = '' 
+           OR (SELECT organization_id FROM channels WHERE channels.id = contacts.channel_id) = current_setting('app.current_org_id', TRUE)::uuid
+        );
 
-      CREATE POLICY org_isolation_contacts ON contacts
-          USING (
-             current_setting('app.current_org_id', TRUE) IS NULL 
-             OR current_setting('app.current_org_id', TRUE) = '' 
-             OR (SELECT organization_id FROM channels WHERE channels.id = contacts.channel_id) = current_setting('app.current_org_id', TRUE)::uuid
-          );
+    CREATE POLICY org_isolation_customers ON customers
+        USING (
+           current_setting('app.current_org_id', TRUE) IS NULL 
+           OR current_setting('app.current_org_id', TRUE) = '' 
+           OR organization_id = current_setting('app.current_org_id', TRUE)::uuid
+        );
+        
+    CREATE POLICY org_isolation_channels ON channels
+        USING (
+           current_setting('app.current_org_id', TRUE) IS NULL 
+           OR current_setting('app.current_org_id', TRUE) = '' 
+           OR organization_id = current_setting('app.current_org_id', TRUE)::uuid
+        );
+    """
 
-      CREATE POLICY org_isolation_customers ON customers
-          USING (
-             current_setting('app.current_org_id', TRUE) IS NULL 
-             OR current_setting('app.current_org_id', TRUE) = '' 
-             OR organization_id = current_setting('app.current_org_id', TRUE)::uuid
-          );
-          
-      CREATE POLICY org_isolation_channels ON channels
-          USING (
-             current_setting('app.current_org_id', TRUE) IS NULL 
-             OR current_setting('app.current_org_id', TRUE) = '' 
-             OR organization_id = current_setting('app.current_org_id', TRUE)::uuid
-          );
-    `);
-  } catch(err) {
-    console.error('Migration error for RLS policies:', err.message);
-  }
+    try:
+        print("Executing DDL...")
+        cur.execute(ddl)
+        print("Executing Indexes...")
+        cur.execute(indexes)
+        print("Executing RLS policies...")
+        cur.execute(rls)
+        
+        # Seed Organization
+        print("Seeding Carepal360 organization...")
+        cur.execute("""
+            INSERT INTO organizations (name, slug)
+            VALUES ('Carepal360', 'carepal360')
+            ON CONFLICT (slug) DO NOTHING
+            RETURNING id
+        """)
+        org_row = cur.fetchone()
+        
+        # Fetch organization id if it already existed
+        if not org_row:
+            cur.execute("SELECT id FROM organizations WHERE slug = 'carepal360'")
+            org_id = cur.fetchone()[0]
+        else:
+            org_id = org_row[0]
+            
+        # Seed Administrator
+        print("Seeding initial administrator account...")
+        admin_email = 'admin@carepal360.com'
+        admin_pass = 'Admin@12345'
+        admin_name = 'Administrator'
+        salt = os.urandom(16).hex()
+        
+        # Pbkdf2 SHA512 hash matched with JS pbkdf2Sync
+        hashed = hashlib.pbkdf2_hmac('sha512', admin_pass.encode('utf-8'), salt.encode('utf-8'), 10000, 64).hex()
+        initials = admin_name[:2].upper()
+        
+        cur.execute("""
+            INSERT INTO users (organization_id, email, name, initials, role, status, provider, password_hash, salt, updated_at)
+            VALUES (%s, %s, %s, %s, 'admin', 'approved', 'email', %s, %s, NOW())
+            ON CONFLICT (email) DO NOTHING
+        """, (org_id, admin_email, admin_name, initials, hashed, salt))
 
-  await ensureAdmin(p);
-}
+        print("Database reinitialization complete successfully!")
+    except Exception as e:
+        print(f"Error executing schema: {e}")
+    finally:
+        cur.close()
+        conn.close()
 
-async function ensureAdmin(p) {
-  try {
-    const salt = crypto.randomBytes(16).toString('hex');
-    const passwordHash = hashPassword(INITIAL_ADMIN_PASSWORD, salt);
-    const initials = INITIAL_ADMIN_NAME.substring(0, 2).toUpperCase();
-
-    // The initial admin belongs to the Carepal360 org
-    await p.query(
-      `INSERT INTO users (organization_id, email, name, initials, role, status, provider, password_hash, salt, updated_at)
-       SELECT id, $1, $2, $3, 'admin', 'approved', 'email', $4, $5, NOW()
-       FROM organizations WHERE slug = 'carepal360'
-       ON CONFLICT (email) DO NOTHING`,
-      [INITIAL_ADMIN_EMAIL, INITIAL_ADMIN_NAME, initials, passwordHash, salt]
-    );
-  } catch (err) {
-    console.error('ensureAdmin error:', err.message);
-  }
-}
-
-module.exports = { getPool, ensureTables, ensureAdmin, hashPassword, closePool };
+if __name__ == "__main__":
+    main()

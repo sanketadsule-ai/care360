@@ -13,7 +13,16 @@ const pool = new Pool({
 
 async function checkApi() {
   try {
-    const channelRes = await pool.query("SELECT id, access_token FROM connected_channels WHERE platform = 'google_business' ORDER BY created_at DESC LIMIT 1");
+    // Set RLS bypass
+    await pool.query("SET LOCAL app.current_org_id = ''");
+
+    const channelRes = await pool.query(`
+      SELECT c.id, cc.encrypted_value AS access_token 
+      FROM channels c 
+      LEFT JOIN channel_credentials cc ON cc.channel_id = c.id 
+      WHERE c.platform = 'google_business' AND c.deleted_at IS NULL
+      ORDER BY c.connected_at DESC LIMIT 1
+    `);
     if (channelRes.rows.length === 0) {
       console.log("No google_business channel found in DB.");
       process.exit(1);
