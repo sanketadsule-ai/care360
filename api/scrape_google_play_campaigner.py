@@ -180,7 +180,7 @@ def main():
             received_at = r['at']
 
             cur.execute("""
-                INSERT INTO google_reviews (channel_id, review_id, rating, author_name, comment, received_at, status, priority, next_action, department, user_type, created_at)
+                INSERT INTO google_play_reviews (channel_id, review_id, rating, author_name, comment, received_at, status, priority, next_action, department, user_type, created_at)
                 VALUES (%s, %s, %s, %s, %s, %s, 'open', %s, %s, %s, %s, NOW())
                 ON CONFLICT (review_id)
                 DO UPDATE SET

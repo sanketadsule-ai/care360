@@ -28,6 +28,7 @@ module.exports = async function handler(req, res) {
     const tables = [
       { name: 'trustpilot_reviews', idCol: 'review_id' },
       { name: 'google_reviews', idCol: 'review_id' },
+      { name: 'google_play_reviews', idCol: 'review_id' },
       { name: 'facebook_messages', idCol: 'fb_post_id' },
       { name: 'email_messages', idCol: 'gmail_message_id' }
     ];

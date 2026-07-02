@@ -123,7 +123,7 @@ async function buildInstagramThreads(pool) {
 async function buildGooglePlayThreads(pool) {
   const res = await pool.query(
     `SELECT review_id, rating, author_name, comment, received_at, priority, next_action, department, user_type
-     FROM google_reviews WHERE comment IS NOT NULL`);
+     FROM google_play_reviews WHERE comment IS NOT NULL`);
   return res.rows.map(r => ({
     id: 'gp_' + r.review_id,
     platform: 'google_play',

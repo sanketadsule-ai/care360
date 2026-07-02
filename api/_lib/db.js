@@ -183,6 +183,24 @@ async function _ensureTables() {
       user_type         VARCHAR(100),
       created_at        TIMESTAMP DEFAULT NOW()
     );
+
+    CREATE TABLE IF NOT EXISTS google_play_reviews (
+      id                SERIAL PRIMARY KEY,
+      channel_id        INTEGER REFERENCES connected_channels(id),
+      review_id         VARCHAR(255) UNIQUE,
+      rating            INTEGER,
+      author_name       VARCHAR(255),
+      author_avatar     VARCHAR(512),
+      comment           TEXT,
+      received_at       TIMESTAMP,
+      status            VARCHAR(50) DEFAULT 'open',
+      is_read           BOOLEAN DEFAULT FALSE,
+      priority          VARCHAR(50),
+      next_action       TEXT,
+      department        VARCHAR(100),
+      user_type         VARCHAR(100),
+      created_at        TIMESTAMP DEFAULT NOW()
+    );
   `);
 
   // 3. User Migrations (bundled)
@@ -224,6 +242,7 @@ async function _ensureTables() {
     await p.query(`
       ALTER TABLE trustpilot_reviews ADD COLUMN IF NOT EXISTS comments JSONB DEFAULT '[]'::jsonb;
       ALTER TABLE google_reviews ADD COLUMN IF NOT EXISTS comments JSONB DEFAULT '[]'::jsonb;
+      ALTER TABLE google_play_reviews ADD COLUMN IF NOT EXISTS comments JSONB DEFAULT '[]'::jsonb;
       ALTER TABLE facebook_messages ADD COLUMN IF NOT EXISTS comments JSONB DEFAULT '[]'::jsonb;
       ALTER TABLE email_messages ADD COLUMN IF NOT EXISTS comments JSONB DEFAULT '[]'::jsonb;
     `);
