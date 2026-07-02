@@ -69,6 +69,32 @@ module.exports = async function handler(req, res) {
         return await trustpilotReviews(req, res);
       case '/api/trustpilot-reviews-sync':
         return await trustpilotReviewsSync(req, res);
+      case '/api/scrape-google-play-donate': {
+        const { exec } = require('child_process');
+        const path = require('path');
+        const scriptPath = path.join(__dirname, 'scrape_google_play_donate.py');
+        exec(`python3 "${scriptPath}" || python "${scriptPath}"`, (error, stdout, stderr) => {
+          if (error) {
+            console.error(`exec error: ${error}`);
+            return res.status(500).json({ success: false, error: error.message, stderr });
+          }
+          return res.status(200).json({ success: true, stdout });
+        });
+        return;
+      }
+      case '/api/scrape-google-play-campaigner': {
+        const { exec } = require('child_process');
+        const path = require('path');
+        const scriptPath = path.join(__dirname, 'scrape_google_play_campaigner.py');
+        exec(`python3 "${scriptPath}" || python "${scriptPath}"`, (error, stdout, stderr) => {
+          if (error) {
+            console.error(`exec error: ${error}`);
+            return res.status(500).json({ success: false, error: error.message, stderr });
+          }
+          return res.status(200).json({ success: true, stdout });
+        });
+        return;
+      }
       case '/api/update-case':
         return await updateCase(req, res);
       default:

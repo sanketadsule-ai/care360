@@ -122,7 +122,7 @@ async function buildInstagramThreads(pool) {
 
 async function buildGooglePlayThreads(pool) {
   const res = await pool.query(
-    `SELECT review_id, rating, author_name, comment, received_at
+    `SELECT review_id, rating, author_name, comment, received_at, priority, next_action, department, user_type
      FROM google_reviews WHERE comment IS NOT NULL`);
   return res.rows.map(r => ({
     id: 'gp_' + r.review_id,
@@ -131,6 +131,10 @@ async function buildGooglePlayThreads(pool) {
     author: cleanName(r.author_name, 'Play Store User'),
     text: (r.rating ? '★'.repeat(r.rating) + ' ' : '') + (r.comment || ''),
     createdTime: r.received_at,
+    priority: r.priority || null,
+    next_action: r.next_action || null,
+    department: r.department || null,
+    user_type: r.user_type || null,
     comments: []
   }));
 }

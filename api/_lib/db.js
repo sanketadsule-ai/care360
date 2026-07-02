@@ -158,6 +158,10 @@ async function _ensureTables() {
       received_at       TIMESTAMP,
       status            VARCHAR(50) DEFAULT 'open',
       is_read           BOOLEAN DEFAULT FALSE,
+      priority          VARCHAR(50),
+      next_action       TEXT,
+      department        VARCHAR(100),
+      user_type         VARCHAR(100),
       created_at        TIMESTAMP DEFAULT NOW()
     );
 
@@ -225,6 +229,18 @@ async function _ensureTables() {
     `);
   } catch (err) {
     console.error('Migration error for comments columns:', err.message);
+  }
+
+  // 3d. google_reviews escalation columns migration
+  try {
+    await p.query(`
+      ALTER TABLE google_reviews ADD COLUMN IF NOT EXISTS priority VARCHAR(50);
+      ALTER TABLE google_reviews ADD COLUMN IF NOT EXISTS next_action TEXT;
+      ALTER TABLE google_reviews ADD COLUMN IF NOT EXISTS department VARCHAR(100);
+      ALTER TABLE google_reviews ADD COLUMN IF NOT EXISTS user_type VARCHAR(100);
+    `);
+  } catch (err) {
+    console.error('Migration error for google_reviews escalation columns:', err.message);
   }
 
   // 4. Notifications (depends on users)

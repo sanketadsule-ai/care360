@@ -232,6 +232,35 @@ try:
 except Exception as e:
     print(f"[DEBUG] Failed to load initial trustpilot reviews: {e}")
 
+# ── Run Google Play Scrapers in Background on Startup ────────────────
+def run_google_play_scrapers():
+    try:
+        import threading
+        def worker():
+            print("[DEBUG] Starting background Google Play scrapers...")
+            base_dir = os.path.dirname(os.path.abspath(__file__))
+            donate_script = os.path.join(base_dir, 'api', 'scrape_google_play_donate.py')
+            campaigner_script = os.path.join(base_dir, 'api', 'scrape_google_play_campaigner.py')
+            
+            try:
+                subprocess.run([sys.executable, donate_script], capture_output=True, text=True)
+                print("[DEBUG] Scraped Google Play com.impactguru.donate reviews.")
+            except Exception as ev_e:
+                print(f"[DEBUG] Error running donate scraper: {ev_e}")
+                
+            try:
+                subprocess.run([sys.executable, campaigner_script], capture_output=True, text=True)
+                print("[DEBUG] Scraped Google Play com.impactguru.campaigner_app reviews.")
+            except Exception as ev_e:
+                print(f"[DEBUG] Error running campaigner scraper: {ev_e}")
+                
+        t = threading.Thread(target=worker, daemon=True)
+        t.start()
+    except Exception as launch_e:
+        print(f"[DEBUG] Failed to launch background scrapers: {launch_e}")
+
+run_google_play_scrapers()
+
 PORT = 8080
 
 class Care360RequestHandler(http.server.SimpleHTTPRequestHandler):
@@ -283,27 +312,58 @@ class Care360RequestHandler(http.server.SimpleHTTPRequestHandler):
             query = urllib.parse.parse_qs(url_parts.query)
             channel_id = query.get('channel_id', [''])[0]
             if channel_id and ('com.' in channel_id or 'play' in channel_id.lower() or 'android' in channel_id.lower()):
-                mock_reviews = [
-                    {
-                        'id': f'ps_{channel_id}_1',
-                        'sender_name': 'Sarah Jenkins',
-                        'body_text': 'Great app! Really helpful and easy to use.',
-                        'received_at': '2026-06-29T10:00:00Z'
-                    },
-                    {
-                        'id': f'ps_{channel_id}_2',
-                        'sender_name': 'Mike Ross',
-                        'body_text': 'Needs more payment options, but otherwise good.',
-                        'received_at': '2026-06-28T15:30:00Z'
-                    },
-                    {
-                        'id': f'ps_{channel_id}_3',
-                        'sender_name': 'Priya Patel',
-                        'body_text': 'App keeps crashing on startup since the last update. Please fix this soon.',
-                        'received_at': '2026-06-30T09:15:00Z'
-                    }
-                ]
-                data_to_return = mock_reviews
+                csv_filename = f"google_play_{channel_id}_reviews.csv"
+                csv_path_root = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', csv_filename)
+                csv_path_curr = os.path.join(os.path.dirname(os.path.abspath(__file__)), csv_filename)
+                
+                real_reviews = []
+                target_csv = None
+                if os.path.exists(csv_path_root):
+                    target_csv = csv_path_root
+                elif os.path.exists(csv_path_curr):
+                    target_csv = csv_path_curr
+                    
+                if target_csv:
+                    try:
+                        with open(target_csv, 'r', encoding='utf-8') as f:
+                            reader = csv.DictReader(f)
+                            for idx, item in enumerate(reader):
+                                real_reviews.append({
+                                    'id': f"gp_review_{item.get('Review ID', str(idx))}",
+                                    'sender_name': item.get('UserName', 'Play Store User'),
+                                    'body_text': (f"[{item.get('Rating')} Stars] " if item.get('Rating') else "") + item.get('Comment', ''),
+                                    'received_at': item.get('Date', ''),
+                                    'priority': item.get('Priority') or 'Medium',
+                                    'department': item.get('Department') or 'Support',
+                                    'user_type': item.get('UserType') or 'Inquirer',
+                                    'next_action': item.get('NextAction') or 'Assess review and route to appropriate department.'
+                                })
+                    except Exception as csv_e:
+                        print(f"[DEBUG] Error reading Google Play CSV: {csv_e}")
+                        
+                if real_reviews:
+                    data_to_return = real_reviews
+                else:
+                    data_to_return = [
+                        {
+                            'id': f'ps_{channel_id}_1',
+                            'sender_name': 'Sarah Jenkins',
+                            'body_text': 'Great app! Really helpful and easy to use.',
+                            'received_at': '2026-06-29T10:00:00Z'
+                        },
+                        {
+                            'id': f'ps_{channel_id}_2',
+                            'sender_name': 'Mike Ross',
+                            'body_text': 'Needs more payment options, but otherwise good.',
+                            'received_at': '2026-06-28T15:30:00Z'
+                        },
+                        {
+                            'id': f'ps_{channel_id}_3',
+                            'sender_name': 'Priya Patel',
+                            'body_text': 'App keeps crashing on startup since the last update. Please fix this soon.',
+                            'received_at': '2026-06-30T09:15:00Z'
+                        }
+                    ]
             else:
                 data_to_return = MOCK_PLATFORM_MESSAGES
             self.send_response(200)

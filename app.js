@@ -1283,7 +1283,11 @@
             author: msg.sender_name,
             text: msg.body_text,
             createdTime: msg.received_at,
-            type: 'Review'
+            type: 'Review',
+            priority: msg.priority || 'Medium',
+            department: msg.department || 'Support',
+            user_type: msg.user_type || 'Inquirer',
+            next_action: msg.next_action || 'No action specified.'
           }));
         } else {
           // REAL Facebook Data Fetch
@@ -3860,24 +3864,31 @@ Collab Manager`
       }
 
       // Process Google Reviews
+      state.cases = state.cases.filter(c => c.channel !== 'google_business' && c.channel !== 'google_play');
+      const updatedIdsForGb = new Set(state.cases.map(c => cleanId(c.gmailMessageId || c.fbPostId || c.id)).filter(Boolean));
+
       if (gbData && gbData.success && gbData.data && gbData.data.length > 0) {
         gbData.data.forEach(gbMsg => {
-          if (gbMsg.review_id && !existingIds.has(cleanId(gbMsg.review_id))) {
+          if (gbMsg.review_id && !updatedIdsForGb.has(cleanId(gbMsg.review_id))) {
+            const plat = gbMsg.platform || 'google_business';
             state.cases.push({
               id: gbMsg.review_id,
               gbReviewId: gbMsg.review_id,
-              source: 'Google Business',
+              source: plat === 'google_play' ? 'Google Play' : 'Google Business',
               author: gbMsg.author_name,
               authorName: gbMsg.author_name,
-              channel: 'google_business',
+              channel: plat,
               avatarGradient: AVATAR_GRADIENTS[Math.abs(hashCode(gbMsg.author_name || '')) % AVATAR_GRADIENTS.length],
               text: (gbMsg.rating ? `[${gbMsg.rating} Stars] ` : '') + (gbMsg.comment || '').substring(0, 120),
               createdTime: gbMsg.received_at || gbMsg.created_at,
               type: 'Review',
               status: gbMsg.status === 'open' ? 'Open' : 'Closed',
-              priority: 'High',
+              priority: gbMsg.priority || 'Medium',
+              department: gbMsg.department || 'Support',
+              user_type: gbMsg.user_type || 'Inquirer',
+              next_action: gbMsg.next_action || 'No action specified.',
               assignedTo: 'Unassigned',
-              emailSubject: 'Google Review: ' + gbMsg.rating + ' Stars',
+              emailSubject: (plat === 'google_play' ? 'Google Play Review: ' : 'Google Review: ') + gbMsg.rating + ' Stars',
               emailAttachments: [],
               messages: [{
                 id: 'gb-db-' + gbMsg.id,
