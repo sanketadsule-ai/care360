@@ -243,6 +243,15 @@ async function _ensureTables() {
     console.error('Migration error for google_reviews escalation columns:', err.message);
   }
 
+  // 3e. connected_channels account_id column migration (for Google Play package name storage)
+  try {
+    await p.query(`
+      ALTER TABLE connected_channels ADD COLUMN IF NOT EXISTS account_id VARCHAR(255);
+    `);
+  } catch (err) {
+    console.error('Migration error for connected_channels account_id column:', err.message);
+  }
+
   // 4. Notifications (depends on users)
   try {
     await p.query(`

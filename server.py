@@ -232,6 +232,35 @@ try:
 except Exception as e:
     print(f"[DEBUG] Failed to load initial trustpilot reviews: {e}")
 
+# Try to load existing Google Play reviews from CSVs
+for pkg in ["com.impactguru.donate", "com.impactguru.campaigner_app"]:
+    try:
+        gp_csv = os.path.join(os.path.dirname(os.path.abspath(__file__)), f'google_play_{pkg}_reviews.csv')
+        if os.path.exists(gp_csv):
+            loaded_count = 0
+            with open(gp_csv, 'r', encoding='utf-8') as f:
+                reader = csv.DictReader(f)
+                for idx, item in enumerate(reader):
+                    rev_id = f"gp_review_{item.get('Review ID', str(idx))}"
+                    MOCK_GOOGLE_REVIEWS.append({
+                        'id': rev_id,
+                        'review_id': rev_id,
+                        'rating': item.get('Rating', '5'),
+                        'author_name': item.get('UserName', 'Play Store User'),
+                        'comment': item.get('Comment', ''),
+                        'received_at': item.get('Date', ''),
+                        'platform': 'google_play',
+                        'priority': item.get('Priority') or 'Medium',
+                        'department': item.get('Department') or 'Support',
+                        'user_type': item.get('UserType') or 'Inquirer',
+                        'next_action': item.get('NextAction') or 'Assess review and route to appropriate department.',
+                        'status': 'open'
+                    })
+                    loaded_count += 1
+            print(f"[DEBUG] Loaded {loaded_count} Google Play reviews for {pkg} from CSV.")
+    except Exception as e:
+        print(f"[DEBUG] Failed to load initial Google Play reviews for {pkg}: {e}")
+
 # ── Run Google Play Scrapers in Background on Startup ────────────────
 def run_google_play_scrapers():
     try:

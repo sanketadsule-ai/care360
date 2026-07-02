@@ -155,9 +155,9 @@ def main():
         conn.autocommit = True
         cur = conn.cursor()
 
-        # Ensure channel exists
+        # Ensure channel exists (use account_email to store the package name, consistent with connected_channels schema)
         cur.execute(
-            "SELECT id FROM connected_channels WHERE platform='google_play' AND account_id=%s LIMIT 1",
+            "SELECT id FROM connected_channels WHERE platform='google_play' AND account_email=%s LIMIT 1",
             (PACKAGE_NAME,)
         )
         row = cur.fetchone()
@@ -165,7 +165,7 @@ def main():
             channel_id = row[0]
         else:
             cur.execute(
-                "INSERT INTO connected_channels (platform, account_name, account_id, status) VALUES ('google_play', %s, %s, 'active') RETURNING id",
+                "INSERT INTO connected_channels (platform, account_name, account_email, status) VALUES ('google_play', %s, %s, 'active') RETURNING id",
                 (APP_NAME, PACKAGE_NAME)
             )
             channel_id = cur.fetchone()[0]

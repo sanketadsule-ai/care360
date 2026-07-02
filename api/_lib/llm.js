@@ -1,4 +1,4 @@
-const fetch = require('node-fetch');
+const https = require('https');
 
 // Default fallbacks in case Azure OpenAI is not configured or fails
 const DEFAULT_ESCALATION = {
@@ -9,7 +9,7 @@ const DEFAULT_ESCALATION = {
 };
 
 /**
- * Sends a request to Azure OpenAI to analyze a review.
+ * Sends a request to Azure OpenAI to analyze a review using built-in https.
  * @param {string} comment - The review comment to analyze.
  * @returns {Promise<{priority: string, next_action: string, department: string, user_type: string}>}
  */
@@ -28,32 +28,48 @@ async function analyzeReview(comment) {
   const systemPrompt = `You are an AI assistant that analyzes Instagram captions. Analyze the provided caption and extract the following information. You must respond strictly in valid JSON format with these exact keys:  priority (Choose one: "P0", "P1", "P2", "P3", "P4", "P5")  next_action (A brief description of what action needs to be taken next)  department (The department that should handle this, e.g., Support, Sales, Marketing, HR)  user_type (Categorize the user, e.g., "Campaigner", "Donor", "Inquirer")  Do not include any conversational text, code blocks, or markdown formatting in your response. Return only the raw JSON object.`;
   const userContent = `caption: ${comment || ''}`;
 
+  const bodyStr = JSON.stringify({
+    messages: [
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: userContent }
+    ],
+    temperature: 0
+  });
+
   try {
-    // Standard Azure OpenAI chat completions URL
-    const url = `${endpoint.replace(/\/$/, '')}/openai/deployments/${deploymentName}/chat/completions?api-version=${apiVersion}`;
-    
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'api-key': apiKey,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userContent }
-        ],
-        temperature: 0
-      }),
-      timeout: 10000 // 10 second timeout
+    const urlBase = `${endpoint.replace(/\/$/, '')}/openai/deployments/${deploymentName}/chat/completions?api-version=${apiVersion}`;
+    const parsedUrl = new URL(urlBase);
+
+    const data = await new Promise((resolve, reject) => {
+      const options = {
+        hostname: parsedUrl.hostname,
+        path: parsedUrl.pathname + parsedUrl.search,
+        method: 'POST',
+        headers: {
+          'api-key': apiKey,
+          'Content-Type': 'application/json',
+          'Content-Length': Buffer.byteLength(bodyStr)
+        }
+      };
+
+      const req = https.request(options, (res) => {
+        let raw = '';
+        res.on('data', chunk => { raw += chunk; });
+        res.on('end', () => {
+          if (res.statusCode < 200 || res.statusCode >= 300) {
+            reject(new Error(`Azure OpenAI HTTP ${res.statusCode}: ${raw}`));
+          } else {
+            try { resolve(JSON.parse(raw)); } catch (e) { reject(e); }
+          }
+        });
+      });
+
+      req.on('error', reject);
+      req.setTimeout(10000, () => { req.destroy(); reject(new Error('Request timed out')); });
+      req.write(bodyStr);
+      req.end();
     });
 
-    if (!response.ok) {
-      console.error(`Azure OpenAI API error: ${response.status} ${response.statusText}`);
-      return { ...DEFAULT_ESCALATION };
-    }
-
-    const data = await response.json();
     if (!data.choices || data.choices.length === 0 || !data.choices[0].message) {
       console.error('Azure OpenAI returned an empty response.');
       return { ...DEFAULT_ESCALATION };
@@ -62,7 +78,7 @@ async function analyzeReview(comment) {
     const replyText = data.choices[0].message.content.trim();
     return parseLLMResponse(replyText);
   } catch (error) {
-    console.error('Failed to run Azure OpenAI review analysis:', error);
+    console.error('Failed to run Azure OpenAI review analysis:', error.message);
     return { ...DEFAULT_ESCALATION };
   }
 }
