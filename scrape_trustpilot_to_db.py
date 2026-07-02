@@ -28,12 +28,15 @@ BASE = "https://www.trustpilot.com/review/{domain}?page={page}"
 def load_env():
     env_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env")
     if os.path.exists(env_path):
+        parsed = {}
         with open(env_path, "r", encoding="utf-8") as f:
             for line in f:
                 line = line.strip()
                 if line and not line.startswith("#") and "=" in line:
                     k, v = line.split("=", 1)
-                    os.environ.setdefault(k.strip(), v.strip().strip("'").strip('"'))
+                    parsed[k.strip()] = v.strip().strip("'").strip('"')
+        for k, v in parsed.items():
+            os.environ.setdefault(k, v)
 
 
 def ensure_deps():
@@ -81,15 +84,15 @@ def analyze_review(comment):
         return default_res
         
     system_prompt = (
-        "You are an AI assistant that analyzes Instagram captions. Analyze the provided caption and extract the following information. "
+        "You are an AI assistant that analyzes Trustpilot reviews. Analyze the provided review and extract the following information. "
         "You must respond strictly in valid JSON format with these exact keys: "
         "priority (Choose one: \"P0\", \"P1\", \"P2\", \"P3\", \"P4\", \"P5\") "
         "next_action (A brief description of what action needs to be taken next) "
         "department (The department that should handle this, e.g., Support, Sales, Marketing, HR) "
-        "user_type (Categorize the user, e.g., \"Campaigner\", \"Donor\", \"Inquirer\") "
+        "user_type (Categorize the user, e.g., \"Customer\", \"Donor\", \"Inquirer\") "
         "Do not include any conversational text, code blocks, or markdown formatting in your response. Return only the raw JSON object."
     )
-    user_content = f"caption: {comment or ''}"
+    user_content = f"review: {comment or ''}"
     
     try:
         import requests

@@ -1,0 +1,9 @@
+{
+    "n8n.environments": [
+        {
+            "name": "Production",
+            "url": "https://automate.igbknd.com",
+            "apiKey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIyMTI0NmYyMi0zMmJhLTQ5ODItOWE3Yy1mMDA1ZjdmYTJkMDkiLCJpc3MiOiJuOG4iLCJhdWQiOiJwdWJsaWMtYXBpIiwiaWF0IjoxNzgyNDU0NTE2LCJleHAiOjE3ODUwMDQyMDB9.Q4GJeDZ0p74DIvbsCd82EwGo9uPvKnf1esXJzwGQmdA"
+        }
+    ]
+}

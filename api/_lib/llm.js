@@ -25,8 +25,8 @@ async function analyzeReview(comment) {
   }
 
   // Construct prompt exactly as used by the user
-  const systemPrompt = `You are an AI assistant that analyzes Instagram captions. Analyze the provided caption and extract the following information. You must respond strictly in valid JSON format with these exact keys:  priority (Choose one: "P0", "P1", "P2", "P3", "P4", "P5")  next_action (A brief description of what action needs to be taken next)  department (The department that should handle this, e.g., Support, Sales, Marketing, HR)  user_type (Categorize the user, e.g., "Campaigner", "Donor", "Inquirer")  Do not include any conversational text, code blocks, or markdown formatting in your response. Return only the raw JSON object.`;
-  const userContent = `caption: ${comment || ''}`;
+  const systemPrompt = `You are an AI assistant that analyzes Trustpilot reviews. Analyze the provided review and extract the following information. You must respond strictly in valid JSON format with these exact keys:  priority (Choose one: "P0", "P1", "P2", "P3", "P4", "P5")  next_action (A brief description of what action needs to be taken next)  department (The department that should handle this, e.g., Support, Sales, Marketing, HR)  user_type (Categorize the user, e.g., "Customer", "Donor", "Inquirer")  Do not include any conversational text, code blocks, or markdown formatting in your response. Return only the raw JSON object.`;
+  const userContent = `review: ${comment || ''}`;
 
   const bodyStr = JSON.stringify({
     messages: [
